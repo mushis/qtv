@@ -1,0 +1,519 @@
+------------------------------------------------------------------------
+r60 | qqshka | 2007-10-23 17:16:14 +0200 (Tue, 23 Oct 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/source.c
+
+no more incomplete MD5 in qtv code
+------------------------------------------------------------------------
+r59 | qqshka | 2007-10-23 16:12:23 +0200 (Tue, 23 Oct 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/build.c
+
+reapeat, strncasecmp is CRIME in eztv.
+------------------------------------------------------------------------
+r58 | d3urk | 2007-10-22 22:40:31 +0200 (Mon, 22 Oct 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/Makefile
+   M /eztv/trunk/SVN.settings
+   A /eztv/trunk/build.c
+   M /eztv/trunk/dotnet2005/eztvprox.vcproj
+   M /eztv/trunk/sys.c
+
+Another try at fixing that DAMN revision number
+------------------------------------------------------------------------
+r57 | qqshka | 2007-10-22 21:05:14 +0200 (Mon, 22 Oct 2007) | 2 lines
+Changed paths:
+   M /eztv/trunk/dotnet2005/eztvprox.vcproj
+   M /eztv/trunk/main.c
+   M /eztv/trunk/parse.c
+   M /eztv/trunk/qconst.h
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/source.c
+   A /eztv/trunk/svc.h
+   M /eztv/trunk/sys.c
+
+1) now size of mvd message fixed to MAX_MVD_SIZE. 
+2) new variables: shownet, developer.
+------------------------------------------------------------------------
+r56 | qqshka | 2007-10-20 14:08:16 +0200 (Sat, 20 Oct 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/sys.c
+
+stricmp is ansi, strcasecmp is unix (c) Spike, so using strncasecmp in eztv project is shocking crime.
+------------------------------------------------------------------------
+r55 | qqshka | 2007-10-13 23:30:39 +0200 (Sat, 13 Oct 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/httpsv_generate.c
+
+reverting notfound.jpg changes
+------------------------------------------------------------------------
+r54 | d3urk | 2007-10-08 23:59:57 +0200 (Mon, 08 Oct 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/sys.c
+
+Changed SVN keywords on sys.c
+------------------------------------------------------------------------
+r53 | d3urk | 2007-10-08 23:48:26 +0200 (Mon, 08 Oct 2007) | 4 lines
+Changed paths:
+   A /eztv/trunk/SVN.settings
+   M /eztv/trunk/httpsv_generate.c
+   M /eztv/trunk/sys.c
+
+Changed build number to match SVN revision (check your SVN settings - see SVN.settings)
+Added a default map image when actual map image cannot be found, avoids image not found icon
+
+
+------------------------------------------------------------------------
+r52 | qqshka | 2007-09-24 10:59:59 +0200 (Mon, 24 Sep 2007) | 2 lines
+Changed paths:
+   M /eztv/trunk/qtv.h
+
+MAX_MSGLEN changed from 1400 to 1450 like in all qw engins.
+NOTE: need ask Spike why it 1400 in FTEQTV.
+------------------------------------------------------------------------
+r51 | qqshka | 2007-09-09 03:00:16 +0200 (Sun, 09 Sep 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/parse.c
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/qw.c
+
+userid now same as players have on server
+------------------------------------------------------------------------
+r50 | vvd0 | 2007-08-14 16:35:47 +0200 (Tue, 14 Aug 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/eztvbg01.png
+
+optimized by optipng
+------------------------------------------------------------------------
+r49 | qqshka | 2007-08-12 23:53:45 +0200 (Sun, 12 Aug 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/forward_pending.c
+   M /eztv/trunk/net_utils.c
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/source.c
+
+turning off SO_LINGER atm
+------------------------------------------------------------------------
+r48 | qqshka | 2007-08-12 06:20:45 +0200 (Sun, 12 Aug 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/main.c
+   M /eztv/trunk/qtv.h
+
+ignore it
+------------------------------------------------------------------------
+r47 | qqshka | 2007-08-12 06:17:10 +0200 (Sun, 12 Aug 2007) | 3 lines
+Changed paths:
+   M /eztv/trunk/main.c
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/source_cmds.c
+   M /eztv/trunk/sys.c
+
+1) added "quit" command :E
+2) proxy auto shutdown after ~23 days, integer variable limitation.
+
+------------------------------------------------------------------------
+r46 | qqshka | 2007-08-12 02:13:52 +0200 (Sun, 12 Aug 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/cl_cmds.c
+   M /eztv/trunk/dotnet2005/eztvprox.vcproj
+   M /eztv/trunk/forward_pending.c
+   M /eztv/trunk/info.c
+   A /eztv/trunk/info.h
+   M /eztv/trunk/main.c
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/sys.c
+
+added setinfo support, this allow nicks in chat.
+------------------------------------------------------------------------
+r45 | disconn3ct | 2007-08-04 17:42:20 +0200 (Sat, 04 Aug 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/dotnet2005/eztvprox.vcproj
+
+back to the static linking of runtime library
+------------------------------------------------------------------------
+r44 | qqshka | 2007-07-31 13:25:44 +0200 (Tue, 31 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/cl_cmds.c
+   M /eztv/trunk/net_utils.c
+   M /eztv/trunk/qtv.h
+
+now it compiles on linux
+------------------------------------------------------------------------
+r43 | qqshka | 2007-07-31 00:31:06 +0200 (Tue, 31 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/forward_pending.c
+   M /eztv/trunk/net_utils.c
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/source.c
+
+add black magic: SO_KEEPALIVE and SO_LINGER, probably this solve some particular bug.
+------------------------------------------------------------------------
+r42 | qqshka | 2007-07-29 19:55:36 +0200 (Sun, 29 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/fs.c
+   M /eztv/trunk/qtv.h
+
+Johny say so
+------------------------------------------------------------------------
+r41 | qqshka | 2007-07-29 05:27:45 +0200 (Sun, 29 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/fs.c
+   M /eztv/trunk/httpsv_generate.c
+   M /eztv/trunk/qtv.h
+
+some obvious corrections
+------------------------------------------------------------------------
+r40 | qqshka | 2007-07-29 02:16:33 +0200 (Sun, 29 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/cl_cmds.c
+   M /eztv/trunk/forward.c
+   M /eztv/trunk/forward_pending.c
+   M /eztv/trunk/main.c
+   M /eztv/trunk/parse.c
+   M /eztv/trunk/qconst.h
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/qw.c
+   M /eztv/trunk/source.c
+
+finishing(?) download support
+------------------------------------------------------------------------
+r39 | johnnycz | 2007-07-21 01:25:13 +0200 (Sat, 21 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/httpsv_generate.c
+
+fixed: missing fclose and free calls on allocated resources, what a shame
+------------------------------------------------------------------------
+r38 | disconn3ct | 2007-07-20 07:11:38 +0200 (Fri, 20 Jul 2007) | 6 lines
+Changed paths:
+   M /eztv/trunk
+   M /eztv/trunk/!fixme.txt
+   M /eztv/trunk/Makefile
+   M /eztv/trunk/cl_cmds.c
+   M /eztv/trunk/cmd.c
+   M /eztv/trunk/cmd.h
+   M /eztv/trunk/crc.c
+   M /eztv/trunk/cvar.c
+   M /eztv/trunk/cvar.h
+   M /eztv/trunk/dotnet2005
+   M /eztv/trunk/dotnet2005/eztvprox.sln
+   M /eztv/trunk/dotnet2005/eztvprox.vcproj
+   M /eztv/trunk/eztvbg01.png
+   M /eztv/trunk/forward.c
+   M /eztv/trunk/forward_pending.c
+   M /eztv/trunk/fs.c
+   M /eztv/trunk/httpsv.c
+   M /eztv/trunk/httpsv_generate.c
+   M /eztv/trunk/info.c
+   M /eztv/trunk/main.c
+   M /eztv/trunk/mdfour.c
+   M /eztv/trunk/msg.c
+   M /eztv/trunk/net_utils.c
+   M /eztv/trunk/parse.c
+   M /eztv/trunk/qconst.h
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/qw.c
+   M /eztv/trunk/source.c
+   M /eztv/trunk/source_cmds.c
+   M /eztv/trunk/style.css
+   M /eztv/trunk/sys.c
+   M /eztv/trunk/token.c
+
+1) setting the 'svn:eol-style' property for all files:
+MSVC projects - CRLF
+Makefiles, configure scripts & Co - LF
+Sources - native
+2) small changes with 'svn:ignore' property
+3) small changes in MSVC projects
+------------------------------------------------------------------------
+r37 | disconn3ct | 2007-07-20 04:51:45 +0200 (Fri, 20 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/dotnet2005/eztvprox.sln
+   M /eztv/trunk/dotnet2005/eztvprox.vcproj
+
+tweaks to MSVC8 project - part 2
+------------------------------------------------------------------------
+r36 | johnnycz | 2007-07-17 01:44:48 +0200 (Tue, 17 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/httpsv_generate.c
+   M /eztv/trunk/style.css
+
+small scores tables redesign
+------------------------------------------------------------------------
+r35 | johnnycz | 2007-07-16 22:04:52 +0200 (Mon, 16 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/httpsv_generate.c
+
+added sorting by frags, added team scores
+------------------------------------------------------------------------
+r34 | johnnycz | 2007-07-16 18:37:21 +0200 (Mon, 16 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/style.css
+
+fix: don't change the color of visited watch now links
+------------------------------------------------------------------------
+r33 | johnnycz | 2007-07-16 18:27:16 +0200 (Mon, 16 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/eztvbg01.png
+
+let the stars shine above our heads again!
+------------------------------------------------------------------------
+r32 | johnnycz | 2007-07-16 18:12:56 +0200 (Mon, 16 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/eztvbg01.png
+   M /eztv/trunk/fs.c
+   M /eztv/trunk/httpsv.c
+   M /eztv/trunk/httpsv_generate.c
+   M /eztv/trunk/info.c
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/style.css
+
+fixes: proper map image, show map filename, even/odd coloring in players table, better backgroun image, made by bps, don't change visited link color
+------------------------------------------------------------------------
+r31 | johnnycz | 2007-07-16 15:51:22 +0200 (Mon, 16 Jul 2007) | 2 lines
+Changed paths:
+   A /eztv/trunk/eztvbg01.png
+   M /eztv/trunk/httpsv.c
+   M /eztv/trunk/httpsv_generate.c
+   M /eztv/trunk/qtv.h
+   A /eztv/trunk/style.css
+
+http page redesign, template by bps; put style.css and eztvbg01.png into eztv dir
+send CRLF in headers;
+------------------------------------------------------------------------
+r30 | qqshka | 2007-07-13 16:47:27 +0200 (Fri, 13 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/cl_cmds.c
+   A /eztv/trunk/fs.c
+   M /eztv/trunk/qtv.h
+
+
+------------------------------------------------------------------------
+r29 | qqshka | 2007-07-12 21:03:53 +0200 (Thu, 12 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/cl_cmds.c
+   M /eztv/trunk/qtv.h
+
+now u can follow particular qtv user, initial support
+------------------------------------------------------------------------
+r28 | qqshka | 2007-07-12 19:05:50 +0200 (Thu, 12 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/cl_cmds.c
+   M /eztv/trunk/main.c
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/source.c
+   M /eztv/trunk/sys.c
+
+a bit fixing and cleaning download
+------------------------------------------------------------------------
+r27 | qqshka | 2007-07-09 20:18:54 +0200 (Mon, 09 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/Makefile
+   M /eztv/trunk/cl_cmds.c
+   M /eztv/trunk/dotnet2005/eztvprox.vcproj
+   M /eztv/trunk/qtv.h
+
+adding download support for clients, no pak files support atm, probably some other issues, need testing.
+------------------------------------------------------------------------
+r26 | qqshka | 2007-07-03 20:42:07 +0200 (Tue, 03 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/httpsv_generate.c
+
+small layout change
+------------------------------------------------------------------------
+r25 | qqshka | 2007-07-02 22:22:58 +0200 (Mon, 02 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/cl_cmds.c
+   M /eztv/trunk/main.c
+   M /eztv/trunk/qtv.h
+
+add say flood protect
+------------------------------------------------------------------------
+r24 | qqshka | 2007-07-01 06:35:41 +0200 (Sun, 01 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/cl_cmds.c
+   M /eztv/trunk/forward.c
+   M /eztv/trunk/forward_pending.c
+   M /eztv/trunk/qtv.h
+
+adding client forwarded command "users"
+------------------------------------------------------------------------
+r23 | qqshka | 2007-07-01 03:10:15 +0200 (Sun, 01 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/forward_pending.c
+
+ignore it
+------------------------------------------------------------------------
+r22 | qqshka | 2007-07-01 02:49:34 +0200 (Sun, 01 Jul 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/Makefile
+   A /eztv/trunk/cl_cmds.c
+   M /eztv/trunk/dotnet2005/eztvprox.vcproj
+   M /eztv/trunk/forward.c
+   M /eztv/trunk/forward_pending.c
+   M /eztv/trunk/main.c
+   M /eztv/trunk/qconst.h
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/source.c
+
+adding chat support, need testing...
+------------------------------------------------------------------------
+r21 | qqshka | 2007-06-30 19:25:17 +0200 (Sat, 30 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/source.c
+
+
+------------------------------------------------------------------------
+r20 | johnnycz | 2007-06-29 15:44:35 +0200 (Fri, 29 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/httpsv.c
+
+Changed version string and links to project homepage
+------------------------------------------------------------------------
+r19 | qqshka | 2007-06-25 02:11:00 +0200 (Mon, 25 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/forward.c
+   M /eztv/trunk/forward_pending.c
+   M /eztv/trunk/httpsv_generate.c
+   M /eztv/trunk/parse.c
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/source.c
+
+cleaning/fixing
+------------------------------------------------------------------------
+r18 | qqshka | 2007-06-24 06:54:40 +0200 (Sun, 24 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/source.c
+
+
+------------------------------------------------------------------------
+r17 | qqshka | 2007-06-24 02:57:43 +0200 (Sun, 24 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/forward.c
+   M /eztv/trunk/forward_pending.c
+
+cosmetic
+------------------------------------------------------------------------
+r16 | qqshka | 2007-06-23 21:33:51 +0200 (Sat, 23 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/forward.c
+
+cosmetic changes
+------------------------------------------------------------------------
+r15 | qqshka | 2007-06-18 17:58:37 +0200 (Mon, 18 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/httpsv.c
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/source.c
+   M /eztv/trunk/sys.c
+
+Our project must use Q_vsnprintf instead if vsnprintf now.
+------------------------------------------------------------------------
+r14 | qqshka | 2007-06-17 02:35:32 +0200 (Sun, 17 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/!fixme.txt
+
+test3
+------------------------------------------------------------------------
+r13 | qqshka | 2007-06-17 02:29:22 +0200 (Sun, 17 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/!fixme.txt
+
+still working?
+------------------------------------------------------------------------
+r12 | qqshka | 2007-06-17 01:41:58 +0200 (Sun, 17 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/!fixme.txt
+
+cia test
+------------------------------------------------------------------------
+r11 | disconn3ct | 2007-06-17 01:06:13 +0200 (Sun, 17 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/dotnet2005/eztvprox.vcproj
+   M /eztv/trunk/qtv.h
+
+add stdlib.h to windows includes && turn off extra warnings for MSVC
+------------------------------------------------------------------------
+r10 | disconn3ct | 2007-06-17 00:58:52 +0200 (Sun, 17 Jun 2007) | 4 lines
+Changed paths:
+   M /eztv/trunk/dotnet2005/eztvprox.vcproj
+   M /eztv/trunk/qtv.h
+   M /eztv/trunk/sys.c
+
+1) Add WIN32_LEAN_AND_MEAN and _CRT_DISABLE_PERFCRIT_LOCKS to preprocessor definitions
+2) Chane runtime library to multi threaded DLL
+3) minor fixes to project
+4) add some #ifdefs around vsnprintf
+------------------------------------------------------------------------
+r9 | qqshka | 2007-06-17 00:39:14 +0200 (Sun, 17 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/dotnet2005
+
+
+------------------------------------------------------------------------
+r8 | qqshka | 2007-06-17 00:35:56 +0200 (Sun, 17 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/dotnet2005
+
+
+------------------------------------------------------------------------
+r7 | qqshka | 2007-06-17 00:33:34 +0200 (Sun, 17 Jun 2007) | 1 line
+Changed paths:
+   M /eztv/trunk/dotnet2005
+
+
+------------------------------------------------------------------------
+r6 | disconn3ct | 2007-06-17 00:18:48 +0200 (Sun, 17 Jun 2007) | 1 line
+Changed paths:
+   A /eztv/trunk/!fixme.txt
+   A /eztv/trunk/Makefile
+   A /eztv/trunk/cmd.c
+   A /eztv/trunk/cmd.h
+   A /eztv/trunk/crc.c
+   A /eztv/trunk/cvar.c
+   A /eztv/trunk/cvar.h
+   A /eztv/trunk/dotnet2005
+   A /eztv/trunk/dotnet2005/eztvprox.sln
+   A /eztv/trunk/dotnet2005/eztvprox.vcproj
+   A /eztv/trunk/forward.c
+   A /eztv/trunk/forward_pending.c
+   A /eztv/trunk/httpsv.c
+   A /eztv/trunk/httpsv_generate.c
+   A /eztv/trunk/info.c
+   A /eztv/trunk/main.c
+   A /eztv/trunk/mdfour.c
+   A /eztv/trunk/msg.c
+   A /eztv/trunk/net_utils.c
+   A /eztv/trunk/parse.c
+   A /eztv/trunk/qconst.h
+   A /eztv/trunk/qtv.h
+   A /eztv/trunk/qw.c
+   A /eztv/trunk/source.c
+   A /eztv/trunk/source_cmds.c
+   A /eztv/trunk/sys.c
+   A /eztv/trunk/token.c
+
+fixing directory structure
+------------------------------------------------------------------------
+r5 | disconn3ct | 2007-06-17 00:18:04 +0200 (Sun, 17 Jun 2007) | 1 line
+Changed paths:
+   D /eztv/trunk/eztv
+
+fixing directory structure
+------------------------------------------------------------------------
+r4 | disconn3ct | 2007-06-17 00:14:42 +0200 (Sun, 17 Jun 2007) | 1 line
+Changed paths:
+   D /branches
+   A /eztv/branches (from /branches:3)
+   A /eztv/tags (from /tags:3)
+   A /eztv/trunk (from /trunk:3)
+   D /tags
+   D /trunk
+
+fixing directory structure
+------------------------------------------------------------------------
+r3 | disconn3ct | 2007-06-17 00:05:57 +0200 (Sun, 17 Jun 2007) | 1 line
+Changed paths:
+   A /eztv
+
+add eztv directory
+------------------------------------------------------------------------
