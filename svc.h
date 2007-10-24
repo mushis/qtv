@@ -1,0 +1,92 @@
+// svc.h
+
+// 1-10
+
+SVC(svc_bad)
+SVC(svc_nop)
+SVC(svc_disconnect)
+SVC(svc_updatestat)				// [qbyte] [qbyte]
+SVC(svc_version_UNUSED)			// [long] server version
+SVC(svc_nqsetview)				// [short] entity number
+SVC(svc_sound)					// <see code>
+SVC(svc_nqtime)					// [float] server time
+SVC(svc_print)					// [qbyte] id [string] null terminated string
+SVC(svc_stufftext)				// [string] stuffed into client's console buffer
+								// the string should be \n terminated
+SVC(svc_setangle)				// [angle3] set the view angle to this absolute value
+
+// 11-20
+
+SVC(svc_serverdata)				// [long] protocol ...
+SVC(svc_lightstyle)				// [qbyte] [string]
+SVC(svc_nqupdatename)			// [qbyte] [string]
+SVC(svc_updatefrags)			// [qbyte] [short]
+SVC(svc_nqclientdata)			// <shortbits + data>
+SVC(svc_stopsound_UNUSED)		// <see code>
+SVC(svc_nqupdatecolors)			// [qbyte] [qbyte] [qbyte]
+SVC(svc_particle)				// [vec3] <variable>
+SVC(svc_damage)
+
+SVC(svc_spawnstatic)
+
+// 21-30
+
+SVC(svc_spawnstatic2_UNUSED)
+SVC(svc_spawnbaseline)
+
+SVC(svc_temp_entity)			// variable
+SVC(svc_setpause)				// [qbyte] on / off
+SVC(svc_nqsignonnum)			// [qbyte]  used for the signon sequence
+
+SVC(svc_centerprint)			// [string] to put in center of the screen
+
+SVC(svc_killedmonster_UNUSED)	// WTF: why unused?
+SVC(svc_foundsecret_UNUSED)		// WTF: why unused?
+
+SVC(svc_spawnstaticsound)		// [coord3] [qbyte] samp [qbyte] vol [qbyte] aten
+
+SVC(svc_intermission)			// [vec3_t] origin [vec3_t] angle
+
+// 31-40
+
+SVC(svc_finale_UNUSED)			// [string] text
+
+SVC(svc_cdtrack)				// [qbyte] track
+SVC(svc_sellscreen_UNUSED)
+
+// used number 34, same as svc_smallkick, so...
+//SVC(svc_cutscene_UNUSED)		//hmm... nq only... added after qw tree splitt?
+
+SVC(svc_smallkick)				// set client punchangle to 2
+SVC(svc_bigkick)				// set client punchangle to 4
+
+SVC(svc_updateping)				// [qbyte] [short]
+SVC(svc_updateentertime)		// [qbyte] [float]
+
+SVC(svc_updatestatlong)			// [qbyte] [long]
+
+SVC(svc_muzzleflash)			// [short] entity
+
+SVC(svc_updateuserinfo)			// [qbyte] slot [long] uid
+								// [string] userinfo
+
+// 41-50
+
+SVC(svc_download)				// [short] size [size bytes]
+SVC(svc_playerinfo)				// variable
+SVC(svc_nails)					// [qbyte] num [48 bits] xyzpy 12 12 12 4 8
+SVC(svc_chokecount)				// [qbyte] packets choked
+SVC(svc_modellist)				// [strings]
+SVC(svc_soundlist)				// [strings]
+SVC(svc_packetentities)			// [...]
+SVC(svc_deltapacketentities)	// [...]
+SVC(svc_maxspeed)				// maxspeed change, for prediction
+SVC(svc_entgravity)				// gravity change, for prediction
+
+// 51-60
+
+SVC(svc_setinfo)				// setinfo on a client
+SVC(svc_serverinfo)				// serverinfo
+SVC(svc_updatepl)				// [qbyte] [qbyte]
+SVC(svc_nails2)					// qwe - [qbyte] num [52 bits] nxyzpy 8 12 12 12 4 8
+
