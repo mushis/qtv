@@ -21,7 +21,7 @@ cvar_t	demo_dir				= {"demo_dir", 	"demos"};
 //==========================================
 // say/say_team vars
 
-cvar_t floodprot = {"floodprot", "1 1 10"};
+cvar_t floodprot = {"floodprot", "4 2 2"};
 
 
 //============================================================================

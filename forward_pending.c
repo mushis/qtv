@@ -5,7 +5,7 @@
 #include "qtv.h"
 
 cvar_t mvdport    		= {"mvdport", PROX_DEFAULT_LISTEN_PORT};
-cvar_t maxproxies		= {"maxproxies", "64"};
+cvar_t maxproxies		= {"maxproxies", "1000"};
 cvar_t allow_http		= {"allow_http", "1"};
 cvar_t pending_livetime = {"pending_livetime", "5"}; // 5 seconds
 

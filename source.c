@@ -56,7 +56,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <signal.h>
 #endif
 
-cvar_t maxsources		= {"maxsources", "32"};
+cvar_t maxsources		= {"maxsources", "100"};
 cvar_t upstream_timeout	= {"upstream_timeout", "60"};
 
 #define BUFFERTIME 10	// secords for artificial delay, so we can buffer things properly.
