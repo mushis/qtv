@@ -2,7 +2,7 @@
 System dependant stuff, live hard.
 Also contain some "misc" functions, have no idea where to put it, u r welcome to sort out it.
 */
-
+ 
 #include "qtv.h"
 
 
