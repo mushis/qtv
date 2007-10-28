@@ -1,0 +1,12 @@
+28.10.2007
+
+- demo_autotrack 1 (follows KTX autotrack info)
+- filter private messages (s-p etc)
+- filter mm2 messages (no more spying :()
+- cmd users displays eztv spectators
+- flood protection.
+- download through EZTV
+- wew http page
+- chat support (a bit delayed atm)
+- follow command (follow one eztv spectator's pov changes)
+- lower CPU% using usleep
