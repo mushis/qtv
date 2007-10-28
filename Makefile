@@ -11,11 +11,11 @@ OBJS = cmd.o crc.o cvar.o forward.o forward_pending.o info.o main.o mdfour.o \
 
 eztv: $(OBJS) qtv.h qconst.h
 	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $@.db -lm
-	$(STRIP) $(STRIPFLAGS) $@.db -o $@
+	$(STRIP) $(STRIPFLAGS) $@.db -o $@.bin
 
 eztv.exe: *.c *.h
 	$(MAKE) eztv CFLAGS=-mno-cygwin LDFLAGS="-lwsock32 -lwinmm"
 	mv eztv eztv.exe
 
 clean:
-	rm -rf eztv eztv.exe eztv.db *.o
+	rm -rf eztv.bin eztv.exe eztv.db *.o
