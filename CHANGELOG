@@ -1,3 +1,8 @@
+29.10.2007
+
+- changed maxproxies/maxsources to maxclients/maxservers
+- changed proxies: and sources: from status command
+
 28.10.2007
 
 - demo_autotrack 1 (follows KTX autotrack info)
@@ -10,4 +15,3 @@
 - chat support (a bit delayed atm)
 - follow command (follow one eztv spectator's pov changes)
 - lower CPU% using usleep
-- changed maxproxies/maxsources to maxclients/maxservers
