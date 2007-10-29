@@ -5,7 +5,7 @@
 #include "qtv.h"
 
 cvar_t mvdport    		= {"mvdport", PROX_DEFAULT_LISTEN_PORT};
-cvar_t maxproxies		= {"maxproxies", "1000"};
+cvar_t maxclients		= {"maxclients", "1000"};
 cvar_t allow_http		= {"allow_http", "1"};
 cvar_t pending_livetime = {"pending_livetime", "5"}; // 5 seconds
 
@@ -312,7 +312,7 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 	if (pend->flushing)
 		return false;
 
-	if (cluster->numproxies >= maxproxies.integer)
+	if (cluster->numproxies >= maxclients.integer)
 	{
 		Net_ProxyPrintf(pend, QTVSVHEADER
 							  "TERROR: This QTV has reached it's connection limit\n\n");
@@ -454,7 +454,7 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv)
 		return;
 	}
 
-	if (cluster->numproxies >= maxproxies.integer)
+	if (cluster->numproxies >= maxclients.integer)
 	{
 		// FIXME: WTF is going on here?
 		// I think recepient will die after recive this "Proxy is full." because of broken parse process
@@ -612,7 +612,7 @@ void Prox_FixName(sv_t *qtv, oproxy_t *prox)
 void Pending_Init(void)
 {
 	Cvar_Register (&mvdport);
-	Cvar_Register (&maxproxies);
+	Cvar_Register (&maxclients);
 	Cvar_Register (&allow_http);
 	Cvar_Register (&pending_livetime);
 }

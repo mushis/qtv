@@ -56,7 +56,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <signal.h>
 #endif
 
-cvar_t maxsources		= {"maxsources", "100"};
+cvar_t maxservers		= {"maxservers", "100"};
 cvar_t upstream_timeout	= {"upstream_timeout", "60"};
 
 #define BUFFERTIME 10	// secords for artificial delay, so we can buffer things properly.
@@ -489,7 +489,7 @@ sv_t *QTV_NewServerConnection(cluster_t *cluster, char *server, char *password, 
 //		if (cluster->nouserconnects)
 //			return NULL;
 
-	if (cluster->NumServers >= maxsources.integer)
+	if (cluster->NumServers >= maxservers.integer)
 		return NULL; // too much sources opened
 
 	qtv = Sys_malloc(sizeof(sv_t)); // well, Sys_malloc may terminate application if not enought memory, is that good or bad?

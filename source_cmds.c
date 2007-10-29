@@ -113,8 +113,8 @@ void sourcelist_f(void)
 void status_f(void)
 {
 	Sys_Printf(NULL, "Status:\n");
-	Sys_Printf(NULL, " sources: %4i/%i\n", g_cluster.NumServers, maxsources.integer);
-	Sys_Printf(NULL, " proxies: %4i/%i\n", g_cluster.numproxies, maxproxies.integer);
+	Sys_Printf(NULL, " sources: %4i/%i\n", g_cluster.NumServers, maxservers.integer);
+	Sys_Printf(NULL, " proxies: %4i/%i\n", g_cluster.numproxies, maxclients.integer);
 
 	Sys_Printf(NULL, "Options:\n");
 	Sys_Printf(NULL, "   hostname: %s\n", hostname.string);
@@ -129,7 +129,7 @@ void quit_f(void)
 
 void Source_Init(void)
 {
-	Cvar_Register (&maxsources);
+	Cvar_Register (&maxservers);
 	Cvar_Register (&upstream_timeout);
 
 	Cmd_AddCommand ("qtv", qtv_f);

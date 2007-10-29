@@ -599,7 +599,7 @@ char			*COM_ParseToken (char *data, char *out, int outsize, const char *punctuat
 // source.c
 //
 
-extern cvar_t	maxsources;
+extern cvar_t	maxservers;
 extern cvar_t	upstream_timeout;
 
 
@@ -730,7 +730,7 @@ void			Forward_Init(void);
 //
 
 extern cvar_t	mvdport;
-extern cvar_t	maxproxies;
+extern cvar_t	maxclients;
 extern cvar_t	allow_http;
 extern cvar_t	pending_livetime;
 
