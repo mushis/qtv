@@ -10,3 +10,4 @@
 - chat support (a bit delayed atm)
 - follow command (follow one eztv spectator's pov changes)
 - lower CPU% using usleep
+- changed maxproxies/maxsources to maxclients/maxservers
