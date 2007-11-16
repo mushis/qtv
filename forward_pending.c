@@ -211,6 +211,13 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 					{
 						usableversion = atof(colon);
 
+						// { Well, EZTV is a fork from FTEQTV, at some point I was need change VERSION number,
+						//   probably right solution was add additional version, something like EZTV_VERSION.
+						//   Downgrade FTE client from version 1.1 to 1.0 here, at least that way they able to connect.
+						if (usableversion == 1.1f)
+							usableversion = 1.0f;
+						// }
+
 						switch((int)usableversion)
 						{
 						case 1:

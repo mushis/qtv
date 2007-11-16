@@ -317,10 +317,14 @@ void Net_SendConnectionMVD_NEW(sv_t *qtv, oproxy_t *prox)
 
 void Net_SendConnectionMVD(sv_t *qtv, oproxy_t *prox)
 {
-	if (prox->clversion == 1.0)
+	if (prox->clversion == 1.0f)
+	{
 		Net_SendConnectionMVD_1_0(qtv, prox); // backward compatibility
+	}
 	else
+	{
 		Net_SendConnectionMVD_NEW(qtv, prox); // new way
+	}
 }
 
 oproxy_t *Net_FileProxy(sv_t *qtv, char *filename)
