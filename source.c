@@ -336,8 +336,14 @@ qbool QTV_Connect(sv_t *qtv, char *serverurl)
 	*qtv->serverinfo = '\0';
 
 /* fixme
+
+	{
+		char qtv_version[32];
+		snprintf(qtv_version, sizeof(qtv_version), "%g", QTV_VERSION);
+		Info_SetValueForStarKey(qtv->serverinfo, "*qtv", 	qtv_version,	sizeof(qtv->serverinfo));
+	}
+
 	Info_SetValueForStarKey(qtv->serverinfo, "*version",	"FTEQTV",	sizeof(qtv->serverinfo));
-	Info_SetValueForStarKey(qtv->serverinfo, "*qtv",		VERSION,	sizeof(qtv->serverinfo));
 	Info_SetValueForStarKey(qtv->serverinfo, "hostname",	qtv->cluster->hostname,	sizeof(qtv->serverinfo));
 	Info_SetValueForStarKey(qtv->serverinfo, "maxclients",	"99",	sizeof(qtv->serverinfo));
 	if (!strncmp(qtv->server, "file:", 5))
@@ -813,9 +819,9 @@ qbool QTV_ParseHeader(sv_t *qtv)
 	svversion = atof(qtv->buffer + 6);
 
 	// server sent float version, but we compare only major version number here
-	if ((int)svversion != atoi(VERSION))
+	if ((int)svversion != (int)QTV_VERSION)
 	{
-		Sys_Printf(NULL, "QTV server doesn't support a compatable protocol version, returned %.2f, need %s\n", svversion, VERSION);
+		Sys_Printf(NULL, "QTV server doesn't support a compatable protocol version, returned %.2f, need %.2f\n", svversion, QTV_VERSION);
 		qtv->drop = true;
 		return false;
 	}
@@ -844,6 +850,8 @@ qbool QTV_ParseHeader(sv_t *qtv)
 			colon = "";
 			*value = '\0';
 		}
+
+		Sys_DPrintf(NULL, "qtv sv, got (%s) (%s)\n", start, value);
 
 		//read the notes at the top of this file for which messages to expect
 		if (!strcmp(start, "AUTH"))

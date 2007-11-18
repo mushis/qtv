@@ -75,7 +75,7 @@ static void ParseServerData(sv_t *tv, netmsg_t *m, int to, unsigned int playerma
 	strlcpy(tv->status, "Receiving soundlist", sizeof(tv->status));
 
 	for (prox = tv->proxies; prox; prox = prox->next)
-		if ( prox->clversion > 1.0 ) // new way for proxy with VERSION: > 1.0
+		if (prox->qtv_ezquake_ext & QTV_EZQUAKE_EXT_DOWNLOAD) // we need it for clients with full download support
 			prox->flushing = true;
 }
 
@@ -106,6 +106,9 @@ static void ParseStufftext(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 	}
 	else if (!strncmp(text, "fullserverinfo ", 15))
 	{
+		char qtv_version[32];
+		snprintf(qtv_version, sizeof(qtv_version), "%g", QTV_VERSION);
+
 		// FIXME: clear all this block { ... }
 
 		text[strlen(text)-1] = '\0';
@@ -121,7 +124,7 @@ static void ParseStufftext(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 			fromproxy = false;
 
 		//add on our extra infos
-		Info_SetValueForStarKey(tv->serverinfo, "*qtv", VERSION, sizeof(tv->serverinfo));
+		Info_SetValueForStarKey(tv->serverinfo, "*qtv", qtv_version, sizeof(tv->serverinfo));
 //		Info_SetValueForStarKey(tv->serverinfo, "*z_ext", Z_EXT_STRING, sizeof(tv->serverinfo));
 
 		Info_ValueForKey(tv->serverinfo, "hostname", tv->hostname, sizeof(tv->hostname));

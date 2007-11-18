@@ -10,6 +10,25 @@ cvar_t allow_http		= {"allow_http", "1"};
 cvar_t pending_livetime = {"pending_livetime", "5"}; // 5 seconds
 
 
+// this just can't be done as macro, so I wrote this function
+char *QTV_SV_HEADER(oproxy_t *prox, float qtv_ver)
+{
+	static char header[1024];
+
+	int ext = (prox->qtv_ezquake_ext & QTV_EZQUAKE_EXT_NUM);
+
+	if (ext)
+	{
+		snprintf(header, sizeof(header), "QTVSV %g\n" QTV_EZQUAKE_EXT ": %d\n", qtv_ver, ext);
+	}
+	else
+	{
+		snprintf(header, sizeof(header), "QTVSV %g\n", qtv_ver);
+	}
+
+	return header;
+}
+
 // returns true if the pending proxy should be unlinked
 // truth does not imply that it should be freed/released, just unlinked.
 // FIXME: split me ffs!
@@ -117,13 +136,15 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 			{
 				if (!colon)
 				{
+					Sys_DPrintf(NULL, "qtv cl, got (%s)\n", s);
+
 					if (!strcmp(s, "QTV"))
 					{
 						//just a qtv request
 					}
 					else if (!strcmp(s, "SOURCELIST"))
 					{	//lists sources that are currently playing
-						Net_ProxyPrintf(pend, QTVSVHEADER);
+						Net_ProxyPrintf(pend, "%s", QTV_SV_HEADER(pend, QTV_VERSION));
 
 						if (!cluster->servers)
 						{
@@ -167,8 +188,9 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 						}
 						if (!qtv)
 						{
-							Net_ProxyPrintf(pend, QTVSVHEADER
-												  "PERROR: Multiple streams are currently playing\n\n");
+							Net_ProxyPrintf(pend, "%s"
+												  "PERROR: Multiple streams are currently playing\n\n",
+												  QTV_SV_HEADER(pend, QTV_VERSION));
 							pend->flushing = true;
 						}
 					}
@@ -178,7 +200,7 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 
 						Cluster_BuildAvailableDemoList(cluster);
 
-						Net_ProxyPrintf(pend, QTVSVHEADER);
+						Net_ProxyPrintf(pend, "%s", QTV_SV_HEADER(pend, QTV_VERSION));
 
 						if (!cluster->availdemoscount)
 						{
@@ -207,16 +229,12 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 				else
 				{
 					*colon++ = '\0';
+
+					Sys_DPrintf(NULL, "qtv cl, got (%s) (%s)\n", s, colon);
+
 					if (!strcmp(s, "VERSION"))
 					{
 						usableversion = atof(colon);
-
-						// { Well, EZTV is a fork from FTEQTV, at some point I was need change VERSION number,
-						//   probably right solution was add additional version, something like EZTV_VERSION.
-						//   Downgrade FTE client from version 1.1 to 1.0 here, at least that way they able to connect.
-						if (usableversion == 1.1f)
-							usableversion = 1.0f;
-						// }
 
 						switch((int)usableversion)
 						{
@@ -228,6 +246,11 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 							usableversion = 0;
 							break;
 						}
+					}
+					else if (!strcmp(s, QTV_EZQUAKE_EXT))
+					{
+						// we set this ASAP
+						pend->qtv_ezquake_ext = (atoi(colon) & QTV_EZQUAKE_EXT_NUM);
 					}
 					else if (!strcmp(s, "RAW"))
 					{
@@ -258,8 +281,9 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 						qtv = QTV_NewServerConnection(cluster, buf, "", false, true, true, false);
 						if (!qtv)
 						{
-							Net_ProxyPrintf(pend, QTVSVHEADER
-												  "PERROR: couldn't open demo\n\n");
+							Net_ProxyPrintf(pend, "%s"
+												  "PERROR: couldn't open demo\n\n",
+												  QTV_SV_HEADER(pend, QTV_VERSION));
 							pend->flushing = true;
 						}
 					}
@@ -297,32 +321,36 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 		pend->inbuffersize = 0; // something wrong, just skip all input buffer
 	}
 
-	pend->clversion = usableversion;
-
-	if (!pend->flushing)
-	{
-		if (!usableversion)
-		{
-			Net_ProxyPrintf(pend, QTVSVHEADER
-								  "PERROR: Requested protocol version not supported\n\n");
-			pend->flushing = true;
-		}
-
-		if (!qtv)
-		{
-			Net_ProxyPrintf(pend, QTVSVHEADER
-								  "PERROR: No stream selected\n\n");
-			pend->flushing = true;
-		}
-	}
+	pend->qtv_clversion = usableversion;
 
 	if (pend->flushing)
 		return false;
 
+	if (!usableversion)
+	{
+		Net_ProxyPrintf(pend, "%s"
+							  "PERROR: Requested protocol version not supported\n\n",
+							  QTV_SV_HEADER(pend, QTV_VERSION));
+
+		pend->flushing = true;
+		return false;
+	}
+
+	if (!qtv)
+	{
+		Net_ProxyPrintf(pend, "%s"
+							  "PERROR: No stream selected\n\n",
+							  QTV_SV_HEADER(pend, QTV_VERSION));
+
+		pend->flushing = true;
+		return false;
+	}
+
 	if (cluster->numproxies >= maxclients.integer)
 	{
-		Net_ProxyPrintf(pend, QTVSVHEADER
-							  "TERROR: This QTV has reached it's connection limit\n\n");
+		Net_ProxyPrintf(pend, "%s"
+							  "TERROR: This QTV has reached it's connection limit\n\n",
+							  QTV_SV_HEADER(pend, QTV_VERSION));
 		pend->flushing = true;
 		return false;
 	}
@@ -332,8 +360,8 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 
 	if (!raw)
 	{
-		Net_ProxyPrintf(pend, QTVSVHEADER
-							  "BEGIN: %s\n\n", qtv->server);
+		Net_ProxyPrintf(pend, "%s"
+							  "BEGIN: %s\n\n", QTV_SV_HEADER(pend, QTV_VERSION), qtv->server);
 	}
 
 	Info_Convert(&pend->ctx, userinfo);

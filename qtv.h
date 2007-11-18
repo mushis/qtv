@@ -160,10 +160,22 @@ extern "C" {
 
 //======================================
 
-#define BUILD_DATE				__DATE__ ", " __TIME__
+#define QTV_VERSION			1.0f		// we are support up to this QTV version
 
-#define VERSION					"1.3"	//this will be added to the serverinfo
-#define QTVSVHEADER				"QTVSV " VERSION "\n"
+// { QTV_EZQUAKE_EXT
+
+#define QTV_EZQUAKE_EXT		"QTV_EZQUAKE_EXT"
+
+#define QTV_EZQUAKE_EXT_DOWNLOAD (1<<0)		// well, this is not just download, but also different connection process
+#define QTV_EZQUAKE_EXT_SETINFO  (1<<1)		// does't qtv server/client support setinfo
+
+#define QTV_EZQUAKE_EXT_NUM ( QTV_EZQUAKE_EXT_DOWNLOAD | QTV_EZQUAKE_EXT_SETINFO )
+
+// }
+
+//======================================
+
+#define BUILD_DATE				__DATE__ ", " __TIME__
 
 #define DEFAULT_HOSTNAME			"Unnamed"
 
@@ -351,7 +363,8 @@ typedef struct oproxy_s {
 
 	fp_cmd_t		fp_s; // say flood protect
 
-	float			clversion; // client version, float
+	float			qtv_clversion; // client version, float
+	int				qtv_ezquake_ext; // qtv ezquake extensions
 
 	ctxinfo_t		ctx; // info context, we store here user setting like name and etc
 
@@ -733,6 +746,10 @@ extern cvar_t	mvdport;
 extern cvar_t	maxclients;
 extern cvar_t	allow_http;
 extern cvar_t	pending_livetime;
+
+// this just can't be done as macro, so I wrote this function
+// just generate qtv server header
+char			*QTV_SV_HEADER(oproxy_t *prox, float qtv_ver);
 
 // look for any other proxies wanting to muscle in on the action
 void			SV_ReadPendingProxies(cluster_t *cluster);

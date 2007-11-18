@@ -439,7 +439,8 @@ static void Clcmd_Ptrack_f(sv_t *qtv, oproxy_t *prox)
 		return;
 	}
 
-	prox->pov++;
+	prox->pov++; // and here we increase it
+
 	apply_pov(qtv, prox);
 }
 
@@ -683,7 +684,7 @@ static ucmd_t ucmds[] =
 	{"qtvmodellist",	Clcmd_Modellist_f},
 	{"qtvspawn",		Clcmd_Spawn_f},
 
-// argh, server send it too in mvd demo, FIXME
+// argh, server send it in mvd demo too, FIXME
 
 	{"new",				NULL},
 	{"soundlist",		NULL},

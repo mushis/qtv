@@ -317,13 +317,14 @@ void Net_SendConnectionMVD_NEW(sv_t *qtv, oproxy_t *prox)
 
 void Net_SendConnectionMVD(sv_t *qtv, oproxy_t *prox)
 {
-	if (prox->clversion == 1.0f)
+	if (prox->qtv_ezquake_ext & QTV_EZQUAKE_EXT_DOWNLOAD)
 	{
-		Net_SendConnectionMVD_1_0(qtv, prox); // backward compatibility
+		// for full support of download we need a bit different conntection method
+		Net_SendConnectionMVD_NEW(qtv, prox); // new way
 	}
 	else
 	{
-		Net_SendConnectionMVD_NEW(qtv, prox); // new way
+		Net_SendConnectionMVD_1_0(qtv, prox); // backward compatibility
 	}
 }
 
@@ -339,7 +340,8 @@ oproxy_t *Net_FileProxy(sv_t *qtv, char *filename)
 	//no full proxy check, this is going to be used by proxy admins, who won't want to have to raise the limit to start recording.
 
 	prox = SV_NewProxy((void*)f, false, qtv);
-	prox->clversion = 1.0; // using VERSION: 1 for file proxy
+	prox->qtv_clversion = 1.0; // using VERSION: 1 for file proxy
+	prox->qtv_ezquake_ext = 0; // we does't support any qtv ezquake extensions in such case
 
 	prox->next = qtv->proxies;
 	qtv->proxies = prox;
