@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual C++ Express 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "eztv", "eztvprox.vcproj", "{62669E6C-7E18-4E4D-BA54-DFBE29E7D24E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "qtv", "qtvprox.vcproj", "{62669E6C-7E18-4E4D-BA54-DFBE29E7D24E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

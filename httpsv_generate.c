@@ -27,7 +27,7 @@ void HTTPSV_GenerateCSSFile(cluster_t *cluster, oproxy_t *dest)
 	char buffer[MAX_PROXY_BUFFER] = {0};
 	int  len = sizeof(buffer);
 
-	if (!FS_ReadFile("eztv", "style.css", buffer, &len))
+	if (!FS_ReadFile("qtv", "style.css", buffer, &len))
 	{
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
@@ -510,7 +510,7 @@ void HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest)
 	char buffer[MAX_PROXY_BUFFER] = {0};
 	int  len = sizeof(buffer);
 
-	if (!FS_ReadFile("eztv", "eztvbg01.png", buffer, &len))
+	if (!FS_ReadFile("qtv", "qtvbg01.png", buffer, &len))
 	{
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;

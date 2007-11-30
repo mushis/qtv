@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8,00"
-	Name="eztv"
+	Name="qtv"
 	ProjectGUID="{62669E6C-7E18-4E4D-BA54-DFBE29E7D24E}"
 	>
 	<Platforms>
@@ -37,7 +37,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName="Debug\eztvprox.tlb"
+				TypeLibraryName="Debug\qtvprox.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -147,7 +147,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName="Release\eztvprox.tlb"
+				TypeLibraryName="Release\qtvprox.tlb"
 				HeaderFileName=""
 			/>
 			<Tool

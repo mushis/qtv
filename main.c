@@ -201,7 +201,7 @@ int main(int argc, char **argv)
 
 	cluster_initialized = true;
 
-	Sys_Printf(&g_cluster, "EZTV Build %i, build date: %s.\n", g_cluster.buildnumber, BUILD_DATE);
+	Sys_Printf(&g_cluster, "QTV Build %i, build date: %s.\n", g_cluster.buildnumber, BUILD_DATE);
 
 	// process command line arguments
 	Cmd_StuffCmds (argc, argv);

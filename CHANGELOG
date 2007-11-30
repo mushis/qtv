@@ -9,10 +9,10 @@
 - demo_autotrack 1 (follows KTX autotrack info)
 - filter private messages (s-p etc)
 - filter mm2 messages (no more spying :()
-- cmd users displays eztv spectators
+- cmd users displays qtv spectators
 - flood protection.
-- download through EZTV
+- download through QTV
 - wew http page
 - chat support (a bit delayed atm)
-- follow command (follow one eztv spectator's pov changes)
+- follow command (follow one qtv spectator's pov changes)
 - lower CPU% using usleep

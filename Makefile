@@ -9,13 +9,13 @@ OBJS = cmd.o crc.o cvar.o forward.o forward_pending.o info.o main.o mdfour.o \
 	msg.o net_utils.o parse.o qw.o source.o source_cmds.o sys.o build.o token.o httpsv.o httpsv_generate.o \
 	cl_cmds.o fs.o
 
-eztv: $(OBJS) qtv.h qconst.h
+qtv: $(OBJS) qtv.h qconst.h
 	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $@.db -lm
 	$(STRIP) $(STRIPFLAGS) $@.db -o $@.bin
 
-eztv.exe: *.c *.h
-	$(MAKE) eztv CFLAGS=-mno-cygwin LDFLAGS="-lwsock32 -lwinmm"
-	mv eztv eztv.exe
+qtv.exe: *.c *.h
+	$(MAKE) qtv CFLAGS=-mno-cygwin LDFLAGS="-lwsock32 -lwinmm"
+	mv qtv qtv.exe
 
 clean:
-	rm -rf eztv.bin eztv.exe eztv.db *.o
+	rm -rf qtv.bin qtv.exe qtv.db *.o

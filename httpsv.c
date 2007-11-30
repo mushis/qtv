@@ -142,7 +142,7 @@ void HTTPSV_SendHTMLFooter(cluster_t *cluster, oproxy_t *dest)
 	char *s;
 	char buffer[2048];
 
-	sprintf(buffer, "<p id='version'>QuakeTV Version: <strong><a href='http://ezquake.sourceforge.net/eztv/'>EZTV</a> %i</strong></p>", cluster->buildnumber);
+	sprintf(buffer, "<p id='version'>Quake TV version: <strong><a href='http://qtv.qw-dev.net'>QTV</a> %i</strong></p>", cluster->buildnumber);
 	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
 	s = "</body>\n"
@@ -322,7 +322,7 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	else if (!strncmp(pend->inbuffer+4, "/about", 6))
 	{	//redirect them to our funky website
 		s = "HTTP/1.0 302 Found" CRLF
-			"Location: http://ezquake.sf.net/eztv/" CRLF
+			"Location: http://qtv.qw-dev.net" CRLF
 			CRLF;
 		Net_ProxySend(cluster, pend, s, strlen(s));
 	}
@@ -345,7 +345,7 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	{
 		HTTPSV_GenerateCSSFile(cluster, pend);
 	}
-	else if (!strncmp(pend->inbuffer+4, "/eztvbg01.png", sizeof("/eztvbg01.png")-1))
+	else if (!strncmp(pend->inbuffer+4, "/qtvbg01.png", sizeof("/qtvbg01.png")-1))
 	{
 		HTTPSV_GenerateHTMLBackGroundImg(cluster,pend);
 	}
