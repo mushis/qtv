@@ -126,11 +126,11 @@ void HTTPSV_GenerateTableForTeam(cluster_t *cluster, oproxy_t *dest, scoreboard 
 		if (p++ % 2) HTMLPRINT("<tr class='scodd'>"); else HTMLPRINT("<tr>");
 	
 		// frags
-		snprintf(buffer, sizeof(buffer), "<td>%i</td>", b->players[i].frags);
+		snprintf(buffer, sizeof(buffer), "<td class='frags'>%i</td>", b->players[i].frags);
 		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
 		// nick
-		HTMLPRINT("<td>");
+		HTMLPRINT("<td class='nick'>");
 		HTMLprintf(buffer, sizeof(buffer), "%s", b->players[i].name);
 		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 		HTMLPRINT("</td>");
@@ -148,10 +148,13 @@ void HTTPSV_GenerateScoreBoard(cluster_t *cluster, oproxy_t *dest, scoreboard *b
 	if (teams) {
 		HTMLPRINT("<table class='overallscores'><tr class='teaminfo'>");
 		for (i = 0; i < b->teams_count; i++) {
-			HTMLPRINT("<td><span>Team: </span>");
-			HTMLprintf(buffer, sizeof(buffer), "%s [%i]", b->teams[i].name, b->teams[i].frags);
+			HTMLPRINT("<td><span>Team: </span><span class='teamname'>");
+			HTMLprintf(buffer, sizeof(buffer), "%s", b->teams[i].name);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-			HTMLPRINT("</td>");
+      HTMLPRINT("</span><span class='frags'>");
+      HTMLprintf(buffer, sizeof(buffer), "%i", b->teams[i].name, b->teams[i].frags);
+      Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+			HTMLPRINT("]</span></td>");
 		}
 		HTMLPRINT("</tr><tr>");
 	}

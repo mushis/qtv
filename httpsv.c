@@ -123,12 +123,14 @@ void HTTPSV_SendHTMLHeader(cluster_t *cluster, oproxy_t *dest, char *title)
 	char *s;
 	char buffer[2048];
 
-	s =	"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n"
-		"<html>\n"
+	s =	
+    "<?xml version=\"1.0\"?>\n"
+    "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>\n"
+		"<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>\n"
 		"<head>\n"
-		"  <meta http-equiv=\"content-type\" content=\"text/html; charset=iso-8859-1\">\n"
+		"  <meta http-equiv=\"content-type\" content=\"text/html; charset=iso-8859-1\" />\n"
 		"  <title>%s</title>\n"
-		"  <link rel=\"StyleSheet\" href=\"/style.css\" type=\"text/css\">\n"
+		"  <link rel=\"StyleSheet\" href=\"/style.css\" type=\"text/css\" />\n"
 		"</head>\n"
 		"<body><div id=\"navigation\"><div><p><a href=\"/nowplaying/\">Live</a> | <a href=\"/demos/\">Demos</a> | <a href=\"/admin/\">Admin</a></p></div></div>";
 
