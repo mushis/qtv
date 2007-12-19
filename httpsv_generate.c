@@ -6,6 +6,8 @@
 #include "stdlib.h"
 
 #define CRLF "\r\n"
+#define HTMLFILESPATH "qtv"
+#define NOTFOUNDLEVELSHOT "levelshots/_notfound.jpg"
 #define HTMLPRINT(str) Net_ProxySend(cluster, dest, str "\n", strlen(str "\n"))
 
 qbool IsPlayer(const playerinfo_t *p)
@@ -27,7 +29,7 @@ void HTTPSV_GenerateCSSFile(cluster_t *cluster, oproxy_t *dest)
 	char buffer[MAX_PROXY_BUFFER] = {0};
 	int  len = sizeof(buffer);
 
-	if (!FS_ReadFile("qtv", "style.css", buffer, &len))
+	if (!FS_ReadFile(HTMLFILESPATH, "style.css", buffer, &len))
 	{
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
@@ -270,7 +272,7 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 			HTMLPRINT("<tr class='notempty nebottom'>");
 			
 			// map preview
-			snprintf(buffer, sizeof(buffer), "<td class='mappic'><img src='http://www.quakeservers.net/images/maps/quakeworld/%s.jpg' width='144' height='108' alt='%s' title='%s' /></td>", mapname, mapname, mapname);
+			snprintf(buffer, sizeof(buffer), "<td class='mappic'><img src='/levelshots/%s.jpg' width='144' height='108' alt='%s' title='%s' /></td>", mapname, mapname, mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
 			// scores table
@@ -513,7 +515,7 @@ void HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest)
 	char buffer[MAX_PROXY_BUFFER] = {0};
 	int  len = sizeof(buffer);
 
-	if (!FS_ReadFile("qtv", "qtvbg01.png", buffer, &len))
+	if (!FS_ReadFile(HTMLFILESPATH, "qtvbg01.png", buffer, &len))
 	{
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
@@ -527,4 +529,61 @@ void HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest)
 
 	// sending a lot of data here!
 	Net_ProxySend(cluster, dest, buffer, len);
+}
+
+static qbool LevelshotFilenameValid(const char *name)
+{
+	size_t i, len = strlen(name);
+	for (i = 0; i < len; i++) {
+		if (!isalnum(name[i]) && !(name[i] == '.')) return false;
+	}
+	return true;
+}
+
+static qbool LevelshotPathName(char *buf, size_t bufsize, const char *name) 
+{
+	char pathname[MAX_QPATH];
+	char *space = strchr(name,' ');
+	size_t spacepos;
+
+	if (!space) return FALSE;
+	spacepos = space-name+1;
+	strlcpy(pathname,name,(spacepos < MAX_QPATH) ? spacepos : MAX_QPATH);
+	
+	if (!LevelshotFilenameValid(pathname)) return FALSE;
+
+	snprintf(buf,bufsize,"levelshots/%s",pathname);
+	
+	return TRUE;
+}
+
+void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, const char *name)
+{
+	FILE *f;
+	char pathname[MAX_QPATH];
+	int s;
+	char readbuf[512];
+
+	if (!LevelshotPathName(pathname,MAX_QPATH,name)) {
+		HTTPSV_GenerateNotFoundError(cluster,dest);
+		return;
+	}
+	
+	f = FS_OpenFile(HTMLFILESPATH, pathname, &s);
+	if (!f) {
+		f = FS_OpenFile(HTMLFILESPATH, NOTFOUNDLEVELSHOT, &s);
+		if (!f) {
+			HTTPSV_GenerateNotFoundError(cluster,dest);
+			return;
+		}
+	}
+
+	HTTPSV_SendHTTPHeader(cluster, dest, "200", "image/jpeg", false);
+
+	while(!feof(f)) {
+		int len = (int) fread(readbuf,1,512,f);
+		Net_ProxySend(cluster,dest,readbuf,len);
+	}
+
+	fclose(f);
 }

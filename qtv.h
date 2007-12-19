@@ -135,7 +135,7 @@ int		Q_vsnprintf(char *buffer, size_t count, const char *format, va_list argptr)
 
 
 #if defined(__linux__) || defined(_WIN32) || defined(__CYGWIN__)
-size_t	strlcpy (char *dst, char *src, size_t siz);
+size_t	strlcpy (char *dst, const char *src, size_t siz);
 size_t	strlcat (char *dst, char *src, size_t siz);
 #endif
 
@@ -807,6 +807,7 @@ void			HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamty
 void			HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char *postbody);
 void			HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest);
 void			HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest);
+void			HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, const char *name);
 
 
 //

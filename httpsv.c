@@ -351,6 +351,10 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	{
 		HTTPSV_GenerateHTMLBackGroundImg(cluster,pend);
 	}
+	else if (!strncmp(pend->inbuffer+4, "/levelshots/", sizeof("/levelshots/")-1))
+	{
+		HTTPSV_GenerateLevelshot(cluster,pend,pend->inbuffer+4+sizeof("/levelshots/")-1);
+	}
 	else
 	{
 		HTTPSV_SendHTTPHeader(cluster, pend, "404", "text/html", true);

@@ -43,7 +43,7 @@ int Q_vsnprintf(char *buffer, size_t count, const char *format, va_list argptr)
  *
  *  // VVD
  */
-size_t strlcpy(char *dst, char *src, size_t siz)
+size_t strlcpy(char *dst, const char *src, size_t siz)
 {
 	register char *d = dst;
 	register const char *s = src;
