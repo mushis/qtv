@@ -3,7 +3,8 @@
 
 #include "qtv.h"
 
-#if 1
+
+#if 0 
 
 //returns SVN revision number
 int Sys_Build_Number( void )

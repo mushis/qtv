@@ -144,7 +144,7 @@ void HTTPSV_SendHTMLFooter(cluster_t *cluster, oproxy_t *dest)
 	char *s;
 	char buffer[2048];
 
-	sprintf(buffer, "<p id='version'>Quake TV version: <strong><a href='http://qtv.qw-dev.net'>QTV</a> %i</strong></p>", cluster->buildnumber);
+	sprintf(buffer, "<p id='version'><strong><a href='http://qtv.qw-dev.net'>QTV</a> %s, build %i</strong></p>", PROXY_VERSION, cluster->buildnumber);
 	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
 	s = "</body>\n"
