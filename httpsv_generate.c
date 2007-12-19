@@ -546,15 +546,15 @@ static qbool LevelshotPathName(char *buf, size_t bufsize, const char *name)
 	char *space = strchr(name,' ');
 	size_t spacepos;
 
-	if (!space) return FALSE;
+	if (!space) return false;
 	spacepos = space-name+1;
 	strlcpy(pathname,name,(spacepos < MAX_QPATH) ? spacepos : MAX_QPATH);
 	
-	if (!LevelshotFilenameValid(pathname)) return FALSE;
+	if (!LevelshotFilenameValid(pathname)) return false;
 
 	snprintf(buf,bufsize,"levelshots/%s",pathname);
 	
-	return TRUE;
+	return true;
 }
 
 void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, const char *name)
