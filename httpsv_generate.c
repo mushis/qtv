@@ -282,6 +282,9 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 		}
 	}
 	HTMLPRINT("</table>");
+	snprintf(buffer,sizeof(buffer), "<p class='observers'>Observers: <span>%u</span></p>", cluster->numproxies);
+	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+
 	if (!cluster->servers)
 	{
 		s = "No streams are currently being played<br/>";
