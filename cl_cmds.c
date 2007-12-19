@@ -652,6 +652,21 @@ static void Clcmd_SetInfo_f (sv_t *qtv, oproxy_t *prox)
 
 //============================================================================
 
+unsigned int Clcmd_UsersCount(const sv_t *qtv)
+{
+	unsigned int c = 0;
+	const oproxy_t *tmp;
+
+	for (tmp = qtv->proxies; tmp; tmp = tmp->next)
+	{
+		if (tmp->drop)
+			continue;
+		c++;
+	}	
+	
+	return c;
+}
+
 char cl_cmd[MAX_PROXY_INBUFFER]; // global so it does't allocated on stack, this save some CPU I think
 
 

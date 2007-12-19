@@ -238,7 +238,7 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 		// 3rd cell: map name
 		if (streams->qstate < qs_active)
 		{
-			HTMLPRINT("</td><td class='mn'>NOT CONNECTED</td>");
+			HTMLPRINT("<td class='mn'>NOT CONNECTED</td>");
 		}
 		else if (!strcmp(streams->gamedir, "qw"))
 		{
@@ -278,12 +278,15 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 			// scores table
 			HTMLPRINT("<td class='svstatus' colspan='2'>");			
 			HTTPSV_GenerateScoreBoard(cluster, dest, &sboard, teamplay);
+
+			// number of observers
+			snprintf(buffer,sizeof(buffer), "<p class='observers'>Observers: <span>%u</span></p>", Clcmd_UsersCount(streams));
+			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+
 			HTMLPRINT("</td></tr>");
 		}
 	}
 	HTMLPRINT("</table>");
-	snprintf(buffer,sizeof(buffer), "<p class='observers'>Observers: <span>%u</span></p>", cluster->numproxies);
-	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
 	if (!cluster->servers)
 	{

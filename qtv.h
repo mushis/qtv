@@ -821,6 +821,7 @@ void			FixSayFloodProtect(void);
 
 void			Proxy_ReadProxies(sv_t *qtv);
 void			Cl_Cmds_Init(void);
+unsigned int Clcmd_UsersCount(const sv_t *qtv);
 
 //
 // fs.c
