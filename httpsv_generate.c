@@ -153,9 +153,9 @@ void HTTPSV_GenerateScoreBoard(cluster_t *cluster, oproxy_t *dest, scoreboard *b
 			HTMLPRINT("<td><span>Team: </span><span class='teamname'>");
 			HTMLprintf(buffer, sizeof(buffer), "%s", b->teams[i].name);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-      HTMLPRINT("</span><span class='frags'>");
-      HTMLprintf(buffer, sizeof(buffer), "%i", b->teams[i].name, b->teams[i].frags);
-      Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+		        HTMLPRINT("</span><span class='frags'>");
+		        HTMLprintf(buffer, sizeof(buffer), "%i", b->teams[i].frags);
+		        Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 			HTMLPRINT("]</span></td>");
 		}
 		HTMLPRINT("</tr><tr>");
@@ -243,9 +243,9 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 		else if (!strcmp(streams->gamedir, "qw"))
 		{
 			HTMLPRINT("<td class='mn'>");
-			HTMLprintf(buffer, sizeof(buffer), "%s", mapname);
+			HTMLprintf(buffer, sizeof(buffer), "filename: %s.bsp", mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-			Net_ProxySend(cluster, dest, " &ldquo;<span>", sizeof(" &ldquo;<span>")-1);
+			Net_ProxySend(cluster, dest, "<br />&ldquo;<span>", sizeof("<br />&ldquo;<span>")-1);
 			HTMLprintf(buffer, sizeof(buffer), "%s", streams->mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));			
 			HTMLPRINT("</span>&rdquo;</td>");
