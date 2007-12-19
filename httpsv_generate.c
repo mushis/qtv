@@ -535,7 +535,7 @@ static qbool LevelshotFilenameValid(const char *name)
 {
 	size_t i, len = strlen(name);
 	for (i = 0; i < len; i++) {
-		if (!isalnum(name[i]) && !(name[i] == '.')) return false;
+		if (!isalnum(name[i]) && (name[i] != '.') && (name[i] != '-')) return false;
 	}
 	return true;
 }
