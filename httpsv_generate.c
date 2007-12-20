@@ -153,10 +153,10 @@ void HTTPSV_GenerateScoreBoard(cluster_t *cluster, oproxy_t *dest, scoreboard *b
 			HTMLPRINT("<td><span>Team: </span><span class='teamname'>");
 			HTMLprintf(buffer, sizeof(buffer), "%s", b->teams[i].name);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-		        HTMLPRINT("</span><span class='frags'>[");
+		        HTMLPRINT(" [</span><span class='frags'>");
 		        HTMLprintf(buffer, sizeof(buffer), "%i", b->teams[i].frags);
 		        Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-			HTMLPRINT("]</span></td>");
+			HTMLPRINT("</span>]</td>");
 		}
 		HTMLPRINT("</tr><tr>");
 	}
