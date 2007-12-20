@@ -247,8 +247,9 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 			HTMLprintf(buffer, sizeof(buffer), "%s", streams->mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));			
 			HTMLPRINT("</span>");
-			HTMLprintf(buffer, sizeof(buffer), " (%s)</td>", mapname);
+			HTMLprintf(buffer, sizeof(buffer), " (%s)", mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+			HTMLPRINT("</td>");
 		}
 		else
 		{
@@ -259,8 +260,9 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 			HTMLPRINT("</span>");
 			HTMLprintf(buffer, sizeof(buffer), "(%s: ", streams->gamedir);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-			HTMLprintf(buffer, sizeof(buffer), "%s)</td>", mapname);
+			HTMLprintf(buffer, sizeof(buffer), "%s)", mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+			HTMLPRINT("</td>");
 		}
 
 		HTMLPRINT("</tr>");
