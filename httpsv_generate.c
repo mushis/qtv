@@ -542,8 +542,14 @@ void HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest)
 static qbool LevelshotFilenameValid(const char *name)
 {
 	size_t i, len = strlen(name);
-	for (i = 0; i < len; i++) {
-		if (!isalnum(name[i]) && (name[i] != '.') && (name[i] != '-')) return false;
+
+	for (i = 0; i < len; i++)
+	{
+		if (name[i] == '.' || name[i] == '-')
+			continue; // valid chars
+
+		if (!isalnum(name[i]))
+			return false; // non alpha is invalid
 	}
 	return true;
 }
@@ -554,11 +560,14 @@ static qbool LevelshotPathName(char *buf, size_t bufsize, const char *name)
 	char *space = strchr(name,' ');
 	size_t spacepos;
 
-	if (!space) return false;
+	if (!space)
+		return false;
+
 	spacepos = space-name+1;
 	strlcpy(pathname,name,(spacepos < MAX_QPATH) ? spacepos : MAX_QPATH);
 	
-	if (!LevelshotFilenameValid(pathname)) return false;
+	if (!LevelshotFilenameValid(pathname))
+		return false;
 
 	snprintf(buf,bufsize,"levelshots/%s",pathname);
 	
