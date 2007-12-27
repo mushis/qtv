@@ -269,6 +269,10 @@ qbool Net_ConnectToTCPServer(sv_t *qtv, char *ip)
 
 qbool OpenDemoFile(sv_t *qtv, char *demo)
 {
+	char fullpath[1024];
+
+	snprintf(fullpath, sizeof(fullpath), "%s/%s", demo_dir.string, demo);
+
 	if (qtv->src.type != SRC_DEMO) {
 		Sys_Printf(NULL, "Source set to wrong type %d, need %d = SRC_DEMO\n", qtv->src.type, SRC_DEMO);
 		return false;
@@ -280,13 +284,13 @@ qbool OpenDemoFile(sv_t *qtv, char *demo)
 		qtv->src.type = SRC_DEMO; // need SRC_DEMO type
 	}
 
-	if(stricmp(".mvd", Sys_FileExtension(demo))) // .mvd demos only
+	if(stricmp(".mvd", Sys_FileExtension(fullpath))) // .mvd demos only
 		return false;
 
-	if (!Sys_SafePath(demo)) // absolute paths are prohibited
+	if (!Sys_SafePath(fullpath)) // absolute paths are prohibited
 		return false;
 
-	if ((qtv->src.f = fopen(demo, "rb")))
+	if ((qtv->src.f = fopen(fullpath, "rb")))
 	{
 		qtv->src.f_size = Sys_FileLength(qtv->src.f);
 

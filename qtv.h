@@ -819,6 +819,7 @@ void			HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, const char *
 //
 
 extern cvar_t	floodprot;
+extern cvar_t	demo_dir;
 
 void			FixSayFloodProtect(void);
 

@@ -23,6 +23,13 @@ FILE *FS_OpenFile(char *gamedir, char *filename, int *size)
 		}
 	}
 
+	// last resort, open file as is
+	// well, need think about how it good from security point of view...
+	if (!f)
+	{
+		f = fopen(filename, "rb");
+	}
+
 	if (f)
 	{
 		fseek(f, 0, SEEK_END);

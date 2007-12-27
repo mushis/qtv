@@ -358,6 +358,7 @@ static void Clcmd_Download_f(sv_t *qtv, oproxy_t *prox)
 {
 	char	*name, n[1024], *p;
 	qbool	allow_dl = false;
+	qbool	demo_requested = false;	
 //	qbool	file_from_pak; // ZOID did file come from pak?
 
 	char 	buffer[6];
@@ -375,6 +376,8 @@ static void Clcmd_Download_f(sv_t *qtv, oproxy_t *prox)
 
 	if (!strncmp(name, "demos/", sizeof("demos/")-1) && demo_dir.string[0])
 	{
+		demo_requested = true; // well, we change demos/ prefix to something different,
+							   // so this is a hint for check below, this was a demo request
 		snprintf(n, sizeof(n), "%s/%s", demo_dir.string, name + sizeof("demos/")-1);
 		name = n;
 	}
@@ -393,7 +396,7 @@ static void Clcmd_Download_f(sv_t *qtv, oproxy_t *prox)
 		allow_dl = allow_download_sounds.integer;
 	else if (!strncmp(name, "maps/",  sizeof("maps/") -1))
 		allow_dl = allow_download_maps.integer;
-	else if (!strncmp(name, "demos/", sizeof("demos/")-1))
+	else if (demo_requested || !strncmp(name, "demos/", sizeof("demos/")-1))
 		allow_dl = allow_download_demos.integer;
 	else
 		allow_dl = allow_download_other.integer;

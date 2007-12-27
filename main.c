@@ -5,6 +5,11 @@ Contains the control routines
 #include "qtv.h"
 #include <signal.h>
 
+#ifndef _WIN32
+#include <sys/stat.h>
+#include <dirent.h>
+#endif
+
 
 cvar_t developer = {"developer", ""};
 cvar_t shownet   = {"shownet", ""};
@@ -39,7 +44,11 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 	{
 		WIN32_FIND_DATA ffd;
 		HANDLE h;
-		h = FindFirstFile("*.mvd", &ffd);
+		char path[256];
+
+		snprintf(path, sizeof(path), "%s/*.mvd", demo_dir.string);
+
+		h = FindFirstFile(path, &ffd);
 		if (h != INVALID_HANDLE_VALUE)
 		{
 			do
@@ -57,7 +66,45 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 		}
 	}
 #else
-// FIXME: yeah
+	{
+		DIR *dir;
+		struct dirent *ent;
+		struct stat sb;
+		char fullname[512];
+
+		dir = opendir(demo_dir.string);	//yeek!
+		if (dir)	
+		{
+			for(;;)
+			{
+				if (cluster->availdemoscount == sizeof(cluster->availdemos)/sizeof(cluster->availdemos[0]))
+					break;
+
+				ent = readdir(dir);
+				if (!ent)
+					break;
+				if (*ent->d_name == '.')
+					continue;	//ignore 'hidden' files
+
+				if(stricmp(".mvd", Sys_FileExtension(ent->d_name)))
+					continue; // ignore non *.mvd
+
+				snprintf(fullname, sizeof(fullname), "%s/%s", demo_dir.string, ent->d_name);
+				if (stat(fullname, &sb))
+					continue;	//some kind of error
+				strlcpy(cluster->availdemos[cluster->availdemoscount].name, ent->d_name, sizeof(cluster->availdemos[0].name));
+				cluster->availdemos[cluster->availdemoscount].size = sb.st_size;
+				cluster->availdemos[cluster->availdemoscount].time = sb.st_mtime;
+				cluster->availdemoscount++;
+			}
+
+			closedir(dir);
+		}
+		else
+		{
+			Sys_Printf(cluster, "Couldn't open dir for demo listings\n");
+		}
+	}
 #endif
 
 	qsort(cluster->availdemos, cluster->availdemoscount, sizeof(cluster->availdemos[0]), SortFilesByDate);
