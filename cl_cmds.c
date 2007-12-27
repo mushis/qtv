@@ -152,6 +152,95 @@ void Clcmd_Users_f(sv_t *qtv, oproxy_t *prox)
 	Sys_Printf(NULL, "%i total users\n", c);
 }
 
+// { extension which allow have user list on client side
+
+// generate userlist message about "prox" and put in "msg"
+static void msg_qtvuserlist(netmsg_t *msg, oproxy_t *prox, qtvuserlist_t action)
+{
+	char  str[512];
+
+	switch ( action )
+	{
+		case QUL_ADD:
+		case QUL_CHANGE:
+			snprintf(str, sizeof(str), "//qul %d %d \"%s\"\n", action, prox->id, Info_Get(&prox->ctx, "name"));
+
+		break;
+
+		case QUL_DEL:
+			snprintf(str, sizeof(str), "//qul %d %d\n", action, prox->id);
+
+		break;
+
+		default:
+			Sys_Printf(NULL, "msg_qtvuserlist: proxy #%d unknown action %d\n", prox->id, action);
+
+		return;		
+	}
+
+	WriteByte(msg, svc_stufftext);
+	WriteString(msg, str);
+}
+
+// send userlist message about "prox" to all proxies
+void Prox_UpdateProxiesUserList(sv_t *qtv, oproxy_t *prox, qtvuserlist_t action)
+{
+	oproxy_t *tmp;
+	char buffer[1024];
+	netmsg_t msg;
+
+	InitNetMsg(&msg, buffer, sizeof(buffer));
+
+	msg_qtvuserlist(&msg, prox, action);
+
+	if (!msg.cursize)
+		return;
+
+	for (tmp = qtv->proxies; tmp; tmp = tmp->next)
+	{
+		if (tmp->drop)
+			continue;
+
+		if (tmp->qtv_ezquake_ext & QTV_EZQUAKE_EXT_QTVUSERLIST)
+			Prox_SendMessage(&g_cluster, tmp, msg.data, msg.cursize, dem_read, (unsigned)-1);        
+	}
+}
+
+// send userlist to this "prox", do it once, so we do not send it on each level change
+void Prox_SendInitialUserList(sv_t *qtv, oproxy_t *prox)
+{
+	oproxy_t *tmp;
+	char buffer[1024];
+	netmsg_t msg;
+
+	// we must alredy have list
+	if (prox->connected_at_least_once)
+		return;
+
+	// we do not support this extension
+	if (!(prox->qtv_ezquake_ext & QTV_EZQUAKE_EXT_QTVUSERLIST))
+		return;
+
+	InitNetMsg(&msg, buffer, sizeof(buffer));
+
+	for (tmp = qtv->proxies; tmp; tmp = tmp->next)
+	{
+		if (tmp->drop)
+			continue;
+
+		msg.cursize = 0;
+
+		msg_qtvuserlist(&msg, tmp, QUL_ADD);
+
+		if (!msg.cursize)
+			continue;
+
+		Prox_SendMessage(&g_cluster, prox, msg.data, msg.cursize, dem_read, (unsigned)-1);
+	}	
+}
+
+// }
+
 
 //============================================================================
 // download
@@ -612,7 +701,10 @@ static void Clcmd_Spawn_f(sv_t *qtv, oproxy_t *prox)
 		prox->drop = true;	//this is unfortunate...
 	}
 	else
+	{
+		prox->connected_at_least_once = true;
 		Net_TryFlushProxyBuffer(&g_cluster, prox);
+	}
 }
 //============================================================================
 
@@ -645,7 +737,11 @@ static void Clcmd_SetInfo_f (sv_t *qtv, oproxy_t *prox)
 
 	// process any changed values
 	if (!strcmp(Cmd_Argv(1), "name"))
+	{
 		Prox_FixName(qtv, prox);
+
+		Prox_UpdateProxiesUserList(qtv, prox, QUL_CHANGE);
+	}
 }
 
 

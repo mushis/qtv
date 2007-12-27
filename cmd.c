@@ -333,9 +333,8 @@ Cmd_Exec_f
 */
 void Cmd_Exec_f (void)
 {
-	char	*buf, *name;
+	char	buf[1024 * 100], *name;
 	int		size;
-	FILE	*file;
 
 	if (Cmd_Argc () != 2)
 	{
@@ -353,32 +352,22 @@ void Cmd_Exec_f (void)
 		Sys_Printf (NULL, "exec: cfg extension required\n");
 		return;
 	}
-	
-	size = Sys_FileOpenRead (name, &file);
 
-	if (size > 1024 * 100) { // more than 100kb cfg ? fuck it
-		fclose(file); // close file
-		Sys_Printf (NULL, "exec: %s is too large\n", name);
-		return;
-	}
-	else if (size < 0)
+	size = sizeof(buf);
+
+	if (!FS_ReadFile("qtv", name, buf, &size))
 	{
-		Sys_Printf (NULL, "exec: couldn't open %s\n", name);
-		return;
+		size = sizeof(buf);
+
+		if (!FS_ReadFile(NULL, name, buf, &size))
+		{
+			Sys_Printf (NULL, "exec: couldn't exec %s\n", name);
+			return;
+		}
 	}
-
-	buf = (char *)Sys_malloc (size + 1); // +1 for nul terminator
-	fread(buf, size, 1, file); // check or not to check read success, that the question
-	fclose(file); // close file
-	buf[size] = 0;
-
-// WTF IS THAT? its how it was in mvdsv
-//	if (!Cvar_Command ())
 
 	Sys_Printf (NULL, "execing %s\n", name);
-
 	Cbuf_InsertText (buf);
-	Sys_free(buf); // free memory
 }
 
 

@@ -167,10 +167,11 @@ extern "C" {
 
 #define QTV_EZQUAKE_EXT		"QTV_EZQUAKE_EXT"
 
-#define QTV_EZQUAKE_EXT_DOWNLOAD (1<<0)		// well, this is not just download, but also different connection process
-#define QTV_EZQUAKE_EXT_SETINFO  (1<<1)		// does't qtv server/client support setinfo
+#define QTV_EZQUAKE_EXT_DOWNLOAD	(1<<0)		// well, this is not just download, but also different connection process
+#define QTV_EZQUAKE_EXT_SETINFO		(1<<1)		// does't qtv server/client support setinfo
+#define QTV_EZQUAKE_EXT_QTVUSERLIST	(1<<2)		// does't qtv server/client support qtvuserlist command
 
-#define QTV_EZQUAKE_EXT_NUM ( QTV_EZQUAKE_EXT_DOWNLOAD | QTV_EZQUAKE_EXT_SETINFO )
+#define QTV_EZQUAKE_EXT_NUM ( QTV_EZQUAKE_EXT_DOWNLOAD | QTV_EZQUAKE_EXT_SETINFO | QTV_EZQUAKE_EXT_QTVUSERLIST )
 
 // }
 
@@ -342,6 +343,8 @@ typedef struct sv_s sv_t;
 typedef struct oproxy_s {
 	qbool			flushing;
 	qbool			drop;
+
+	qbool			connected_at_least_once; // connection sequence was completed at least once
 
 	sv_t			*defaultstream;
 
@@ -821,7 +824,22 @@ void			FixSayFloodProtect(void);
 
 void			Proxy_ReadProxies(sv_t *qtv);
 void			Cl_Cmds_Init(void);
-unsigned int Clcmd_UsersCount(const sv_t *qtv);
+unsigned int	Clcmd_UsersCount(const sv_t *qtv);
+
+typedef enum {
+
+	QUL_NONE = 0,	//
+	QUL_ADD,		// user joined
+	QUL_CHANGE,		// user changed something like name or something
+	QUL_DEL			// user dropped
+
+} qtvuserlist_t;
+
+// send userlist message about "prox" to all proxies
+void			Prox_UpdateProxiesUserList(sv_t *qtv, oproxy_t *prox, qtvuserlist_t action);
+// send userlist to this "prox", do it once, so we do not send it on each level change
+void			Prox_SendInitialUserList(sv_t *qtv, oproxy_t *prox);
+
 
 //
 // fs.c

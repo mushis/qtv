@@ -281,7 +281,10 @@ void Net_SendConnectionMVD_1_0(sv_t *qtv, oproxy_t *prox)
 		prox->drop = true;	//this is unfortunate...
 	}
 	else
+	{
+		prox->connected_at_least_once = true;
 		Net_TryFlushProxyBuffer(&g_cluster, prox);
+	}
 }
 
 void Net_SendConnectionMVD_NEW(sv_t *qtv, oproxy_t *prox)
@@ -301,6 +304,9 @@ void Net_SendConnectionMVD_NEW(sv_t *qtv, oproxy_t *prox)
 	InitNetMsg(&msg, buffer, sizeof(buffer));
 
 	prox->flushing = false; // so we can catch overflow, set it to PS_WAIT_SOUNDLIST below if no overflow
+
+	// send userlist to prox, do it once, so we do not send it on each level change
+	Prox_SendInitialUserList(qtv, prox);
 
 	BuildServerData(qtv, &msg, qtv->clservercount);
 	Prox_SendMessage(&g_cluster, prox, msg.data, msg.cursize, dem_read, (unsigned)-1);
@@ -327,6 +333,8 @@ void Net_SendConnectionMVD(sv_t *qtv, oproxy_t *prox)
 		Net_SendConnectionMVD_1_0(qtv, prox); // backward compatibility
 	}
 }
+
+/*
 
 oproxy_t *Net_FileProxy(sv_t *qtv, char *filename)
 {
@@ -364,6 +372,8 @@ qbool Net_StopFileProxy(sv_t *qtv)
 	}
 	return false;
 }
+
+*/
 
 //
 //forward the stream on to connected clients

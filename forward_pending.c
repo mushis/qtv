@@ -355,6 +355,8 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 		return false;
 	}
 
+	pend->defaultstream = qtv;
+
 	pend->next = qtv->proxies;
 	qtv->proxies = pend;
 
@@ -366,6 +368,9 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 
 	Info_Convert(&pend->ctx, userinfo);
 	Prox_FixName(qtv, pend);
+
+	// send message to all proxies what we have new client
+	Prox_UpdateProxiesUserList(qtv, pend, QUL_ADD);
 
 	Net_SendConnectionMVD(qtv, pend);
 
@@ -433,6 +438,9 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv)
 // just free memory and handles, do not perfrom removing from any list
 void SV_FreeProxy(oproxy_t *prox)
 {
+	if (prox->defaultstream)
+		Prox_UpdateProxiesUserList(prox->defaultstream, prox, QUL_DEL);
+
 	if (prox->file)
 		fclose(prox->file);
 	if (prox->sock != INVALID_SOCKET)
