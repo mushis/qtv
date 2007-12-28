@@ -710,7 +710,7 @@ qbool Net_ReadStream(sv_t *qtv)
 			Sys_Printf(NULL, "Error: server %s refused connection\n", qtv->server);
 
 			close_source(qtv, "Net_ReadStream");
-			qtv->buffersize = qtv->forwardpoint = qtv->UpstreamBufferSize = 0; //probably contains initial connection request info
+			qtv->buffersize = qtv->UpstreamBufferSize = 0; //probably contains initial connection request info
 
 			return false;
 		}
@@ -733,12 +733,11 @@ qbool Net_ReadStream(sv_t *qtv)
 		if (!qtv->ParsingQTVheader)	//qtv header being the auth part of the connection rather than the stream
 		{
 
-			int forwardable = SV_ConsistantMVDData(qtv->buffer + qtv->forwardpoint, qtv->buffersize - qtv->forwardpoint);
+			int forwardable = SV_ConsistantMVDData(qtv->buffer, qtv->buffersize);
 
 			if (forwardable > 0)
 			{
-				SV_ForwardStream(qtv, qtv->buffer + qtv->forwardpoint, forwardable);
-				qtv->forwardpoint += forwardable;
+				SV_ForwardStream(qtv, qtv->buffer, forwardable);
 			}
 		}
 */
@@ -867,7 +866,7 @@ qbool QTV_ParseHeader(sv_t *qtv)
 			Sys_Printf(NULL, "QTV server wrongly used compression\n");
 
 			qtv->drop = true;
-			qtv->buffersize = qtv->forwardpoint = qtv->UpstreamBufferSize = 0;
+			qtv->buffersize = qtv->UpstreamBufferSize = 0;
 
 			return false;
 		}
@@ -876,7 +875,7 @@ qbool QTV_ParseHeader(sv_t *qtv)
 			Sys_Printf(NULL, "\nQTV server error: %s\n\n", colon);
 
 			qtv->drop = true;
-			qtv->buffersize = qtv->forwardpoint = qtv->UpstreamBufferSize = 0;
+			qtv->buffersize = qtv->UpstreamBufferSize = 0;
 
 			return false;
 		}
@@ -884,7 +883,7 @@ qbool QTV_ParseHeader(sv_t *qtv)
 		{ // temp error
 			Sys_Printf(NULL, "\nQTV server error: %s\n\n", colon);
 
-			qtv->buffersize = qtv->forwardpoint = qtv->UpstreamBufferSize = 0;
+			qtv->buffersize = qtv->UpstreamBufferSize = 0;
 
 			if (qtv->DisconnectWhenNooneIsWatching)
 				qtv->drop = true;	//if its a user registered stream, drop it immediatly
@@ -937,7 +936,7 @@ qbool QTV_ParseHeader(sv_t *qtv)
 		Sys_Printf(NULL, "End of list\n");
 
 		qtv->drop = true;
-		qtv->buffersize = qtv->forwardpoint = qtv->UpstreamBufferSize = 0;
+		qtv->buffersize = qtv->UpstreamBufferSize = 0;
 
 		return false;
 	}
@@ -951,16 +950,13 @@ qbool QTV_ParseHeader(sv_t *qtv)
 		Sys_Printf(NULL, "QTV server sent no begin command - assuming incompatable\n\n");
 
 		qtv->drop = true;
-		qtv->buffersize = qtv->forwardpoint = qtv->UpstreamBufferSize = 0;
+		qtv->buffersize = qtv->UpstreamBufferSize = 0;
 
 		return false;
 	}
 
 	qtv->parsetime = Sys_Milliseconds() + BUFFERTIME * 1000;
 	Sys_Printf(NULL, "Connection established, buffering for %i seconds\n", BUFFERTIME);
-
-//	qqshka: i turned this off
-//	SV_ForwardStream(qtv, qtv->buffer, qtv->forwardpoint); // fixme: thought this is WRONG!!!!
 
 	return true;
 }
@@ -1025,16 +1021,14 @@ int QTV_ParseMVD(sv_t *qtv)
 			}
 			qtv->parsetime += buffer[0];	//well this was pointless
 
-			if (qtv->forwardpoint < length)	//we're about to destroy this data, so it had better be forwarded by now!
-			{
-				forwards++;
-				SV_ForwardStream(qtv, qtv->buffer, length); // fixme: though that WRONG !!!!!
-				qtv->forwardpoint += length;
-			}
+			//we're about to destroy this data, so it had better be forwarded by now!
+			if (qtv->buffersize < length)
+				Sys_Error ("QTV_ParseMVD: qtv->buffersize < length");
 
-			memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize - (length));
-			qtv->buffersize   -= length;
-			qtv->forwardpoint -= length;
+			forwards++;
+			SV_ForwardStream(qtv, qtv->buffer, length);
+			qtv->buffersize -= length;
+			memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize);
 
 			continue;
 
@@ -1066,7 +1060,7 @@ int QTV_ParseMVD(sv_t *qtv)
 
 			close_source(qtv, "QTV_ParseMVD");
 
-			qtv->buffersize = qtv->forwardpoint = qtv->UpstreamBufferSize = 0;			
+			qtv->buffersize = qtv->UpstreamBufferSize = 0;			
 			break;
 		}
 
@@ -1107,20 +1101,14 @@ int QTV_ParseMVD(sv_t *qtv)
 
 		packettime = buffer[0];
 
-		if (qtv->buffersize)
-		{	//svc_disconnect in ParseMessage() can flush our input buffer (to prevent the EndOfDemo part from interfering)
+		//we're about to destroy this data, so it had better be forwarded by now!
+		if (qtv->buffersize < length)
+			Sys_Error ("QTV_ParseMVD: qtv->buffersize < length");
 
-			if (qtv->forwardpoint < length)	//we're about to destroy this data, so it had better be forwarded by now!
-			{
-				forwards++;
-				SV_ForwardStream(qtv, qtv->buffer, length); // fixme: though that WRONG !!!!!
-				qtv->forwardpoint += length;
-			}
-
-			memmove(qtv->buffer, qtv->buffer+length, qtv->buffersize-(length));
-			qtv->buffersize   -= length;
-			qtv->forwardpoint -= length;
-		}
+		forwards++;
+		SV_ForwardStream(qtv, qtv->buffer, length);
+		qtv->buffersize -= length;
+		memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize);
 
 // qqshka: this was in original qtv, cause overflow in some cases
 //		if (qtv->src.type == SRC_DEMO)

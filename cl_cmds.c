@@ -696,8 +696,6 @@ static void Clcmd_Spawn_f(sv_t *qtv, oproxy_t *prox)
 
 	Net_TryFlushProxyBuffer(&g_cluster, prox);
 
-	Net_ProxySend(&g_cluster, prox, qtv->buffer, qtv->forwardpoint);	//send all the info we've not yet processed.
-
 	if (prox->flushing)
 	{
 		Sys_Printf(NULL, "Connection data is too big, dropping proxy client\n");

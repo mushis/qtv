@@ -457,7 +457,6 @@ struct sv_s {	//details about a server connection (also known as stream)
 	// DownStream, answers on request and sure MVD stream at some point
 	unsigned char	buffer[MAX_PROXY_BUFFER];	// this doesn't cycle
 	int				buffersize;					// it memmoves down
-	int				forwardpoint;				// the point in the stream that we're forwarded up to
 
 	qtv_state_t		qstate;						// in which state our qtv
 
