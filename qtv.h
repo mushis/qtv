@@ -184,16 +184,6 @@ extern "C" {
 #define PROX_DEFAULTSERVER			"localhost:27500"
 #define PROX_DEFAULT_LISTEN_PORT	"27599"
 
-#define MAX_PROXY_INBUFFER		4096
-#define MAX_PROXY_BUFFER 		(1<<16)		// must be power-of-two, 1<<16 is 2^16 = 65536
-#define PREFERED_PROXY_BUFFER	4096		// the ammount of data we try to leave in our input buffer (must be large enough to contain any single mvd frame)
-#define MAX_PROXY_UPSTREAM 		2048
-
-#define MAX_PROXY_INFOS			128			// how much settings (count, not bytes) may have one client 
-
-#define MAX_MSGLEN 				1450
-#define	FILE_TRANSFER_BUF_SIZE	((MAX_MSGLEN) - 100)
-
 #define	MSG_BUF_SIZE			8192
 // qqshka: Its all messy.
 // For example ezquake (and FTE?) expect maximum message is MSG_BUF_SIZE == 8192 with mvd header which have not fixed size,
@@ -202,6 +192,17 @@ extern "C" {
 // 
 // MAX_MVD_SIZE - max size of single mvd message _WITHOUT_ header
 #define	MAX_MVD_SIZE			(MSG_BUF_SIZE - 100)
+
+#define MAX_PROXY_INBUFFER		4096
+#define MAX_PROXY_BUFFER 		(1<<16)	// must be power-of-two, 1<<16 is 2^16 = 65536
+#define PREFERED_PROXY_BUFFER	(1<<14) // the ammount of data we try to leave in our input buffer (must be large enough to contain any single mvd frame)
+#define MAX_PROXY_UPSTREAM 		2048
+
+#define MAX_PROXY_INFOS			128			// how much settings (count, not bytes) may have one client 
+
+#define MAX_MSGLEN 				1450
+#define	FILE_TRANSFER_BUF_SIZE	((MAX_MSGLEN) - 100)
+
 
 #define DEMOS_UPDATE_TIME		(1000 * 60) // update demos not so fast, this save CPU time
 

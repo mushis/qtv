@@ -999,7 +999,7 @@ int QTV_ParseMVD(sv_t *qtv)
 			{
 				qtv->parsetime = qtv->curtime + 2 * 1000;	//add two seconds
 				if (IsSourceStream(qtv))
-					Sys_Printf(NULL, "Not enough buffered\n");
+					Sys_Printf(NULL, "Not enough buffered #1\n");
 			}
 			break;
 		}
@@ -1015,7 +1015,7 @@ int QTV_ParseMVD(sv_t *qtv)
 			{	//not enough stuff to play.
 				qtv->parsetime = qtv->curtime + 2 * 1000;	//add two seconds
 				if (IsSourceStream(qtv))
-					Sys_Printf(NULL, "Not enough buffered\n");
+					Sys_Printf(NULL, "Not enough buffered #2\n");
 
 				continue;
 			}
@@ -1045,7 +1045,7 @@ int QTV_ParseMVD(sv_t *qtv)
 		if (qtv->buffersize < lengthofs + 4)
 		{	//the size parameter doesn't fit.
 			if (IsSourceStream(qtv))
-				Sys_Printf(NULL, "Not enough buffered\n");
+				Sys_Printf(NULL, "Not enough buffered #3\n");
 			qtv->parsetime = qtv->curtime + 2 * 1000;	//add two seconds
 			break;
 		}
@@ -1067,7 +1067,7 @@ int QTV_ParseMVD(sv_t *qtv)
 		if (length + lengthofs + 4 > qtv->buffersize)
 		{
 			if (IsSourceStream(qtv))
-				Sys_Printf(NULL, "Not enough buffered\n");
+				Sys_Printf(NULL, "Not enough buffered #4\n");
 			qtv->parsetime = qtv->curtime + 2 * 1000;	//add two seconds
 			break;	//can't parse it yet.
 		}
