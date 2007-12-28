@@ -355,8 +355,7 @@ typedef struct oproxy_s {
 	unsigned int	inbuffersize;	//amount of data available.
 
 	unsigned char	buffer[MAX_PROXY_BUFFER];
-	unsigned int	buffersize;	//use cyclic buffering.
-	unsigned int	bufferpos;
+	unsigned int	buffersize;
 
 	unsigned int	init_time; // when this client was created, so we can timeout it
 	unsigned int	io_time; // when was IO activity, so we can timeout it

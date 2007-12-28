@@ -16,42 +16,39 @@ void CheckMVDConsistancy(unsigned char *buffer, int pos, int size)
 
 void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 {
-	char *buffer;
 	int length;
-	int bufpos;
 
 	if (prox->drop)
 		return;
 
-	while (prox->bufferpos >= MAX_PROXY_BUFFER)
-	{	//so we never get any issues with wrapping..
-		prox->bufferpos  -= MAX_PROXY_BUFFER;
-		prox->buffersize -= MAX_PROXY_BUFFER;
+	if (prox->buffersize < 0 || prox->buffersize > MAX_PROXY_BUFFER)
+	{
+		Sys_Printf(cluster, "Net_TryFlushProxyBuffer: prox->buffersize fucked\n");
+		prox->drop = true;
+		return;
 	}
 
-	bufpos = prox->bufferpos&(MAX_PROXY_BUFFER-1);
-	length = prox->buffersize - prox->bufferpos;
-	if (length > MAX_PROXY_BUFFER-bufpos)	//cap the length correctly.
-		length = MAX_PROXY_BUFFER-bufpos;
-	if (!length)
+	if (!prox->buffersize)
 		return;	//already flushed.
-	buffer = prox->buffer + bufpos;
 
-//	CheckMVDConsistancy(prox->buffer, prox->bufferpos, prox->buffersize);
-
-	if (bufpos + length > MAX_PROXY_BUFFER)
-		Sys_Printf(cluster, "oversize flush\n");
+//	CheckMVDConsistancy(prox->buffer, 0, prox->buffersize);
 
 	if (prox->file)
-		length = fwrite(buffer, 1, length, prox->file);
+	{
+		length = fwrite(prox->buffer, 1, prox->buffersize, prox->file);
+		length = ( length == prox->buffersize ) ? length : -1;
+	}
 	else
-		length = send(prox->sock, buffer, length, 0);
+	{
+		length = send(prox->sock, prox->buffer, prox->buffersize, 0);
+	}
 
 	switch (length)
 	{
-	case 0:	//eof / they disconnected
-		prox->drop = true;
-		break;
+// qqshka: think 0 does't mean here they disconnected, so I turned it off
+//	case 0:	//eof / they disconnected
+//		prox->drop = true;
+//		break;
 
 	case -1:
 		if (qerrno != EWOULDBLOCK && qerrno != EAGAIN)	//not a problem, so long as we can flush it later.
@@ -62,19 +59,25 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 		break;
 
 	default:
-		prox->bufferpos += length;
+		prox->buffersize -= length;
+		memmove(prox->buffer, prox->buffer + length, prox->buffersize);
 		prox->io_time = cluster->curtime; // update IO activity
 	}
 }
 
 void Net_ProxySend(cluster_t *cluster, oproxy_t *prox, char *buffer, int length)
 {
-	int wrap;
+	if (prox->buffersize < 0 || prox->buffersize > MAX_PROXY_BUFFER)
+	{
+		Sys_Printf(cluster, "Net_ProxySend: prox->buffersize fucked\n");
+		prox->drop = true;
+		return;
+	}
 
-	if (prox->buffersize - prox->bufferpos + length > MAX_PROXY_BUFFER)
+	if (prox->buffersize + length > MAX_PROXY_BUFFER)
 	{
 		Net_TryFlushProxyBuffer(cluster, prox);	//try flushing
-		if (prox->buffersize - prox->bufferpos + length > MAX_PROXY_BUFFER)	//damn, still too big.
+		if (prox->buffersize + length > MAX_PROXY_BUFFER)	//damn, still too big.
 		{	//they're too slow. hopefully it was just momentary lag
 			Sys_Printf(NULL, "QTV client is too lagged\n");
 			prox->flushing = true;
@@ -82,10 +85,8 @@ void Net_ProxySend(cluster_t *cluster, oproxy_t *prox, char *buffer, int length)
 		}
 	}
 
-	//just simple
+	memmove(prox->buffer + prox->buffersize, buffer, length);
 	prox->buffersize += length;
-	for (wrap = prox->buffersize - length; wrap < prox->buffersize; wrap++)
-		prox->buffer[wrap&(MAX_PROXY_BUFFER-1)] = *buffer++;
 }
 
 // printf() to downstream to particular "proxy", handy in some cases, instead of Net_ProxySend()
@@ -115,10 +116,10 @@ void Prox_SendMessage(cluster_t *cluster, oproxy_t *prox, char *buf, int length,
 	if (dem_type == dem_multiple)
 		WriteLong(&msg, playermask);
 
-	if (prox->buffersize - prox->bufferpos + length + msg.cursize > MAX_PROXY_BUFFER)
+	if (prox->buffersize + length + msg.cursize > MAX_PROXY_BUFFER)
 	{
 		Net_TryFlushProxyBuffer(cluster, prox);	//try flushing
-		if (prox->buffersize - prox->bufferpos + length + msg.cursize > MAX_PROXY_BUFFER)	//damn, still too big.
+		if (prox->buffersize + length + msg.cursize > MAX_PROXY_BUFFER)	//damn, still too big.
 		{	//they're too slow. hopefully it was just momentary lag
 			Sys_Printf(NULL, "QTV client is too lagged\n");
 			prox->flushing = true;
@@ -386,8 +387,8 @@ void SV_ForwardStream(sv_t *qtv, char *buffer, int length)
 	for (prox = qtv->proxies; prox; prox = prox->next)
 	{
 #if 0 // debug
-		if (prox->buffersize - prox->bufferpos)
-			Sys_Printf(NULL, "DBG: prx buffer: %5d\n", prox->buffersize - prox->bufferpos);
+		if (prox->buffersize)
+			Sys_Printf(NULL, "DBG: prx buffer: %5d\n", prox->buffersize);
 #endif
 
 		if (prox->file)
@@ -421,7 +422,7 @@ void SV_ForwardStream(sv_t *qtv, char *buffer, int length)
 
 		// we're trying to empty thier buffer, NOTE: we use prox->flushing == true so it does't trigger when flushing is PS_WAIT_MODELLIST and etc
 		if (prox->flushing == true)
-			if (prox->buffersize == prox->bufferpos) // ok, they have empty buffer
+			if (!prox->buffersize) // ok, they have empty buffer
 				if (qtv->qstate == qs_active) // ok, our qtv is ready
 					Net_SendConnectionMVD(qtv, prox); // resend the connection info and set flushing to false
 

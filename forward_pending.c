@@ -56,7 +56,7 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 
 	if (pend->flushing)
 	{
-		if (pend->bufferpos == pend->buffersize)
+		if (!pend->buffersize) // ok we have empty buffer, now we can drop 
 			pend->drop = true;
 
 		return false;

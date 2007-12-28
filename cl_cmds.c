@@ -303,7 +303,7 @@ static qbool Sub_Clcmd_NextDownload (sv_t *qtv, oproxy_t *prox)
 	if (r > tmp)
 		r = tmp;
 
-	if (prox->buffersize - prox->bufferpos + r > 0.5 * MAX_PROXY_BUFFER)
+	if (prox->buffersize + r > 0.5 * MAX_PROXY_BUFFER)
 		return true; // we alredy have too much in buffer, can't add data to buffer
 
 	r = fread (read_buf, 1, r, prox->download);
