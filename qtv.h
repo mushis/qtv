@@ -524,7 +524,7 @@ typedef struct cluster_s {
 
 	oproxy_t *pendingproxies;			// incoming request queued here, after request is served it unlinked from here
 
-	availdemo_t availdemos[64];			// more demos is a bad idea IMO
+	availdemo_t availdemos[128];		// more demos is a bad idea IMO
 	int availdemoscount;
 	unsigned int last_demos_update;		// milleseconds, last time when Cluster_BuildAvailableDemoList() was issued, saving CPU time
 
