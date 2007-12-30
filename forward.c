@@ -45,10 +45,10 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 
 	switch (length)
 	{
+	case 0:	//eof / they disconnected
 // qqshka: think 0 does't mean here they disconnected, so I turned it off
-//	case 0:	//eof / they disconnected
 //		prox->drop = true;
-//		break;
+		break;
 
 	case -1:
 		if (qerrno != EWOULDBLOCK && qerrno != EAGAIN)	//not a problem, so long as we can flush it later.
