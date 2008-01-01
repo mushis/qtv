@@ -195,7 +195,7 @@ extern "C" {
 
 #define MAX_PROXY_INBUFFER		4096
 #define MAX_PROXY_BUFFER 		(1<<16)	// must be power-of-two, 1<<16 is 2^16 = 65536
-#define PREFERED_PROXY_BUFFER	(1<<14) // the ammount of data we try to leave in our input buffer (must be large enough to contain any single mvd frame)
+#define PREFERED_PROXY_BUFFER	(1<<15) // the ammount of data we try to leave in our input buffer (must be large enough to contain any single mvd frame)
 #define MAX_PROXY_UPSTREAM 		2048
 
 #define MAX_PROXY_INFOS			128			// how much settings (count, not bytes) may have one client 

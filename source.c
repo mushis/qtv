@@ -666,21 +666,16 @@ qbool Net_ReadStream(sv_t *qtv)
 	if (qtv->buffersize < 0 || qtv->buffersize > sizeof(qtv->buffer))
 		Sys_Error("Wrongly sized downstream buffer %d", qtv->buffersize);
 
-	maxreadable = MAX_PROXY_BUFFER - qtv->buffersize;
-	if (!maxreadable)
-		return true;	//full buffer, we filled buffer faster than client suck data, this is bad!
+	// for demos we use smaller buffer size
+	maxreadable = ( qtv->src.type == SRC_DEMO ? PREFERED_PROXY_BUFFER : MAX_PROXY_BUFFER ) - qtv->buffersize;
+	if (maxreadable <= 0)
+		return true; // full buffer
 
 	buffer = qtv->buffer + qtv->buffersize;
 
 	switch (qtv->src.type)
 	{
 	case SRC_DEMO:
-	    // seems Spike trying minimize amount of data in buffer in case of file, this is CPU friendly due to faster memmove
-		if (maxreadable > PREFERED_PROXY_BUFFER - qtv->buffersize)
-			maxreadable = PREFERED_PROXY_BUFFER - qtv->buffersize;
-		if (maxreadable <= 0)
-			return true;
-
 		if (!qtv->src.f)
 		{
 			read = 0; // will close_source()
@@ -1111,8 +1106,8 @@ int QTV_ParseMVD(sv_t *qtv)
 		memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize);
 
 // qqshka: this was in original qtv, cause overflow in some cases
-//		if (qtv->src.type == SRC_DEMO)
-//			Net_ReadStream(qtv); // FIXME: remove me
+		if (qtv->src.type == SRC_DEMO)
+			Net_ReadStream(qtv); // FIXME: remove me
 
 		qtv->parsetime += packettime;
 
