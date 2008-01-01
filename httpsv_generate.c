@@ -520,23 +520,18 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 
 void HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest)
 {
-	char buffer[MAX_PROXY_BUFFER] = {0};
-	int  len = sizeof(buffer);
+	int s;
 
-	if (!FS_ReadFile(HTMLFILESPATH, "qtvbg01.png", buffer, &len))
-	{
+	if (dest->buffer_file)
+		Sys_Error("HTTPSV_GenerateHTMLBackGroundImg: dest->buffer_file");
+	
+	dest->buffer_file = FS_OpenFile(HTMLFILESPATH, "qtvbg01.png", &s);
+	if (!dest->buffer_file) {
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
 	}
 
-	Net_ProxyPrintf(dest,	"HTTP/1.1 200 OK" CRLF
-							"Content-Type: image/png" CRLF
-							"Content-Length: %i" CRLF
-							"Connection: close" CRLF
-							CRLF, len);
-
-	// sending a lot of data here!
-	Net_ProxySend(cluster, dest, buffer, len);
+	HTTPSV_SendHTTPHeader(cluster, dest, "200", "image/png", false);
 }
 
 static qbool LevelshotFilenameValid(const char *name)
@@ -576,31 +571,25 @@ static qbool LevelshotPathName(char *buf, size_t bufsize, const char *name)
 
 void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, const char *name)
 {
-	FILE *f;
 	char pathname[MAX_QPATH];
 	int s;
-	char readbuf[512];
 
-	if (!LevelshotPathName(pathname,MAX_QPATH,name)) {
-		HTTPSV_GenerateNotFoundError(cluster,dest);
+	if (dest->buffer_file)
+		Sys_Error("HTTPSV_GenerateLevelshot: dest->buffer_file");
+
+	if (!LevelshotPathName(pathname, MAX_QPATH, name)) {
+		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
 	}
 	
-	f = FS_OpenFile(HTMLFILESPATH, pathname, &s);
-	if (!f) {
-		f = FS_OpenFile(HTMLFILESPATH, NOTFOUNDLEVELSHOT, &s);
-		if (!f) {
-			HTTPSV_GenerateNotFoundError(cluster,dest);
+	dest->buffer_file = FS_OpenFile(HTMLFILESPATH, pathname, &s);
+	if (!dest->buffer_file) {
+		dest->buffer_file = FS_OpenFile(HTMLFILESPATH, NOTFOUNDLEVELSHOT, &s);
+		if (!dest->buffer_file) {
+			HTTPSV_GenerateNotFoundError(cluster, dest);
 			return;
 		}
 	}
 
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "image/jpeg", false);
-
-	while(!feof(f)) {
-		int len = (int) fread(readbuf,1,512,f);
-		Net_ProxySend(cluster,dest,readbuf,len);
-	}
-
-	fclose(f);
 }

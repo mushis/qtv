@@ -281,25 +281,22 @@ void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend, char *postdata)
 	if (len > pend->inbuffersize)
 		return;	//still need the body
 
-//	if (len <= pend->inbuffersize)
+	if (!strncmp(pend->inbuffer+5, "/admin", 6))
 	{
-		if (!strncmp(pend->inbuffer+5, "/admin", 6))
-		{
-			HTTPSV_GenerateAdmin(cluster, pend, 0, postdata);
-		}
-		else
-		{
-			s = "HTTP/1.1 404 OK" CRLF
-				"Content-Type: text/html" CRLF
-				"Connection: close" CRLF
-				CRLF
-				"<html><HEAD><TITLE>QuakeTV</TITLE></HEAD><BODY>That HTTP method is not supported for that URL.</BODY></html>\n";
-			Net_ProxySend(cluster, pend, s, strlen(s));
-		}
-
-		pend->flushing = true;
-		return;
+		HTTPSV_GenerateAdmin(cluster, pend, 0, postdata);
 	}
+	else
+	{
+		s = "HTTP/1.1 404 OK" CRLF
+			"Content-Type: text/html" CRLF
+			"Connection: close" CRLF
+			CRLF
+			"<html><HEAD><TITLE>QuakeTV</TITLE></HEAD><BODY>That HTTP method is not supported for that URL.</BODY></html>\n";
+		Net_ProxySend(cluster, pend, s, strlen(s));
+	}
+
+	pend->flushing = true;
+	return;
 }
 
 void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)

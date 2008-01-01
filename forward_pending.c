@@ -43,8 +43,16 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 	qbool raw;
 	sv_t *qtv;
 
+	pend->inbuffer[pend->inbuffersize] = 0; // so strings functions are happy
+
 	if (pend->init_time + 1000 * bound(1, pending_livetime.integer, 60 * 10) < cluster->curtime)
+	{
+		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, livetime exceeds, dropping\n", pend->id);
+		if (developer.integer > 1)
+			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
+
 		pend->drop = true; // something like timeout
+	}
 
 	if (pend->drop)
 	{
@@ -56,25 +64,50 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 
 	if (pend->flushing)
 	{
-		if (!pend->buffersize) // ok we have empty buffer, now we can drop 
-			pend->drop = true;
+		// peform reading on buffer file if we have empty buffer
+		if (!pend->buffersize && pend->buffer_file)
+		{
+			pend->buffersize += fread(pend->buffer, 1, sizeof(pend->buffer), pend->buffer_file);
 
+			if (!pend->buffersize)
+			{
+				fclose(pend->buffer_file);
+				pend->buffer_file = NULL;
+			}
+		}
+
+		if (!pend->buffersize) // ok we have empty buffer, now we can drop
+		{
+			Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, empty buffer, dropping\n", pend->id);
+			if (developer.integer > 1)
+				Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
+
+			pend->drop = true;
+		}
+
+		// NOTE: if flushing is true, we do not peform any reading below, just wait when buffer will empty, then dropping
 		return false;
 	}
 
 	len = sizeof(pend->inbuffer) - pend->inbuffersize - 1;
-	len = recv(pend->sock, pend->inbuffer+pend->inbuffersize, len, 0);
-	if (len == 0)
+	len = recv(pend->sock, pend->inbuffer + pend->inbuffersize, len, 0);
+	if (len == 0)  // remote side closed connection
 	{
+		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, remove side closed connection, dropping\n", pend->id);
+		if (developer.integer > 1)
+			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
+
 		pend->drop = true;
 		return false;
 	}
 
-	if (len < 0)
+	if (len < 0) // no new data, or read error
+	{
 		return false;
+	}
 
 	pend->inbuffersize += len;
-	pend->inbuffer[pend->inbuffersize] = 0;
+	pend->inbuffer[pend->inbuffersize] = 0; // so strings functions are happy
 
 	if (pend->inbuffersize < 5)
 		return false; 	//don't have enough yet
@@ -445,6 +478,11 @@ void SV_FreeProxy(oproxy_t *prox)
 		fclose(prox->file);
 	if (prox->sock != INVALID_SOCKET)
 		closesocket(prox->sock);
+
+	if (prox->download)
+		fclose(prox->download);
+	if (prox->buffer_file)
+		fclose(prox->buffer_file);
 
 	Info_RemoveAll(&prox->ctx); // free malloced data
 

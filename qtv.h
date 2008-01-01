@@ -355,6 +355,10 @@ typedef struct oproxy_s {
 	unsigned char	inbuffer[MAX_PROXY_INBUFFER];
 	unsigned int	inbuffersize;	//amount of data available.
 
+	FILE			*buffer_file; // well, we can't always put whole file in buffer[MAX_PROXY_BUFFER],
+								  // so instead we put chunk of file in buffer then flush to client,
+								  // then put next chunk and etc.
+
 	unsigned char	buffer[MAX_PROXY_BUFFER];
 	unsigned int	buffersize;
 
