@@ -496,7 +496,7 @@ void HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char
 void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 {
 	int i;
-	char link[256];
+	char link[1024];
 	char *s;
 
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/html", true);
