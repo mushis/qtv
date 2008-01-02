@@ -794,7 +794,7 @@ void			ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask);
 // httpsv.c
 //
 
-void			HTMLprintf(char *outb, int outl, char *fmt, ...);
+void			HTMLprintf(char *outb, int outl, qbool qfont, char *fmt, ...);
 void			HTTPSV_SendHTTPHeader(cluster_t *cluster, oproxy_t *dest, char *error_code, char *content_type, qbool nocache);
 void			HTTPSV_SendHTMLHeader(cluster_t *cluster, oproxy_t *dest, char *title);
 void			HTTPSV_SendHTMLFooter(cluster_t *cluster, oproxy_t *dest);

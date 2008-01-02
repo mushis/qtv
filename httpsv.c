@@ -43,7 +43,7 @@ static const char qfont_table[256] = {
 	'x', 'y', 'z', '{', '|', '}', '~', '<'
 };
 
-void HTMLprintf(char *outb, int outl, char *fmt, ...)
+void HTMLprintf(char *outb, int outl, qbool qfont, char *fmt, ...)
 {
 	va_list val;
 	char qfmt[8192*4];
@@ -84,7 +84,12 @@ void HTMLprintf(char *outb, int outl, char *fmt, ...)
 		}
 		else
 		{
-			*outb++ = qfont_table[*(unsigned char*)inb];
+			if (qfont)
+				*outb++ = qfont_table[*(unsigned char*)inb];
+			else
+				*outb++ = *inb;
+
+			outl -= 1;
 		}
 		inb++;
 	}

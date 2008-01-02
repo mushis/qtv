@@ -133,7 +133,7 @@ void HTTPSV_GenerateTableForTeam(cluster_t *cluster, oproxy_t *dest, scoreboard 
 
 		// nick
 		HTMLPRINT("<td class='nick'>");
-		HTMLprintf(buffer, sizeof(buffer), "%s", b->players[i].name);
+		HTMLprintf(buffer, sizeof(buffer), true, "%s", b->players[i].name);
 		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 		HTMLPRINT("</td>");
 		// row end
@@ -151,10 +151,10 @@ void HTTPSV_GenerateScoreBoard(cluster_t *cluster, oproxy_t *dest, scoreboard *b
 		HTMLPRINT("<table class='overallscores'><tr class='teaminfo'>");
 		for (i = 0; i < b->teams_count; i++) {
 			HTMLPRINT("<td><span>Team: </span><span class='teamname'>");
-			HTMLprintf(buffer, sizeof(buffer), "%s", b->teams[i].name);
+			HTMLprintf(buffer, sizeof(buffer), true, "%s", b->teams[i].name);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 		        HTMLPRINT("</span><span class='frags'> ");
-		        HTMLprintf(buffer, sizeof(buffer), "[%i]", b->teams[i].frags);
+		        HTMLprintf(buffer, sizeof(buffer), true, "[%i]", b->teams[i].frags);
 		        Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 			HTMLPRINT("</span></td>");
 		}
@@ -231,7 +231,7 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 
 		// 2nd cell: server adress
 		HTMLPRINT("<td class='adr'>");
-		HTMLprintf(buffer, sizeof(buffer), "%s", server);
+		HTMLprintf(buffer, sizeof(buffer), true, "%s", server);
 		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 		HTMLPRINT("</td>");
 
@@ -244,10 +244,10 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 		{
 			HTMLPRINT("<td class='mn'>");
 			Net_ProxySend(cluster, dest, "<span>", sizeof("<span>")-1);
-			HTMLprintf(buffer, sizeof(buffer), "%s", streams->mapname);
+			HTMLprintf(buffer, sizeof(buffer), true, "%s", streams->mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));			
 			HTMLPRINT("</span>");
-			HTMLprintf(buffer, sizeof(buffer), " (%s)", mapname);
+			HTMLprintf(buffer, sizeof(buffer), true, " (%s)", mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 			HTMLPRINT("</td>");
 		}
@@ -255,12 +255,12 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 		{
 			HTMLPRINT("<td class='mn'>");
 			HTMLPRINT("<span>");
-			HTMLprintf(buffer, sizeof(buffer), "%s", streams->mapname);
+			HTMLprintf(buffer, sizeof(buffer), true, "%s", streams->mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));			
 			HTMLPRINT("</span>");
-			HTMLprintf(buffer, sizeof(buffer), "(%s: ", streams->gamedir);
+			HTMLprintf(buffer, sizeof(buffer), true, "(%s: ", streams->gamedir);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-			HTMLprintf(buffer, sizeof(buffer), "%s)", mapname);
+			HTMLprintf(buffer, sizeof(buffer), true, "%s)", mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 			HTMLPRINT("</td>");
 		}
@@ -482,7 +482,7 @@ void HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char
 		s = strchr(o, '\n');
 		if (s)
 			*s = 0;
-		HTMLprintf(cmd, sizeof(cmd), "%s", o);
+		HTMLprintf(cmd, sizeof(cmd), true, "%s", o);
 		Net_ProxySend(cluster, dest, cmd, strlen(cmd));
 		Net_ProxySend(cluster, dest, "<BR />", 6);
 		if (!s)
@@ -496,7 +496,7 @@ void HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char
 void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 {
 	int i;
-	char link[1024];
+	char link[1024], name[sizeof(cluster->availdemos[0].name) * 5];
 	char *s;
 
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/html", true);
@@ -508,9 +508,9 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 	Cluster_BuildAvailableDemoList(cluster);
 	for (i = 0; i < cluster->availdemoscount; i++)
 	{
+		HTMLprintf(name, sizeof(name), false, "%s", cluster->availdemos[i].name);
 		snprintf(link, sizeof(link), "<A HREF=\"/watch.qtv?demo=%s\">%s</A> <A HREF=\"/dl/demos/%s\">(dl %ikb)</A><br/>",
-			 cluster->availdemos[i].name, cluster->availdemos[i].name, cluster->availdemos[i].name, 
-			 cluster->availdemos[i].size/1024);
+			 name, name, name, cluster->availdemos[i].size/1024);
 
 		Net_ProxySend(cluster, dest, link, strlen(link));
 	}
