@@ -541,35 +541,32 @@ static qbool LevelshotFilenameValid(const char *name)
 	for (i = 0; i < len; i++)
 	{
 		if (name[i] == '.' || name[i] == '-')
-			continue; // valid chars
+			continue; // valid chars non alphanum chars
 
 		if (!isalnum(name[i]))
-			return false; // non alpha is invalid
+			return false; // non alphanum is invalid
 	}
 	return true;
 }
 
-static qbool LevelshotPathName(char *buf, size_t bufsize, const char *name) 
+static qbool LevelshotPathName(char *buf, size_t bufsize, char *name) 
 {
 	char pathname[MAX_QPATH];
-	char *space = strchr(name,' ');
-	size_t spacepos;
 
-	if (!space)
+	COM_ParseToken(name, pathname, sizeof(pathname), " ");
+
+	if (!pathname[0])
 		return false;
-
-	spacepos = space-name+1;
-	strlcpy(pathname,name,(spacepos < MAX_QPATH) ? spacepos : MAX_QPATH);
 	
 	if (!LevelshotFilenameValid(pathname))
 		return false;
 
-	snprintf(buf,bufsize,"levelshots/%s",pathname);
+	snprintf(buf, bufsize, "levelshots/%s", pathname);
 	
 	return true;
 }
 
-void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, const char *name)
+void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name)
 {
 	char pathname[MAX_QPATH];
 	int s;
