@@ -752,7 +752,6 @@ void			Forward_Init(void);
 extern cvar_t	mvdport;
 extern cvar_t	maxclients;
 extern cvar_t	allow_http;
-extern cvar_t	pending_livetime;
 
 // this just can't be done as macro, so I wrote this function
 // just generate qtv server header

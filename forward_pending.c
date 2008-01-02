@@ -7,8 +7,6 @@
 cvar_t mvdport    		= {"mvdport", PROX_DEFAULT_LISTEN_PORT};
 cvar_t maxclients		= {"maxclients", "1000"};
 cvar_t allow_http		= {"allow_http", "1"};
-cvar_t pending_livetime = {"pending_livetime", "3600"}; // seconds
-
 
 // this just can't be done as macro, so I wrote this function
 char *QTV_SV_HEADER(oproxy_t *prox, float qtv_ver)
@@ -45,13 +43,13 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 
 	pend->inbuffer[pend->inbuffersize] = 0; // so strings functions are happy
 
-	if (pend->init_time + 1000 * bound(1, pending_livetime.integer, 60 * 10) < cluster->curtime)
+	if (pend->io_time + max(10 * 1000, 1000 * downstream_timeout.integer) <= cluster->curtime)
 	{
-		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, livetime exceeds, dropping\n", pend->id);
+		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, pending stream timeout, dropping\n", pend->id);
 		if (developer.integer > 1)
 			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
 
-		pend->drop = true; // something like timeout
+		pend->drop = true;
 	}
 
 	if (pend->drop)
@@ -106,6 +104,8 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 		return false;
 	}
 
+	pend->io_time = cluster->curtime; // update IO activity
+
 	pend->inbuffersize += len;
 	pend->inbuffer[pend->inbuffersize] = 0; // so strings functions are happy
 
@@ -120,7 +120,12 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 	    		   )
 		   )
 	   )
-	{	//I have no idea what the smeg you are.
+	{	
+		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, unknown client, dropping\n", pend->id);
+		if (developer.integer > 1)
+			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
+	
+		//I have no idea what the smeg you are.
 		pend->drop = true;
 		return false;
 	}
@@ -465,6 +470,9 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv)
 		prox->drop = true;
 	}
 
+	if (developer.integer > 1)
+		Sys_DPrintf(NULL, "SV_NewProxy: new proxy id #%d\n", prox->id);
+
 	return prox;
 }
 
@@ -695,5 +703,4 @@ void Pending_Init(void)
 	Cvar_Register (&mvdport);
 	Cvar_Register (&maxclients);
 	Cvar_Register (&allow_http);
-	Cvar_Register (&pending_livetime);
 }
