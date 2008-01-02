@@ -509,7 +509,7 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 	for (i = 0; i < cluster->availdemoscount; i++)
 	{
 		HTMLprintf(name, sizeof(name), false, "%s", cluster->availdemos[i].name);
-		snprintf(link, sizeof(link), "<A HREF=\"/watch.qtv?demo=%s\">%s</A> <A HREF=\"/dl/demos/%s\">(dl %ikb)</A><br/>",
+		snprintf(link, sizeof(link), "<A HREF=\"/watch.qtv?demo=%s\">%s</A> <A HREF=\"/dl/demos/%s\">(dl %ikB)</A><br/>",
 			 name, name, name, cluster->availdemos[i].size/1024);
 
 		Net_ProxySend(cluster, dest, link, strlen(link));
