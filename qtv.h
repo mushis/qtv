@@ -814,7 +814,8 @@ void			HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamty
 void			HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char *postbody);
 void			HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest);
 void			HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest);
-void			HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, const char *name);
+void			HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name);
+void			HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name);
 
 
 //

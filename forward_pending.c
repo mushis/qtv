@@ -7,7 +7,7 @@
 cvar_t mvdport    		= {"mvdport", PROX_DEFAULT_LISTEN_PORT};
 cvar_t maxclients		= {"maxclients", "1000"};
 cvar_t allow_http		= {"allow_http", "1"};
-cvar_t pending_livetime = {"pending_livetime", "5"}; // 5 seconds
+cvar_t pending_livetime = {"pending_livetime", "3600"}; // seconds
 
 
 // this just can't be done as macro, so I wrote this function

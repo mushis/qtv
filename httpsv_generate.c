@@ -508,7 +508,10 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 	Cluster_BuildAvailableDemoList(cluster);
 	for (i = 0; i < cluster->availdemoscount; i++)
 	{
-		snprintf(link, sizeof(link), "<A HREF=\"/watch.qtv?demo=%s\">%s</A> (%ikb)<br/>", cluster->availdemos[i].name, cluster->availdemos[i].name, cluster->availdemos[i].size/1024);
+		snprintf(link, sizeof(link), "<A HREF=\"/watch.qtv?demo=%s\">%s</A> <A HREF=\"/dl/demos/%s\">(dl %ikb)</A><br/>",
+			 cluster->availdemos[i].name, cluster->availdemos[i].name, cluster->availdemos[i].name, 
+			 cluster->availdemos[i].size/1024);
+
 		Net_ProxySend(cluster, dest, link, strlen(link));
 	}
 
@@ -534,36 +537,25 @@ void HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest)
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "image/png", false);
 }
 
-static qbool LevelshotFilenameValid(const char *name)
-{
-	size_t i, len = strlen(name);
+//========================================================================
+// LEVELSHOTS
+//========================================================================
 
-	for (i = 0; i < len; i++)
-	{
-		if (name[i] == '.' || name[i] == '-')
-			continue; // valid chars non alphanum chars
-
-		if (!isalnum(name[i]))
-			return false; // non alphanum is invalid
-	}
-	return true;
-}
-
-static qbool LevelshotPathName(char *buf, size_t bufsize, char *name) 
+static qbool MediaPathName(char *buf, size_t bufsize, char *name, char *mediadir) 
 {
 	char pathname[MAX_QPATH];
 
+	buf[0] = 0;
+
+	// parse requested file, its string before first space
 	COM_ParseToken(name, pathname, sizeof(pathname), " ");
 
 	if (!pathname[0])
 		return false;
-	
-	if (!LevelshotFilenameValid(pathname))
-		return false;
 
-	snprintf(buf, bufsize, "levelshots/%s", pathname);
-	
-	return true;
+	snprintf(buf, bufsize, "%s/%s", mediadir, pathname);
+		
+	return Sys_SafePath(buf);
 }
 
 void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name)
@@ -574,7 +566,7 @@ void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name)
 	if (dest->buffer_file)
 		Sys_Error("HTTPSV_GenerateLevelshot: dest->buffer_file");
 
-	if (!LevelshotPathName(pathname, MAX_QPATH, name)) {
+	if (!MediaPathName(pathname, MAX_QPATH, name, "levelshots")) {
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
 	}
@@ -589,4 +581,32 @@ void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name)
 	}
 
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "image/jpeg", false);
+}
+
+//========================================================================
+// DEMO DOWNLOAD
+//========================================================================
+
+void HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name)
+{
+	char pathname[MAX_QPATH];
+
+	if (dest->buffer_file)
+		Sys_Error("HTTPSV_GenerateDemoDownload: dest->buffer_file");
+
+	if (   !MediaPathName(pathname, MAX_QPATH, name, demo_dir.string)
+		|| stricmp(".mvd", Sys_FileExtension(pathname))  // .mvd demos only
+	   )
+	{
+		HTTPSV_GenerateNotFoundError(cluster, dest);
+		return;
+	}
+	
+	dest->buffer_file = fopen(pathname, "rb");
+	if (!dest->buffer_file) {
+		HTTPSV_GenerateNotFoundError(cluster, dest);
+		return;
+	}
+
+	HTTPSV_SendHTTPHeader(cluster, dest, "200", "application/octet-stream", false);
 }
