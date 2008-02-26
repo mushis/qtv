@@ -599,8 +599,11 @@ void			Sys_ReadSTDIN(cluster_t *cluster, fd_set socketset);
 
 // Replace char in string
 void			Sys_ReplaceChar(char *s, char from, char to);
-
+// our hash function
 unsigned long	Sys_HashKey(const char *str);
+// just convert uptime seconds in days hours and minutes
+void			Get_Uptime(int uptime_seconds, int *days, int *h, int *m);
+
 
 //
 // token.c
@@ -815,6 +818,7 @@ void			HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest);
 void			HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest);
 void			HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name);
 void			HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name);
+void			HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest);
 
 
 //

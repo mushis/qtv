@@ -610,3 +610,30 @@ void HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name)
 
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "application/octet-stream", false);
 }
+
+//========================================================================
+// STATUS
+//========================================================================
+
+void HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest)
+{
+	int d, h, m;
+
+	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/html", true);
+	HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Status");
+
+	Net_ProxyPrintf(dest, "%s", "<h1>QuakeTV: Status</h1>");
+
+	Net_ProxyPrintf(dest, "%s", "<PRE>");
+
+	Net_ProxyPrintf(dest, "servers: %i/%i\n", g_cluster.NumServers, maxservers.integer);
+	Net_ProxyPrintf(dest, "clients: %i/%i\n", g_cluster.numproxies, maxclients.integer);
+
+	Get_Uptime(g_cluster.curtime / 1000, &d, &h, &m);
+
+	Net_ProxyPrintf(dest, "uptime: %i days %02d:%02d\n", d, h, m);
+
+	Net_ProxyPrintf(dest, "%s", "</PRE>");
+
+	HTTPSV_SendHTMLFooter(cluster, dest);
+}

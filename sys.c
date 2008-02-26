@@ -433,6 +433,9 @@ void Sys_ReplaceChar(char *s, char from, char to)
 				*s = to;
 }
 
+//=====================
+// our hash function
+//=====================
 unsigned long Sys_HashKey (const char *str)
 {
 	unsigned long hash = 0;
@@ -444,4 +447,17 @@ unsigned long Sys_HashKey (const char *str)
         hash = (c &~ 32) + (hash << 6) + (hash << 16) - hash;
 
     return hash;
+}
+
+//=====================
+// just convert uptime seconds in days hours and minutes
+//=====================
+void Get_Uptime(int uptime_seconds, int *days, int *h, int *m)
+{
+	int diff;
+
+	days[0] = uptime_seconds / 60 / 60 / 24; // whole days
+	diff    = uptime_seconds - days[0] * 24 * 60 * 60; // not whole day in seconds
+	h[0]    = diff / 60 / 60; // hours 
+	m[0]    = (diff - h[0] * 60 * 60) / 60; // minutes
 }

@@ -351,15 +351,19 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	}
 	else if (!strncmp(pend->inbuffer+4, "/qtvbg01.png", sizeof("/qtvbg01.png")-1))
 	{
-		HTTPSV_GenerateHTMLBackGroundImg(cluster,pend);
+		HTTPSV_GenerateHTMLBackGroundImg(cluster, pend);
 	}
 	else if (!strncmp(pend->inbuffer+4, "/levelshots/", sizeof("/levelshots/")-1))
 	{
-		HTTPSV_GenerateLevelshot(cluster,pend,pend->inbuffer+4+sizeof("/levelshots/")-1);
+		HTTPSV_GenerateLevelshot(cluster, pend, pend->inbuffer+4+sizeof("/levelshots/")-1);
 	}
 	else if (!strncmp(pend->inbuffer+4, "/dl/demos/", sizeof("/dl/demos/")-1))
 	{
-		HTTPSV_GenerateDemoDownload(cluster,pend,pend->inbuffer+4+sizeof("/dl/demos/")-1);
+		HTTPSV_GenerateDemoDownload(cluster, pend, pend->inbuffer+4+sizeof("/dl/demos/")-1);
+	}
+	else if (!strncmp(pend->inbuffer+4, "/status", sizeof("/status")-1))
+	{
+		HTTPSV_GenerateQTVStatus(cluster, pend);
 	}
 	else
 	{
