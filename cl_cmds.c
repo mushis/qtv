@@ -105,14 +105,14 @@ qbool isSayFlood(sv_t *qtv, oproxy_t *p)
 
 void Clcmd_Say_f(sv_t *qtv, oproxy_t *prox)
 {
-	char buffer[1024 + 100], text[1024];
+	char buffer[1024 + 100], text[1024], name[MAX_INFO_KEY];
 	netmsg_t msg;
 
 	if (isSayFlood(qtv, prox))
 		return; // flooder
 
 //	snprintf(text, sizeof(text), "#%d: %s\n", prox->id, Cmd_Args());
-	snprintf(text, sizeof(text), "#%d:%s: %s\n", prox->id, Info_Get(&prox->ctx, "name"), Cmd_Args());
+	snprintf(text, sizeof(text), "#%d:%s: %s\n", prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)), Cmd_Args());
 
 	InitNetMsg(&msg, buffer, sizeof(buffer));
 
@@ -136,6 +136,7 @@ void Clcmd_Users_f(sv_t *qtv, oproxy_t *prox)
 {
 	int c;
 	oproxy_t *tmp;
+	char name[MAX_INFO_KEY];
 
 	Sys_Printf (NULL, "userid name\n"
 					  "------ ----\n");
@@ -145,7 +146,7 @@ void Clcmd_Users_f(sv_t *qtv, oproxy_t *prox)
 		if (tmp->drop)
 			continue;
 
-		Sys_Printf(NULL, "%6d %s\n", tmp->id, Info_Get(&tmp->ctx, "name"));
+		Sys_Printf(NULL, "%6d %s\n", tmp->id, Info_Get(&tmp->ctx, "name", name, sizeof(name)));
 		c++;
 	}	
 
@@ -157,13 +158,13 @@ void Clcmd_Users_f(sv_t *qtv, oproxy_t *prox)
 // generate userlist message about "prox" and put in "msg"
 static void msg_qtvuserlist(netmsg_t *msg, oproxy_t *prox, qtvuserlist_t action)
 {
-	char  str[512];
+	char  str[512], name[MAX_INFO_KEY];
 
 	switch ( action )
 	{
 		case QUL_ADD:
 		case QUL_CHANGE:
-			snprintf(str, sizeof(str), "//qul %d %d \"%s\"\n", action, prox->id, Info_Get(&prox->ctx, "name"));
+			snprintf(str, sizeof(str), "//qul %d %d \"%s\"\n", action, prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)));
 
 		break;
 
@@ -712,7 +713,7 @@ static void Clcmd_Spawn_f(sv_t *qtv, oproxy_t *prox)
 //Allow clients to change userinfo
 static void Clcmd_SetInfo_f (sv_t *qtv, oproxy_t *prox)
 {
-	char oldval[MAX_INFO_KEY];
+	char oldval[MAX_INFO_KEY], newval[MAX_INFO_KEY];
 
 	if (Cmd_Argc() == 1) {
 		Sys_Printf(NULL, "User info settings:\n");
@@ -729,11 +730,11 @@ static void Clcmd_SetInfo_f (sv_t *qtv, oproxy_t *prox)
 //	if (Cmd_Argv(1)[0] == '*')
 //		return;		// don't set priveledged values
 
-	strlcpy(oldval, Info_Get(&prox->ctx, Cmd_Argv(1)), sizeof(oldval)); // save current as old
+	Info_Get(&prox->ctx, Cmd_Argv(1), oldval, sizeof(oldval)); // save current as old
 
 	Info_Set(&prox->ctx, Cmd_Argv(1), Cmd_Argv(2)); // set new value
 
-	if (!strcmp(Info_Get(&prox->ctx, Cmd_Argv(1)), oldval)) // compare new and old
+	if (!strcmp(Info_Get(&prox->ctx, Cmd_Argv(1), newval, sizeof(newval)), oldval)) // compare new and old
 		return; // key hasn't changed
 
 	// process any changed values

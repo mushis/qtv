@@ -42,7 +42,7 @@ void			Info_SetValueForStarKey (char *s, const char *key, const char *value, int
 
 
 // return value for given key
-char			*Info_Get(ctxinfo_t *ctx, const char *name);
+char			*Info_Get(ctxinfo_t *ctx, const char *name, char *buf, int bufsize);
 // set value for given key
 qbool			Info_Set (ctxinfo_t *ctx, const char *name, const char *value);
 // remove given key

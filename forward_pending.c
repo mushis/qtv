@@ -607,38 +607,40 @@ void SV_CheckMVDPort(cluster_t *cluster)
 void Prox_FixName(sv_t *qtv, oproxy_t *prox)
 {
 	oproxy_t *pcl;
-	char	*val, *p;
+	char	*p;
 	int		dupc = 1;
-	char	newname[MAX_INFO_KEY], tmp[sizeof(newname)];
+	char	newname[MAX_INFO_KEY], tmp[MAX_INFO_KEY], tmp2[MAX_INFO_KEY];
 
 	// get name
-	val = Info_Get(&prox->ctx, "name");
-	// trim user name
-	strlcpy (newname, val, sizeof(newname));
+	Info_Get(&prox->ctx, "name", tmp, sizeof(tmp)); // save old/current name for some time
+	// copy name
+	strlcpy (newname, tmp, sizeof(newname));
 
 	for (p = newname; *p && (*p & 127) == ' '; p++)
-		; // empty operator, we sesrch where prefixed spaces ends
+		; // empty operator, we search where prefixed spaces ends
 
 	if (p != newname) // skip prefixed spaces, if any, even whole string of spaces
 		strlcpy(newname, p, sizeof(newname));
 
 	for (p = newname + strlen(newname) - 1; p >= newname; p--)
+	{
 		if (*p && (*p & 127) != ' ') // skip spaces in suffix, if any
 		{
 			p[1] = 0;
 			break;
 		}
-
-	if (strcmp(val, newname))
-	{
-		Info_Set(&prox->ctx, "name", newname); // set name with skipped spaces or trimmed
-		val = Info_Get(&prox->ctx, "name");
 	}
 
-	if (!val[0] || !stricmp(val, "console"))
+	if (strcmp(tmp, newname))
+	{
+		Info_Set(&prox->ctx, "name", newname); // set name with skipped spaces or trimmed
+		Info_Get(&prox->ctx, "name", newname, sizeof(newname));
+	}
+
+	if (!newname[0] || !stricmp(newname, "console"))
 	{
 		Info_Set(&prox->ctx, "name", "unnamed"); // console or empty name not allowed, using "unnamed" instead
-		val = Info_Get(&prox->ctx, "name");
+		Info_Get(&prox->ctx, "name", newname, sizeof(newname));
 	}
 
 	// check to see if another user by the same name exists
@@ -648,14 +650,14 @@ void Prox_FixName(sv_t *qtv, oproxy_t *prox)
 		if (prox == pcl)
 			continue; // ignore self
 
-		if (!stricmp(Info_Get(&pcl->ctx, "name"), val))
+		if (!stricmp(Info_Get(&pcl->ctx, "name", tmp, sizeof(tmp)), newname))
 			break; // onoz, dup name
 	}
 
 	if (!pcl)
 		return; // not found dup name
 
-	p = val;
+	p = newname;
 
 	if (p[0] == '(' && isdigit(p[1]))
 	{
@@ -665,7 +667,7 @@ void Prox_FixName(sv_t *qtv, oproxy_t *prox)
 			p++;
 
 		if (p[0] != ')')
-			p = val;
+			p = newname;
 		else
 			p++;
 	}
@@ -681,7 +683,7 @@ void Prox_FixName(sv_t *qtv, oproxy_t *prox)
 			if (prox == pcl)
 				continue; // ignore self
     
-			if (!stricmp(Info_Get(&pcl->ctx, "name"), newname))
+			if (!stricmp(Info_Get(&pcl->ctx, "name", tmp2, sizeof(tmp2)), newname))
 				break; // onoz, dup name
 		}
 

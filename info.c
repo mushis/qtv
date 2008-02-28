@@ -201,25 +201,15 @@ static info_t *_Info_Get (ctxinfo_t *ctx, const char *name)
 	return NULL;
 }
 
-char *Info_Get(ctxinfo_t *ctx, const char *name)
+char *Info_Get(ctxinfo_t *ctx, const char *name, char *buf, int bufsize)
 {
-	static	char value[4][512];
-	static	int valueindex = 0;
-
 	info_t *a = _Info_Get(ctx, name);
 
-	if ( a )
-	{
-		valueindex = (valueindex + 1) % 4;
+	if (!buf || bufsize < 1)
+		Sys_Error("Info_Get: buf");
 
-		strlcpy(value[valueindex], a->value, sizeof(value[0]));
-
-		return value[valueindex];
-	}
-	else
-	{
-		return "";
-	}
+	strlcpy(buf, a ? a->value : "", bufsize);
+	return buf;
 }
 
 qbool Info_Set (ctxinfo_t *ctx, const char *name, const char *value)
