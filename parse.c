@@ -161,6 +161,26 @@ static void ParseStufftext(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 		tv->drop = true;	//this shouldn't ever happen
 		return;
 	}
+	else if (!strncmp(text, "//finalscores ", sizeof("//finalscores ") - 1))
+	{
+		// Ah, this is a lastscores HACK from KTX
+		int arg = 1;
+		int k_ls = bound(0, tv->lastscores_idx, MAX_LASTSCORES-1);
+
+		Cmd_TokenizeString(text + 2); // skip //
+
+		strlcpy(tv->lastscores[k_ls].date, Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].date));
+		strlcpy(tv->lastscores[k_ls].type, Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].type));
+		strlcpy(tv->lastscores[k_ls].map,  Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].map));
+		strlcpy(tv->lastscores[k_ls].e1,   Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].e1));
+		strlcpy(tv->lastscores[k_ls].s1,   Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].s1));
+		strlcpy(tv->lastscores[k_ls].e2,   Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].e2));
+		strlcpy(tv->lastscores[k_ls].s2,   Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].s2));
+
+		tv->lastscores_idx = ( k_ls + 1 ) % MAX_LASTSCORES;
+
+		return;
+	}
 	else
 	{
 		return;

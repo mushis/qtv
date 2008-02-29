@@ -386,6 +386,19 @@ typedef struct oproxy_s {
 	struct			oproxy_s *next;
 } oproxy_t;
 
+
+#define MAX_LASTSCORES 32
+
+typedef struct lastscores_s { // our lastscore struct
+	char			date[sizeof("20080229145032") + 32]; // 32 just in case, useless for now, but may be we extend it one day
+	char			type[32];			// game type, like duel team etc
+	char			map[32];			// map name, dm6 dm3 etc
+	char			e1[64];				// first team/person
+	char			s1[64];				// scores for first team/person
+	char			e2[64];				// second team/person
+	char			s2[64];				// scores for second
+} lastscores_t;
+
 typedef	enum {
 		SRC_BAD = 0,
 		SRC_DEMO,
@@ -427,6 +440,11 @@ struct sv_s {	//details about a server connection (also known as stream)
 	qbool			DisconnectWhenNooneIsWatching; // no comments
 
 	oproxy_t		*proxies;				// list of clients for this QTV stream
+
+	// { lastscores
+	lastscores_t	lastscores[MAX_LASTSCORES];	// here we store lastscores
+	int				lastscores_idx;				// index, well it helps understand where to save new lastscore
+	// }
 
 //
 // fields above saved on each QTV_Connect()

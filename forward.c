@@ -139,7 +139,7 @@ void Prox_Printf(cluster_t *cluster, oproxy_t *prox, int dem_type, unsigned int 
 #define PREFIX_LEN	2
 
 	va_list		argptr;
-	char		string[PREFIX_LEN + 1024];
+	char		string[PREFIX_LEN + 1024 * 8];
 
 	if (prox->flushing)
 		return; // no thx, we trying empty their buffer
