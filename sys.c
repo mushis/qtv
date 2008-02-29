@@ -172,6 +172,10 @@ void Sys_Printf(cluster_t *cluster, char *fmt, ...)
 	// cluster may be NULL, if someday u start use it...
 	// some Sys_Printf used as Sys_Printf (NULL, "lalala\n"); so...
 
+	if (redirect_buf && redirect_buf_size > 0)
+		strlcat(redirect_buf, string, redirect_buf_size);
+
+	// do this conversion after copy to redirection buffer, let quake clients use red letters and etc
 	for (t = (unsigned char*)string; *t; t++)
 	{
 		if (*t >= 146 && *t < 156)
@@ -195,9 +199,6 @@ void Sys_Printf(cluster_t *cluster, char *fmt, ...)
 		if (*t == '\a')	//doh. :D
 			*t = ' ';
 	}
-
-	if (redirect_buf && redirect_buf_size > 0)
-		strlcat(redirect_buf, string, redirect_buf_size);
 
 	printf("%s", string);
 }

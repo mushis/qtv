@@ -390,8 +390,8 @@ typedef struct oproxy_s {
 #define MAX_LASTSCORES 32
 
 typedef struct lastscores_s { // our lastscore struct
-	char			date[sizeof("20080229145032") + 32]; // 32 just in case, useless for now, but may be we extend it one day
-	char			type[32];			// game type, like duel team etc
+	char			date[sizeof("Feb 29, 19:00")]; // date
+	char			type[16];			// game type, like duel team etc
 	char			map[32];			// map name, dm6 dm3 etc
 	char			e1[64];				// first team/person
 	char			s1[64];				// scores for first team/person

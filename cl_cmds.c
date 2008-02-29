@@ -754,12 +754,13 @@ static void Clcmd_LastScores_f (sv_t *qtv, oproxy_t *prox)
 {
 	int i, j, cnt;
 	int k_ls = bound(0, qtv->lastscores_idx, MAX_LASTSCORES-1);
-	char *e1, *e2, *le1, *le2, *s1, *s2, *map, *last, *cur;
+	char *e1, *e2, *le1, *le2, *s1, *s2, *map, *last, *cur, *date;
 
-	e1 = e2 = le1 = le2 = s1 = s2 = map = last = cur = "";
+	le1 = le2 = last = "";
 
 	for ( j = k_ls, cnt = i = 0; i < MAX_LASTSCORES; i++, j = (j+1 >= MAX_LASTSCORES) ? 0: j+1 ) {
 
+		date= qtv->lastscores[j].date;
 		cur = qtv->lastscores[j].type;
 		map = qtv->lastscores[j].map;
 		e1  = qtv->lastscores[j].e1;
@@ -767,17 +768,17 @@ static void Clcmd_LastScores_f (sv_t *qtv, oproxy_t *prox)
 		e2  = qtv->lastscores[j].e2;
 		s2  = qtv->lastscores[j].s2;
 
-		if ( !cur[0] || !e1[0] || !e2[0] )
+		if ( !date[0] || !cur[0] || !e1[0] || !e2[0] )
 			continue;
 
 		if (    strcmp(cur, last) // changed game mode
 			 || (strcmp(le1, e1) || strcmp(le2, e2)) // changed teams, duelers
 		   )
 		{
-			Sys_Printf(NULL, "\x90%s %s %s\x91 %s\n", e1, "vs", e2, cur);
+			Sys_Printf(NULL, "\x90%s \366\363 %s\x91 %s\n", e1, e2, cur); // [dag vs qqshka] duel
 		}
 
-		Sys_Printf(NULL, "   %3s:%-3s \x8D %-8.8s\n", s1, s2, map);
+		Sys_Printf(NULL, "   %3s:%-3s \x8D %-8.8s %s\n", s1, s2, map, date); // -5:100 > dm6
 
 		last = cur;
 		le1 = e1;

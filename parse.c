@@ -164,10 +164,12 @@ static void ParseStufftext(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 	else if (!strncmp(text, "//finalscores ", sizeof("//finalscores ") - 1))
 	{
 		// Ah, this is a lastscores HACK from KTX
-		int arg = 1;
+		int arg = 1, i;
 		int k_ls = bound(0, tv->lastscores_idx, MAX_LASTSCORES-1);
 
-		Cmd_TokenizeString(text + 2); // skip //
+		Cmd_TokenizeString(text + 2); // + 2 skips prefixed //
+
+		memset(&tv->lastscores[k_ls], 0, sizeof(tv->lastscores[k_ls]));
 
 		strlcpy(tv->lastscores[k_ls].date, Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].date));
 		strlcpy(tv->lastscores[k_ls].type, Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].type));
@@ -176,6 +178,34 @@ static void ParseStufftext(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 		strlcpy(tv->lastscores[k_ls].s1,   Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].s1));
 		strlcpy(tv->lastscores[k_ls].e2,   Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].e2));
 		strlcpy(tv->lastscores[k_ls].s2,   Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].s2));
+
+		// something goes wrong
+		if ( !tv->lastscores[k_ls].date[0] )
+		{
+			memset(&tv->lastscores[k_ls], 0, sizeof(tv->lastscores[k_ls]));	
+			return;
+		}
+
+		// check do we have same lastcores alredy, and ignore it if we have
+		for ( i = 0; i < MAX_LASTSCORES; i++ )
+		{
+			if ( i == k_ls || !tv->lastscores[i].date[0] )
+				continue;
+
+			if (    !strcmp(tv->lastscores[i].date, tv->lastscores[k_ls].date)
+				 && !strcmp(tv->lastscores[i].type, tv->lastscores[k_ls].type)
+				 && !strcmp(tv->lastscores[i].map,  tv->lastscores[k_ls].map)
+				 && !strcmp(tv->lastscores[i].e1,   tv->lastscores[k_ls].e1)
+				 && !strcmp(tv->lastscores[i].e2,   tv->lastscores[k_ls].e2)
+				 && !strcmp(tv->lastscores[i].s1,   tv->lastscores[k_ls].s1)
+				 && !strcmp(tv->lastscores[i].s2,   tv->lastscores[k_ls].s2)
+			   )
+			{
+				// same lastscores, probably someone is watching demo again and again, so do not add million same lastcores
+				memset(&tv->lastscores[k_ls], 0, sizeof(tv->lastscores[k_ls]));	
+				return;
+			}
+		}
 
 		tv->lastscores_idx = ( k_ls + 1 ) % MAX_LASTSCORES;
 
