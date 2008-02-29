@@ -739,6 +739,8 @@ void			Prox_SendMessage(cluster_t *cluster, oproxy_t *prox, char *buf, int lengt
 // send text as "svc_print" to particular "proxy"
 void			Prox_Printf(cluster_t *cluster, oproxy_t *prox, int dem_type, unsigned int playermask, int level, char *fmt, ...);
 // FIXME: move to different file, forward.c intended keep something different than this raw protocol things
+void			Prox_SendPlayerStats(sv_t *qtv, oproxy_t *prox);
+// FIXME: move to different file, forward.c intended keep something different than this raw protocol things
 void			Prox_SendInitialPlayers(sv_t *qtv, oproxy_t *prox, netmsg_t *msg);
 void			Net_SendConnectionMVD(sv_t *qtv, oproxy_t *prox);
 oproxy_t		*Net_FileProxy(sv_t *qtv, char *filename);

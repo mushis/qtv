@@ -685,6 +685,9 @@ static void Clcmd_Spawn_f(sv_t *qtv, oproxy_t *prox)
 	Prox_SendMessage(&g_cluster, prox, msg.data, msg.cursize, dem_read, (unsigned)-1);
 	msg.cursize = 0;
 
+	//we do need to send players stats
+	Prox_SendPlayerStats(qtv, prox);
+
 	//we do need to send entity states.
 	Prox_SendInitialEnts(qtv, prox, &msg);
 	Prox_SendMessage(&g_cluster, prox, msg.data, msg.cursize, dem_read, (unsigned)-1);

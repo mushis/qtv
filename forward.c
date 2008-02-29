@@ -158,6 +158,44 @@ void Prox_Printf(cluster_t *cluster, oproxy_t *prox, int dem_type, unsigned int 
 }
 
 // FIXME: move to different file, forward.c intended keep something different than this raw protocol things
+void Prox_SendPlayerStats(sv_t *qtv, oproxy_t *prox)
+{
+	char buffer[MAX_MSGLEN];
+	netmsg_t msg;
+	int player, snum;
+
+	InitNetMsg(&msg, buffer, sizeof(buffer));
+
+	for (player = 0; player < MAX_CLIENTS; player++)
+	{
+		for (snum = 0; snum < MAX_STATS; snum++)
+		{
+			if (qtv->players[player].stats[snum])
+			{
+				if ((unsigned)qtv->players[player].stats[snum] > 255)
+				{
+					WriteByte(&msg, svc_updatestatlong);
+					WriteByte(&msg, snum);
+					WriteLong(&msg, qtv->players[player].stats[snum]);
+				}
+				else
+				{
+					WriteByte(&msg, svc_updatestat);
+					WriteByte(&msg, snum);
+					WriteByte(&msg, qtv->players[player].stats[snum]);
+				}
+			}
+		}
+
+		if (msg.cursize)
+		{
+			Prox_SendMessage(&g_cluster, prox, msg.data, msg.cursize, dem_stats|(player<<3), (1<<player));
+			msg.cursize = 0;
+		}
+	}
+}
+
+// FIXME: move to different file, forward.c intended keep something different than this raw protocol things
 void Prox_SendInitialPlayers(sv_t *qtv, oproxy_t *prox, netmsg_t *msg)
 {
 	int i, j, flags;
