@@ -231,8 +231,9 @@ typedef struct {
 	unsigned int maxsize;
 	char *data;
 	unsigned int startpos;
-	qbool overflowed;
-	qbool allowoverflow;
+// WTF this does't used?
+//	qbool overflowed;
+//	qbool allowoverflow;
 } netmsg_t;
 
 typedef struct { // FIXME: hehe, nice struct
