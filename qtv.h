@@ -643,6 +643,7 @@ char			*COM_ParseToken (char *data, char *out, int outsize, const char *punctuat
 
 extern cvar_t	maxservers;
 extern cvar_t	upstream_timeout;
+extern cvar_t	parse_delay;
 
 
 #define dem_cmd			0

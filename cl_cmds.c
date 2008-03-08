@@ -103,6 +103,29 @@ qbool isSayFlood(sv_t *qtv, oproxy_t *p)
 	return false;
 }
 
+static int CmdToUpstream(sv_t *qtv, char *cmd)
+{
+	char buffer[1024 + 100];
+	netmsg_t msg;
+
+	if (qtv->src.type != SRC_TCP)
+		return 0; // can't send anything anyway
+
+	InitNetMsg(&msg, buffer, sizeof(buffer));
+
+	WriteShort  (&msg, 2 + 1 + strlen(cmd) + 1); // short + byte + null terminated string
+	WriteByte   (&msg, qtv_clc_stringcmd);
+	WriteString (&msg, cmd);
+
+	// may overflow our source and drop, so better do not send this cmd, caller must check success instead
+	if (qtv->UpstreamBufferSize + msg.cursize > sizeof(qtv->UpstreamBuffer))
+		return 0;
+
+	Net_QueueUpstream(qtv, msg.cursize, msg.data);
+
+	return 1;
+}
+
 void Clcmd_Say_f(sv_t *qtv, oproxy_t *prox)
 {
 	char buffer[1024 + 100], text[1024], name[MAX_INFO_KEY];
@@ -110,6 +133,26 @@ void Clcmd_Say_f(sv_t *qtv, oproxy_t *prox)
 
 	if (isSayFlood(qtv, prox))
 		return; // flooder
+
+	if (!stricmp(Cmd_Argv(1), "say_game"))
+	{
+		int i;
+
+		snprintf(text, sizeof(text), "say_game #%d:%s:", prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)));
+
+		for (i = 2; i < Cmd_Argc(); i++)
+		{
+			strlcat(text, " ", sizeof(text));
+			strlcat(text, Cmd_Argv(i), sizeof(text));
+		}
+
+		strlcat(text, "\n", sizeof(text));
+
+		if ( !CmdToUpstream(qtv, text) )
+			Sys_Printf(NULL, "say_game failed\n");
+
+		return;
+	}
 
 //	snprintf(text, sizeof(text), "#%d: %s\n", prox->id, Cmd_Args());
 	snprintf(text, sizeof(text), "#%d:%s: %s\n", prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)), Cmd_Args());

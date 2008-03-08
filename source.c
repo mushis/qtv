@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 cvar_t maxservers		= {"maxservers", "100"};
 cvar_t upstream_timeout	= {"upstream_timeout", "60"};
+cvar_t parse_delay	    = {"parse_delay", "7"};
 
 #define BUFFERTIME 10	// secords for artificial delay, so we can buffer things properly.
 
@@ -146,6 +147,16 @@ void Net_SendQTVConnectionRequest(sv_t *qtv, char *authmethod, char *challenge)
 		else
 		{
 			Net_UpstreamPrintf(qtv, "RECEIVE\n");
+		}
+
+		// send hostname as userinfo
+		{
+			char userinfo[1024] = {0};
+
+			Info_SetValueForStarKey(userinfo, "name", hostname.string, sizeof(userinfo));
+
+			if (userinfo[0])
+				Net_UpstreamPrintf(qtv, "USERINFO: %s\n", userinfo);
 		}
 
 // qqshka: we do not use RAW at all, so do not bother
@@ -961,6 +972,92 @@ qbool IsSourceStream(sv_t *qtv)
 	return (qtv->src.type == SRC_TCP || qtv->src.type == SRC_DEMO) ? true : false;
 }
 
+// return non zero if we have at least one message
+// ms - will contain ms
+int ConsistantMVDDataEx(unsigned char *buffer, int remaining, int *ms)
+{
+	qbool warn = true;
+	int lengthofs;
+	int length;
+	int available = 0;
+
+	if (ms)
+		ms[0] = 0;
+
+	while( 1 )
+	{
+		if (remaining < 2)
+		{
+			return available;
+		}
+
+		//buffer[0] is time
+
+		switch (buffer[1]&dem_mask)
+		{
+		case dem_set:
+			length = 10;
+			goto gottotallength;
+		case dem_multiple:
+			lengthofs = 6;
+			break;
+		default:
+			lengthofs = 2;
+			break;
+		}
+
+		if (lengthofs+4 > remaining)
+		{
+			return available;
+		}
+
+		length = (buffer[lengthofs]<<0) + (buffer[lengthofs+1]<<8) + (buffer[lengthofs+2]<<16) + (buffer[lengthofs+3]<<24);
+
+		if (length > MAX_MVD_SIZE && warn)
+		{
+			Sys_DPrintf(NULL, "Corrupt mvd, length: %d\n", length);
+			warn = false;
+		}
+
+		length += lengthofs+4;
+
+gottotallength:
+		if (remaining < length)
+		{
+			return available;
+		}
+
+		if (ms)
+			ms[0] += buffer[0];
+			
+		remaining -= length;
+		available += length;
+		buffer    += length;
+	}
+}
+
+int ConsistantMVDData(unsigned char *buffer, int remaining)
+{
+	return ConsistantMVDDataEx(buffer, remaining, NULL);
+}
+
+int ServerInGameState(sv_t *qtv)
+{
+	char status[256] = {0};
+
+	Info_ValueForKey(qtv->serverinfo, "status", status, sizeof(status));
+
+#if 1
+	if (!stricmp(status, "Standby"))
+		return 0; // game not yet started
+#else
+	if (!stricmp(status, "Standby") || !stricmp(status, "Countdown"))
+		return 0; // game not yet started, even we probably in Coutdown mode
+#endif
+
+	return 1;
+}
+
 //we will read out as many packets as we can until we're up to date
 //note: this can cause real issues when we're overloaded for any length of time
 //each new packet comes with a leading msec byte (msecs from last packet)
@@ -980,11 +1077,44 @@ int QTV_ParseMVD(sv_t *qtv)
 	int packettime;
 	int forwards = 0;
 
+	int ms = 0;
+	float	demospeed, desired, current;
+
 	unsigned int length, nextpackettime;
 	unsigned char *buffer;
 
 	if (qtv->qstate <= qs_parsingQTVheader)
 		return 0; // we are not ready to parse
+
+	ConsistantMVDDataEx(qtv->buffer, qtv->buffersize, &ms);
+
+	// guess playback speed
+	if (parse_delay.value)
+	{
+		desired = (ServerInGameState(qtv) ? parse_delay.value : 0.5); // in prewar use short delay
+		desired = bound(0.5, desired, 20.0); // bound it to reasonable values
+		current = 0.001 * ms;
+		// qqshka: this is linear version
+		demospeed = current / desired;
+    
+		if (demospeed >= 0.85 && demospeed <= 1.15)
+			demospeed = 1.0;
+    
+		// bound demospeed
+		demospeed = bound(0.1, demospeed, 3.0); // we will crash if demospeed will be zero
+	}
+
+/*
+	if (developer.integer)
+	{
+		static int delayer = 0; // so it does't printed each frame
+
+		if (!((delayer++) % 500))
+		{
+			Sys_Printf(NULL, "qtv: id: %4d, ms:%6d, speed %.3f\n", qtv->streamid, ms, demospeed);
+		}
+	}
+*/
 
 	while (qtv->curtime >= qtv->parsetime)
 	{
@@ -1067,7 +1197,8 @@ int QTV_ParseMVD(sv_t *qtv)
 			break;	//can't parse it yet.
 		}
 
-		nextpackettime = qtv->parsetime + buffer[0];
+		packettime     = (float)buffer[0] / demospeed;
+		nextpackettime = qtv->parsetime + packettime;
 
 		if (nextpackettime >= qtv->curtime)
 			break;
@@ -1094,8 +1225,6 @@ int QTV_ParseMVD(sv_t *qtv)
 
 		length = lengthofs + 4 + length;	//make length be the length of the entire packet
 
-		packettime = buffer[0];
-
 		//we're about to destroy this data, so it had better be forwarded by now!
 		if (qtv->buffersize < length)
 			Sys_Error ("QTV_ParseMVD: qtv->buffersize < length");
@@ -1109,7 +1238,7 @@ int QTV_ParseMVD(sv_t *qtv)
 		if (qtv->src.type == SRC_DEMO)
 			Net_ReadStream(qtv); // FIXME: remove me
 
-		qtv->parsetime += packettime;
+		qtv->parsetime = nextpackettime;
 
 		if (qtv->src.type != SRC_BAD) // parse called even when source is closed, that set wrong reconnect time for demos
 			qtv->NextConnectAttempt = qtv->curtime + (qtv->src.type == SRC_DEMO ? DEMO_RECONNECT_TIME : RECONNECT_TIME);

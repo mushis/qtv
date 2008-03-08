@@ -131,6 +131,7 @@ void Source_Init(void)
 {
 	Cvar_Register (&maxservers);
 	Cvar_Register (&upstream_timeout);
+	Cvar_Register (&parse_delay);
 
 	Cmd_AddCommand ("qtv", qtv_f);
 	Cmd_AddCommand ("playdemo", playdemo_f);
