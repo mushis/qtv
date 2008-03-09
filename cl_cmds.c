@@ -134,16 +134,24 @@ void Clcmd_Say_f(sv_t *qtv, oproxy_t *prox)
 	if (isSayFlood(qtv, prox))
 		return; // flooder
 
-	if (!stricmp(Cmd_Argv(1), "say_game"))
+	if (!stricmp(Cmd_Argv(0), "say_game") || !stricmp(Cmd_Argv(1), "say_game"))
 	{
 		int i;
 
 		snprintf(text, sizeof(text), "say_game #%d:%s:", prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)));
 
-		for (i = 2; i < Cmd_Argc(); i++)
+		if (!stricmp(Cmd_Argv(0), "say_game"))
 		{
 			strlcat(text, " ", sizeof(text));
-			strlcat(text, Cmd_Argv(i), sizeof(text));
+			strlcat(text, Cmd_Args(), sizeof(text));
+		}
+		else
+		{
+			for (i = 2; i < Cmd_Argc(); i++)
+			{
+				strlcat(text, " ", sizeof(text));
+				strlcat(text, Cmd_Argv(i), sizeof(text));
+			}
 		}
 
 		strlcat(text, "\n", sizeof(text));
@@ -869,6 +877,7 @@ static ucmd_t ucmds[] =
 {
 	{"say", 			Clcmd_Say_f},
 	{"say_team",		Clcmd_Say_f},
+	{"say_game",		Clcmd_Say_f},
 
 	{"setinfo",			Clcmd_SetInfo_f},
 
