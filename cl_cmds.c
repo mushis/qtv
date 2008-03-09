@@ -128,11 +128,27 @@ static int CmdToUpstream(sv_t *qtv, char *cmd)
 
 void Clcmd_Say_f(sv_t *qtv, oproxy_t *prox)
 {
-	char buffer[1024 + 100], text[1024], name[MAX_INFO_KEY];
+	char buffer[1024 + 100], text[1024], text2[1024] = {0}, name[MAX_INFO_KEY], *args;
 	netmsg_t msg;
+	int j;
 
 	if (isSayFlood(qtv, prox))
 		return; // flooder
+
+// { get rid of quotes
+	args = Cmd_Args();
+
+	if (args[0] == '"' && (j = strlen(args)) > 2)
+	{
+		args[j-1] = 0;
+		args++;
+
+		strlcat(text2, Cmd_Argv(0), sizeof(text2));
+		strlcat(text2,  " ", sizeof(text2));
+		strlcat(text2, args, sizeof(text2));
+		Cmd_TokenizeString(text2);
+	}
+// }
 
 	if (!stricmp(Cmd_Argv(0), "say_game") || !stricmp(Cmd_Argv(1), "say_game"))
 	{
