@@ -1103,6 +1103,10 @@ int QTV_ParseMVD(sv_t *qtv)
 		// bound demospeed
 		demospeed = bound(0.1, demospeed, 3.0); // we will crash if demospeed will be zero
 	}
+	else
+	{
+		demospeed = 1;
+	}
 
 /*
 	if (developer.integer)
