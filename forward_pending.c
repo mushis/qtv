@@ -637,7 +637,7 @@ void Prox_FixName(sv_t *qtv, oproxy_t *prox)
 		Info_Get(&prox->ctx, "name", newname, sizeof(newname));
 	}
 
-	if (!newname[0] || !stricmp(newname, "console"))
+	if (!newname[0] || !stricmp(newname, "console") || strchr(newname, '#'))
 	{
 		Info_Set(&prox->ctx, "name", "unnamed"); // console or empty name not allowed, using "unnamed" instead
 		Info_Get(&prox->ctx, "name", newname, sizeof(newname));
