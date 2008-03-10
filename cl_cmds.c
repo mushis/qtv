@@ -128,9 +128,10 @@ static int CmdToUpstream(sv_t *qtv, char *cmd)
 
 void Clcmd_Say_f(sv_t *qtv, oproxy_t *prox)
 {
-	char buffer[1024 + 100], text[1024], text2[1024] = {0}, name[MAX_INFO_KEY], *args;
+	char buffer[1024 + 100], text[1024], text2[1024] = {0}, name[MAX_INFO_KEY], *args, *prefix;
 	netmsg_t msg;
 	int j;
+	qbool say_game = false;
 
 	if (isSayFlood(qtv, prox))
 		return; // flooder
@@ -140,37 +141,29 @@ void Clcmd_Say_f(sv_t *qtv, oproxy_t *prox)
 
 	if (args[0] == '"' && (j = strlen(args)) > 2)
 	{
-		args[j-1] = 0;
-		args++;
-
-		strlcat(text2, Cmd_Argv(0), sizeof(text2));
-		strlcat(text2,  " ", sizeof(text2));
-		strlcat(text2, args, sizeof(text2));
-		Cmd_TokenizeString(text2);
+		strlcpy(text2, args + 1, sizeof(text2));
+		text2[(int)bound(0, j - 2, sizeof(text2)-1)] = 0;
+		args = text2;
 	}
 // }
 
-	if (!stricmp(Cmd_Argv(0), "say_game") || !stricmp(Cmd_Argv(1), "say_game"))
+	prefix = "";
+
+	if (!stricmp(Cmd_Argv(0), "say_game"))
 	{
-		int i;
+		say_game = true;	
+	}
+	else if (!strnicmp(args, "say_game ", sizeof("say_game ") - 1))
+	{
+		say_game = true;
 
-		snprintf(text, sizeof(text), "say_game #%d:%s:", prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)));
+		args += sizeof("say_game ") - 1;
+		prefix = "say_game ";
+	}
 
-		if (!stricmp(Cmd_Argv(0), "say_game"))
-		{
-			strlcat(text, " ", sizeof(text));
-			strlcat(text, Cmd_Args(), sizeof(text));
-		}
-		else
-		{
-			for (i = 2; i < Cmd_Argc(); i++)
-			{
-				strlcat(text, " ", sizeof(text));
-				strlcat(text, Cmd_Argv(i), sizeof(text));
-			}
-		}
-
-		strlcat(text, "\n", sizeof(text));
+	if (say_game)
+	{
+		snprintf(text, sizeof(text), "%s \"%s#%d:%s: %s\"", Cmd_Argv(0), prefix, prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)), args);
 
 		if ( !CmdToUpstream(qtv, text) )
 			Sys_Printf(NULL, "say_game failed\n");
@@ -178,8 +171,7 @@ void Clcmd_Say_f(sv_t *qtv, oproxy_t *prox)
 		return;
 	}
 
-//	snprintf(text, sizeof(text), "#%d: %s\n", prox->id, Cmd_Args());
-	snprintf(text, sizeof(text), "#%d:%s: %s\n", prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)), Cmd_Args());
+	snprintf(text, sizeof(text), "#0:qtv_%s:#%d:%s: %s\n", Cmd_Argv(0), prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)), args);
 
 	InitNetMsg(&msg, buffer, sizeof(buffer));
 
