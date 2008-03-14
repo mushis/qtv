@@ -14,9 +14,10 @@ qbool IsPlayer(const playerinfo_t *p)
 {
 	char buffer[64];
 
-	if (*p->userinfo) return !atoi(
-		Info_ValueForKey(p->userinfo, "*spectator", buffer, sizeof(buffer)));
-	else return false;
+	if (!p->userinfo[0])
+		return false;
+
+	return !atoi(Info_ValueForKey(p->userinfo, "*spectator", buffer, sizeof(buffer)));
 }
 
 void HTTPSV_GenerateNotFoundError(cluster_t *cluster, oproxy_t *dest)
@@ -43,89 +44,127 @@ void HTTPSV_GenerateCSSFile(cluster_t *cluster, oproxy_t *dest)
 
 
 /***** SCOREBOARD *****/
+
 typedef struct  {
-	int frags;
-	char name[MAX_INFO_KEY];
+
+	int		frags;
+	char	name[MAX_INFO_KEY];
+
 } scoreboard_teaminfo;
 
 typedef struct {
-	int frags;
-	char name[MAX_INFO_KEY];
-	char team[MAX_INFO_KEY];
+
+	int		frags;
+	char	name[MAX_INFO_KEY];
+	char	team[MAX_INFO_KEY];
+
 } scoreboard_playerinfo;
 
 typedef struct {
-	int players_count;
-	int teams_count;
-	scoreboard_playerinfo players[MAX_CLIENTS];
-	scoreboard_teaminfo teams[MAX_CLIENTS];
+
+	int						players_count;
+	int						teams_count;
+
+	scoreboard_playerinfo	players[MAX_CLIENTS];
+	scoreboard_teaminfo		teams[MAX_CLIENTS];
+
 } scoreboard;
 
-void ScoreBoard_Init(scoreboard *b) { b->players_count = 0; b->teams_count = 0; }
-void ScoreBoard_AddPlayer(scoreboard *b, playerinfo_t* p) {
+void ScoreBoard_Init(scoreboard *b)
+{
+	b->players_count = 0;
+	b->teams_count   = 0;
+}
+
+void ScoreBoard_AddPlayer(scoreboard *b, playerinfo_t* p)
+{
 	int i;
 	qbool teamfound = false;
 
-	if (b->players_count >= MAX_CLIENTS) return;
+	if (b->players_count < 0 || b->players_count >= MAX_CLIENTS)
+		return;
 
 	// add player data
 	b->players[b->players_count].frags = p->frags;
-	Info_ValueForKey(p->userinfo, "name", b->players[b->players_count].name, MAX_INFO_KEY);
-	Info_ValueForKey(p->userinfo, "team", b->players[b->players_count].team, MAX_INFO_KEY);
+	Info_ValueForKey(p->userinfo, "name", b->players[b->players_count].name, sizeof(b->players[0].name));
+	Info_ValueForKey(p->userinfo, "team", b->players[b->players_count].team, sizeof(b->players[0].team));
 	
 	// add frags to team
-	for (i = 0; i < b->teams_count; i++) {
-		if (!strcmp(b->teams[i].name, b->players[b->players_count].team)) {
+	for (i = 0; i < b->teams_count; i++)
+	{
+		if (!strcmp(b->teams[i].name, b->players[b->players_count].team))
+		{
 			b->teams[i].frags += p->frags;
 			teamfound = true;
 			break;
 		}
 	}
-	if (!teamfound && i < MAX_CLIENTS) { // i == b->teams_count, new team found
-		strlcpy(b->teams[i].name, b->players[b->players_count].team, MAX_INFO_KEY);
+
+	if (!teamfound && i < MAX_CLIENTS)
+	{ // i == b->teams_count, new team found
+		strlcpy(b->teams[i].name, b->players[b->players_count].team, sizeof(b->players[0].team));
 		b->teams[i].frags = p->frags;
 		b->teams_count++;
 	}
+
 	b->players_count++;
 }
+
 #define cmpresult(x,y) ((x) < (y) ? -1 : ((x) > (y) ? 1 : 0))
-static int ScoreBoard_CompareTeams(const void *t1, const void *t2) {
+
+static int ScoreBoard_CompareTeams(const void *t1, const void *t2)
+{
 	int f1 = ((scoreboard_teaminfo *) t1)->frags;
 	int f2 = ((scoreboard_teaminfo *) t2)->frags;
 	return -cmpresult(f1, f2);
 }
-static int ScoreBoard_CompareTeamsTN(const void *t1, const void *t2) {
+
+static int ScoreBoard_CompareTeamsTN(const void *t1, const void *t2)
+{
 	char* f1 = ((scoreboard_teaminfo *) t1)->name;
 	char* f2 = ((scoreboard_teaminfo *) t2)->name;
 	return strcmp(f1,f2);
 }
-static int ScoreBoard_ComparePlayers(const void *pv1, const void *pv2) {
+
+static int ScoreBoard_ComparePlayers(const void *pv1, const void *pv2)
+{
 	int f1 = ((scoreboard_playerinfo *) pv1)->frags;
 	int f2 = ((scoreboard_playerinfo *) pv2)->frags;
 	return -cmpresult(f1, f2);
 }
-void ScoreBoard_FSort(scoreboard *b) { // frag-wise sorting
-	qsort(b->teams, b->teams_count, sizeof(scoreboard_teaminfo), ScoreBoard_CompareTeams);
+
+void ScoreBoard_FSort(scoreboard *b)
+{ // frag-wise sorting
+	qsort(b->teams,   b->teams_count,   sizeof(scoreboard_teaminfo),   ScoreBoard_CompareTeams);
 	qsort(b->players, b->players_count, sizeof(scoreboard_playerinfo), ScoreBoard_ComparePlayers);
 }
-void ScoreBoard_TSort(scoreboard *b) { // teamname-wise sorting
-	qsort(b->teams, b->teams_count, sizeof(scoreboard_teaminfo), ScoreBoard_CompareTeamsTN);
+
+void ScoreBoard_TSort(scoreboard *b)
+{ // teamname-wise sorting
+	qsort(b->teams,   b->teams_count,   sizeof(scoreboard_teaminfo),   ScoreBoard_CompareTeamsTN);
 	qsort(b->players, b->players_count, sizeof(scoreboard_playerinfo), ScoreBoard_ComparePlayers);
 }
+
 /**********/
 
+// NOTE: team argument passed as NULL when we need ignore it, for example in duel mode
 void HTTPSV_GenerateTableForTeam(cluster_t *cluster, oproxy_t *dest, scoreboard *b, char* team)
 {
 	int i, p;
 	char buffer[128];
+
 	HTMLPRINT("<table class='scores' cellspacing='0'><tr><th>Frags</th><th>Players</th></tr>");
 
 	for (i = 0, p = 0; i < b->players_count; i++)
 	{
-		if (*team && strcmp(b->players[i].team, team)) continue;
+		if (team && strcmp(b->players[i].team, team))
+			continue; // not on the same team?
 
 		// row start
-		if (p++ % 2) HTMLPRINT("<tr class='scodd'>"); else HTMLPRINT("<tr>");
+		if (p++ % 2)
+			HTMLPRINT("<tr class='scodd'>");
+		else
+			HTMLPRINT("<tr>");
 	
 		// frags
 		snprintf(buffer, sizeof(buffer), "<td class='frags'>%i</td>", b->players[i].frags);
@@ -139,6 +178,7 @@ void HTTPSV_GenerateTableForTeam(cluster_t *cluster, oproxy_t *dest, scoreboard 
 		// row end
 		HTMLPRINT("</tr>");
 	}
+
 	HTMLPRINT("</table>");
 }
 
@@ -147,9 +187,11 @@ void HTTPSV_GenerateScoreBoard(cluster_t *cluster, oproxy_t *dest, scoreboard *b
 	int i, t;
 	char buffer[MAX_INFO_KEY];
 
-	if (teams) {
+	if (teams)
+	{
 		HTMLPRINT("<table class='overallscores'><tr class='teaminfo'>");
-		for (i = 0; i < b->teams_count; i++) {
+		for (i = 0; i < b->teams_count; i++)
+		{
 			HTMLPRINT("<td><span>Team: </span><span class='teamname'>");
 			HTMLprintf(buffer, sizeof(buffer), true, "%s", b->teams[i].name);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
@@ -161,16 +203,24 @@ void HTTPSV_GenerateScoreBoard(cluster_t *cluster, oproxy_t *dest, scoreboard *b
 		HTMLPRINT("</tr><tr>");
 	}
 
-	if (teams) {
-		for (t = 0; t < b->teams_count; t++) {
+	if (teams)
+	{
+		for (t = 0; t < b->teams_count; t++)
+		{
 			HTMLPRINT("<td>");
 			HTTPSV_GenerateTableForTeam(cluster, dest, b, b->teams[t].name);
 			HTMLPRINT("</td>");
 		}
-	} else
-		HTTPSV_GenerateTableForTeam(cluster, dest, b, "");
+	}
+	else
+	{
+		HTTPSV_GenerateTableForTeam(cluster, dest, b, NULL); // NOTE: team argement sent as NULL
+	}
 	
-	if (teams) HTMLPRINT("</tr></table>");
+	if (teams)
+	{
+		HTMLPRINT("</tr></table>");
+	}
 }
 
 void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
@@ -200,24 +250,33 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 		server = (strncmp(streams->server, "tcp:", sizeof("tcp:") - 1) ? streams->server : streams->server + sizeof("tcp:") - 1);
 		
 		// get the name of the map
-		// FIXME: replace "maps/dm6.bsp" with something like "maps/unknown.bsp"
-		strlcpy(mapname, streams->modellist[1].name[0] ? streams->modellist[1].name : "maps/dm6.bsp", sizeof(mapname));
+		// FIXME: is "maps/notready.bsp" is ok to show when we are not ready?
+		strlcpy(mapname, streams->modellist[1].name[0] ? streams->modellist[1].name : "maps/notready.bsp", sizeof(mapname));
 		FS_StripPathAndExtension(mapname);
 
 		// is the server empty? (except spectators)
 		sv_empty = 1;
 		ScoreBoard_Init(&sboard);
-		for (player = 0; player < MAX_CLIENTS; player++) {
-			if (IsPlayer(streams->players + player)) {
+
+		for (player = 0; player < MAX_CLIENTS; player++)
+		{
+			if (IsPlayer(streams->players + player))
+			{
 				sv_empty = 0;
 				ScoreBoard_AddPlayer(&sboard, streams->players + player);
 			}
 		}
-		teamplay = (sboard.players_count > 2) ? atoi(
-			Info_ValueForKey(streams->serverinfo, "teamplay", buffer, sizeof(buffer)))
-			: false;
-		if (!sv_empty) {
-			if (teamplay) ScoreBoard_TSort(&sboard); else ScoreBoard_FSort(&sboard);
+
+		teamplay = false;
+		if (sboard.players_count > 2)
+			teamplay = atoi(Info_ValueForKey(streams->serverinfo, "teamplay", buffer, sizeof(buffer)));
+
+		if (!sv_empty)
+		{
+			if (teamplay)
+				ScoreBoard_TSort(&sboard);
+			else
+				ScoreBoard_FSort(&sboard);
 		}
 
 		// table row
