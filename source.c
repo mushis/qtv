@@ -1058,6 +1058,56 @@ int ServerInGameState(sv_t *qtv)
 	return 1;
 }
 
+float GuessPlaybackSpeed(sv_t *qtv)
+{
+	int ms = 0;
+	float	demospeed, desired, current;
+
+	if (qtv->qstate != qs_active)
+		return 1; // we are not ready, so use 100%
+
+	// this is SRC_DEMO or something, so use 100%, because buffer adjustment works badly in demo case.
+	// Auto adjustment works badly because we always have too much or too less data in buffer in demo(mvd file) case
+	if (qtv->src.type != SRC_TCP)
+		return 1;
+
+	ConsistantMVDDataEx(qtv->buffer, qtv->buffersize, &ms);
+
+	// guess playback speed
+	if (parse_delay.value)
+	{
+		desired = (ServerInGameState(qtv) ? parse_delay.value : 0.5); // in prewar use short delay
+		desired = bound(0.5, desired, 20.0); // bound it to reasonable values
+		current = 0.001 * ms;
+		// qqshka: this is linear version
+		demospeed = current / desired;
+    
+		if (demospeed >= 0.85 && demospeed <= 1.15)
+			demospeed = 1.0;
+    
+		// bound demospeed
+		demospeed = bound(0.1, demospeed, 3.0); // limit demospeed at reasonable ranges
+	}
+	else
+	{
+		demospeed = 1;
+	}
+
+/*
+	if (developer.integer)
+	{
+		static int delayer = 0; // so it does't printed each frame
+
+		if (!((delayer++) % 500))
+		{
+			Sys_Printf(NULL, "qtv: id: %4d, ms:%6d, speed %.3f\n", qtv->streamid, ms, demospeed);
+		}
+	}
+*/
+
+	return demospeed;
+}
+
 //we will read out as many packets as we can until we're up to date
 //note: this can cause real issues when we're overloaded for any length of time
 //each new packet comes with a leading msec byte (msecs from last packet)
@@ -1077,8 +1127,7 @@ int QTV_ParseMVD(sv_t *qtv)
 	int packettime;
 	int forwards = 0;
 
-	int ms = 0;
-	float	demospeed, desired, current;
+	float	demospeed;
 
 	unsigned int length, nextpackettime;
 	unsigned char *buffer;
@@ -1086,39 +1135,7 @@ int QTV_ParseMVD(sv_t *qtv)
 	if (qtv->qstate <= qs_parsingQTVheader)
 		return 0; // we are not ready to parse
 
-	ConsistantMVDDataEx(qtv->buffer, qtv->buffersize, &ms);
-
-	// guess playback speed
-	if (parse_delay.value)
-	{
-		desired = (ServerInGameState(qtv) ? parse_delay.value : 0.5); // in prewar use short delay
-		desired = bound(0.5, desired, 20.0); // bound it to reasonable values
-		current = 0.001 * ms;
-		// qqshka: this is linear version
-		demospeed = current / desired;
-    
-		if (demospeed >= 0.85 && demospeed <= 1.15)
-			demospeed = 1.0;
-    
-		// bound demospeed
-		demospeed = bound(0.1, demospeed, 3.0); // we will crash if demospeed will be zero
-	}
-	else
-	{
-		demospeed = 1;
-	}
-
-/*
-	if (developer.integer)
-	{
-		static int delayer = 0; // so it does't printed each frame
-
-		if (!((delayer++) % 500))
-		{
-			Sys_Printf(NULL, "qtv: id: %4d, ms:%6d, speed %.3f\n", qtv->streamid, ms, demospeed);
-		}
-	}
-*/
+	demospeed = max(0.001, GuessPlaybackSpeed(qtv));
 
 	while (qtv->curtime >= qtv->parsetime)
 	{
