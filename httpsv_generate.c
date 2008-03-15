@@ -27,19 +27,18 @@ void HTTPSV_GenerateNotFoundError(cluster_t *cluster, oproxy_t *dest)
 
 void HTTPSV_GenerateCSSFile(cluster_t *cluster, oproxy_t *dest)
 {
-	char buffer[MAX_PROXY_BUFFER] = {0};
-	int  len = sizeof(buffer);
+	int s;
 
-	if (!FS_ReadFile(HTMLFILESPATH, "style.css", buffer, &len))
-	{
+	if (dest->buffer_file)
+		Sys_Error("HTTPSV_GenerateCSSFile: dest->buffer_file");
+	
+	dest->buffer_file = FS_OpenFile(HTMLFILESPATH, "style.css", &s);
+	if (!dest->buffer_file) {
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
 	}
 
     HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/css", false);
-
-	// sending a lot of data here!
-	Net_ProxySend(cluster, dest, buffer, len);
 }
 
 
@@ -557,6 +556,8 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 	int i;
 	char link[1024], name[sizeof(cluster->availdemos[0].name) * 5];
 	char *s;
+
+	dest->_bufferautoadjustmaxsize_ = 1024 * 1024; // NOTE: this allow 1MB buffer...
 
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/html", true);
 	HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Demos");

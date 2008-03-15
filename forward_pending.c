@@ -63,18 +63,18 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 	if (pend->flushing)
 	{
 		// peform reading on buffer file if we have empty buffer
-		if (!pend->buffersize && pend->buffer_file)
+		if (!pend->_buffersize_ && pend->buffer_file)
 		{
-			pend->buffersize += fread(pend->buffer, 1, sizeof(pend->buffer), pend->buffer_file);
+			pend->_buffersize_ += fread(pend->_buffer_, 1, pend->_buffermaxsize_, pend->buffer_file);
 
-			if (!pend->buffersize)
+			if (!pend->_buffersize_)
 			{
 				fclose(pend->buffer_file);
 				pend->buffer_file = NULL;
 			}
 		}
 
-		if (!pend->buffersize) // ok we have empty buffer, now we can drop
+		if (!pend->_buffersize_) // ok we have empty buffer, now we can drop
 		{
 			Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, empty buffer, dropping\n", pend->id);
 			if (developer.integer > 1)
@@ -451,6 +451,11 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv)
 {
 	oproxy_t *prox = Sys_malloc(sizeof(*prox));
 
+	// { dynamic buffer allocation
+	prox->_buffermaxsize_ = MAX_PROXY_BUFFER;
+	prox->_buffer_ = Sys_malloc(prox->_buffermaxsize_);
+	// }
+
 	prox->sock = (socket ? *(SOCKET*)s : INVALID_SOCKET);
 	prox->file = (socket ?        NULL : (FILE*)s);
 
@@ -496,6 +501,7 @@ void SV_FreeProxy(oproxy_t *prox)
 
 	g_cluster.numproxies--;
 
+	Sys_free(prox->_buffer_); // free buffer
 	Sys_free(prox);
 }
 

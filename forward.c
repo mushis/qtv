@@ -21,26 +21,26 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 	if (prox->drop)
 		return;
 
-	if (prox->buffersize < 0 || prox->buffersize > MAX_PROXY_BUFFER)
+	if (prox->_buffersize_ < 0 || prox->_buffersize_ > prox->_buffermaxsize_)
 	{
 		Sys_Printf(cluster, "Net_TryFlushProxyBuffer: prox->buffersize fucked\n");
 		prox->drop = true;
 		return;
 	}
 
-	if (!prox->buffersize)
+	if (!prox->_buffersize_)
 		return;	//already flushed.
 
 //	CheckMVDConsistancy(prox->buffer, 0, prox->buffersize);
 
 	if (prox->file)
 	{
-		length = fwrite(prox->buffer, 1, prox->buffersize, prox->file);
-		length = ( length == prox->buffersize ) ? length : -1;
+		length = fwrite(prox->_buffer_, 1, prox->_buffersize_, prox->file);
+		length = ( length == prox->_buffersize_ ) ? length : -1;
 	}
 	else
 	{
-		length = send(prox->sock, prox->buffer, prox->buffersize, 0);
+		length = send(prox->sock, prox->_buffer_, prox->_buffersize_, 0);
 	}
 
 	switch (length)
@@ -59,34 +59,70 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 		break;
 
 	default:
-		prox->buffersize -= length;
-		memmove(prox->buffer, prox->buffer + length, prox->buffersize);
+		prox->_buffersize_ -= length;
+		memmove(prox->_buffer_, prox->_buffer_ + length, prox->_buffersize_);
 		prox->io_time = cluster->curtime; // update IO activity
 	}
 }
 
 void Net_ProxySend(cluster_t *cluster, oproxy_t *prox, char *buffer, int length)
 {
-	if (prox->buffersize < 0 || prox->buffersize > MAX_PROXY_BUFFER)
+	if (prox->_buffersize_ < 0 || prox->_buffersize_ > prox->_buffermaxsize_)
 	{
 		Sys_Printf(cluster, "Net_ProxySend: prox->buffersize fucked\n");
 		prox->drop = true;
 		return;
 	}
 
-	if (prox->buffersize + length > MAX_PROXY_BUFFER)
+	// can't fit in current buffer
+	if (prox->_buffersize_ + length > prox->_buffermaxsize_)
 	{
-		Net_TryFlushProxyBuffer(cluster, prox);	//try flushing
-		if (prox->buffersize + length > MAX_PROXY_BUFFER)	//damn, still too big.
-		{	//they're too slow. hopefully it was just momentary lag
-			Sys_Printf(NULL, "QTV client is too lagged\n");
-			prox->flushing = true;
-			return;
+		// try flushing
+		Net_TryFlushProxyBuffer(cluster, prox);
+
+		if (prox->_buffersize_ + length > prox->_buffermaxsize_) // damn, still too big.
+		{
+			// check do it fit if we expand buffer
+			if (prox->_bufferautoadjustmaxsize_ >= prox->_buffersize_ + length) 
+			{
+				// try bigger buffer, but not bigger than prox->_bufferautoadjustmaxsize_
+				int  new_size;
+				char *new_buf;
+
+				// basically we wants two times bigger buffer but not less than prox->_buffersize_ + length
+				new_size = max(prox->_buffersize_ + length, prox->_buffermaxsize_ * 2);
+				// at the same time buffer must be not bigger than prox->_bufferautoadjustmaxsize_
+				new_size = min(prox->_bufferautoadjustmaxsize_, new_size);
+				new_buf  = realloc(prox->_buffer_, new_size);
+
+				if (new_buf)
+				{
+					Sys_DPrintf(NULL, "EXPANDED %d -> %d\n", prox->_buffermaxsize_, new_size);
+					prox->_buffer_        = new_buf;
+					prox->_buffermaxsize_ = new_size;
+				}
+				else
+				{
+					Sys_DPrintf(NULL, "FAILED TO EXPAND %d -> %d\n", prox->_buffermaxsize_, new_size);
+				}
+			}
+			else
+			{
+				Sys_DPrintf(NULL, "IMPOSSIBLE TO EXPAND %d -> %d\n", prox->_bufferautoadjustmaxsize_, prox->_buffersize_ + length);
+			}
+
+			if (prox->_buffersize_ + length > prox->_buffermaxsize_) // damn, still too big.
+			{
+				// they're too slow. hopefully it was just momentary lag
+				Sys_Printf(NULL, "QTV client is too lagged\n");
+				prox->flushing = true;
+				return;
+			}
 		}
 	}
 
-	memmove(prox->buffer + prox->buffersize, buffer, length);
-	prox->buffersize += length;
+	memmove(prox->_buffer_ + prox->_buffersize_, buffer, length);
+	prox->_buffersize_ += length;
 }
 
 // printf() to downstream to particular "proxy", handy in some cases, instead of Net_ProxySend()
@@ -116,10 +152,10 @@ void Prox_SendMessage(cluster_t *cluster, oproxy_t *prox, char *buf, int length,
 	if (dem_type == dem_multiple)
 		WriteLong(&msg, playermask);
 
-	if (prox->buffersize + length + msg.cursize > MAX_PROXY_BUFFER)
+	if (prox->_buffersize_ + length + msg.cursize > prox->_buffermaxsize_)
 	{
 		Net_TryFlushProxyBuffer(cluster, prox);	//try flushing
-		if (prox->buffersize + length + msg.cursize > MAX_PROXY_BUFFER)	//damn, still too big.
+		if (prox->_buffersize_ + length + msg.cursize > prox->_buffermaxsize_)	//damn, still too big.
 		{	//they're too slow. hopefully it was just momentary lag
 			Sys_Printf(NULL, "QTV client is too lagged\n");
 			prox->flushing = true;
@@ -460,7 +496,7 @@ void SV_ForwardStream(sv_t *qtv, char *buffer, int length)
 
 		// we're trying to empty thier buffer, NOTE: we use prox->flushing == true so it does't trigger when flushing is PS_WAIT_MODELLIST and etc
 		if (prox->flushing == true)
-			if (!prox->buffersize) // ok, they have empty buffer
+			if (!prox->_buffersize_) // ok, they have empty buffer
 				if (qtv->qstate == qs_active) // ok, our qtv is ready
 					Net_SendConnectionMVD(qtv, prox); // resend the connection info and set flushing to false
 

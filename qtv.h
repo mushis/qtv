@@ -356,12 +356,17 @@ typedef struct oproxy_s {
 	unsigned char	inbuffer[MAX_PROXY_INBUFFER];
 	unsigned int	inbuffersize;	//amount of data available.
 
-	FILE			*buffer_file; // well, we can't always put whole file in buffer[MAX_PROXY_BUFFER],
+	FILE			*buffer_file; // well, we can't always put whole file in _buffer_[MAX_PROXY_BUFFER],
 								  // so instead we put chunk of file in buffer then flush to client,
 								  // then put next chunk and etc.
 
-	unsigned char	buffer[MAX_PROXY_BUFFER];
-	unsigned int	buffersize;
+	unsigned char	*_buffer_;
+	unsigned int	_buffersize_;
+	unsigned int	_buffermaxsize_; // by default its MAX_PROXY_BUFFER
+	unsigned int	_bufferautoadjustmaxsize_; // default is 0, means disabled,
+											   // well this must allow have really huge buffer,
+											   // so buffer will be expanded maximum to this size when needed.
+
 
 	unsigned int	init_time; // when this client was created, so we can timeout it
 	unsigned int	io_time; // when was IO activity, so we can timeout it
@@ -547,7 +552,7 @@ typedef struct cluster_s {
 
 	oproxy_t *pendingproxies;			// incoming request queued here, after request is served it unlinked from here
 
-	availdemo_t availdemos[256];		// more demos is a bad idea IMO (I broke it anyway (c)renzo)
+	availdemo_t availdemos[2048];		// lala, insane... but we support it, I checked
 	int availdemoscount;
 	unsigned int last_demos_update;		// milleseconds, last time when Cluster_BuildAvailableDemoList() was issued, saving CPU time
 
