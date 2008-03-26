@@ -578,7 +578,7 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 		HTMLprintf(name, sizeof(name), false, "%s", cluster->availdemos[i].name);
 		snprintf(link, sizeof(link), 
 			"<tr class='%s'>"
-			"<td class='stream'><a href='watch.qtv?demo=%s'><img src='/stream.png' width='14' height='15' /></a></td>"
+			"<td class='stream'><a href='/watch.qtv?demo=%s'><img src='/stream.png' width='14' height='15' /></a></td>"
 			"<td class='save'><a href='/dl/demos/%s'><img src='/save.png' width='16' height='16' /></a></td>"
 			"<td class='name'>%s</td><td class='size'>%i kB</td>"
 			"</tr>\n",
