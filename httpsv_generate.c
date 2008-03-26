@@ -562,18 +562,32 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/html", true);
 	HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Demos");
 
-	s = "<h1>QuakeTV: Demo Listing</h1>";
+	s = "<h1>QuakeTV: Demo Listing</h1>\n\n";
+	Net_ProxySend(cluster, dest, s, strlen(s));
+
+	s = "<table id='demos' cellspacing='0'><thead><tr>"
+		"<th class='stream'>stream</th>"
+		"<th class='save'>Download</th>"
+		"<th class='name'>Demoname</th>"
+		"<th class='size'>Size</th></tr></thead>\n<tbody>\n";
 	Net_ProxySend(cluster, dest, s, strlen(s));
 
 	Cluster_BuildAvailableDemoList(cluster);
 	for (i = 0; i < cluster->availdemoscount; i++)
 	{
 		HTMLprintf(name, sizeof(name), false, "%s", cluster->availdemos[i].name);
-		snprintf(link, sizeof(link), "<A HREF=\"/watch.qtv?demo=%s\">%s</A> <A HREF=\"/dl/demos/%s\">(dl %ikB)</A><br/>",
-			 name, name, name, cluster->availdemos[i].size/1024);
+		snprintf(link, sizeof(link), 
+			"<tr class='%s'>"
+			"<td class='stream'><a href='watch.qtv?demo=%s'><img src='/stream.png' width='14' height='15' /></a></td>"
+			"<td class='save'><a href='/dl/demos/%s'><img src='/save.png' width='16' height='16' /></a></td>"
+			"<td class='name'>%s</td><td class='size'>%i kB</td>"
+			"</tr>\n",
+			((i % 2) ? "even" : "odd"), name, name, name, cluster->availdemos[i].size/1024);
 
 		Net_ProxySend(cluster, dest, link, strlen(link));
 	}
+	s = "</tbody></table>\n";
+	Net_ProxySend(cluster, dest, s, strlen(s));
 
 	sprintf(link, "<P>Total: %i demos</P>", cluster->availdemoscount);
 	Net_ProxySend(cluster, dest, link, strlen(link));
@@ -581,14 +595,14 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 	HTTPSV_SendHTMLFooter(cluster, dest);
 }
 
-void HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest)
+void HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest, char *imgfilename)
 {
 	int s;
 
 	if (dest->buffer_file)
 		Sys_Error("HTTPSV_GenerateHTMLBackGroundImg: dest->buffer_file");
 	
-	dest->buffer_file = FS_OpenFile(HTMLFILESPATH, "qtvbg01.png", &s);
+	dest->buffer_file = FS_OpenFile(HTMLFILESPATH, imgfilename, &s);
 	if (!dest->buffer_file) {
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;

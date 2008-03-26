@@ -351,7 +351,15 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	}
 	else if (!strncmp(pend->inbuffer+4, "/qtvbg01.png", sizeof("/qtvbg01.png")-1))
 	{
-		HTTPSV_GenerateHTMLBackGroundImg(cluster, pend);
+		HTTPSV_GenerateHTMLBackGroundImg(cluster, pend, "qtvbg01.png");
+	}
+	else if (!strncmp(pend->inbuffer+4, "/stream.png", sizeof("/stream.png")-1))
+	{
+		HTTPSV_GenerateHTMLBackGroundImg(cluster, pend, "stream.png");
+	}
+	else if (!strncmp(pend->inbuffer+4, "/save.png", sizeof("/save.png")-1))
+	{
+		HTTPSV_GenerateHTMLBackGroundImg(cluster, pend, "save.png");
 	}
 	else if (!strncmp(pend->inbuffer+4, "/levelshots/", sizeof("/levelshots/")-1))
 	{
