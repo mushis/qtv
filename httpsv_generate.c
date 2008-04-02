@@ -617,7 +617,7 @@ void HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest, char *
 
 static qbool MediaPathName(char *buf, size_t bufsize, char *name, char *mediadir) 
 {
-	char pathname[MAX_QPATH];
+	char pathname[256];
 
 	buf[0] = 0;
 
@@ -634,13 +634,13 @@ static qbool MediaPathName(char *buf, size_t bufsize, char *name, char *mediadir
 
 void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name)
 {
-	char pathname[MAX_QPATH];
+	char pathname[256];
 	int s;
 
 	if (dest->buffer_file)
 		Sys_Error("HTTPSV_GenerateLevelshot: dest->buffer_file");
 
-	if (!MediaPathName(pathname, MAX_QPATH, name, "levelshots")) {
+	if (!MediaPathName(pathname, sizeof(pathname), name, "levelshots")) {
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
 	}
@@ -663,12 +663,12 @@ void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name)
 
 void HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name)
 {
-	char pathname[MAX_QPATH];
+	char pathname[256];
 
 	if (dest->buffer_file)
 		Sys_Error("HTTPSV_GenerateDemoDownload: dest->buffer_file");
 
-	if (   !MediaPathName(pathname, MAX_QPATH, name, demo_dir.string)
+	if (   !MediaPathName(pathname, sizeof(pathname), name, demo_dir.string)
 		|| stricmp(".mvd", Sys_FileExtension(pathname))  // .mvd demos only
 	   )
 	{
