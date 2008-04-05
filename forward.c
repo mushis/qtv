@@ -196,7 +196,7 @@ void Prox_Printf(cluster_t *cluster, oproxy_t *prox, int dem_type, unsigned int 
 // FIXME: move to different file, forward.c intended keep something different than this raw protocol things
 void Prox_SendPlayerStats(sv_t *qtv, oproxy_t *prox)
 {
-	char buffer[MAX_MSGLEN];
+	char buffer[MAX_MSGLEN], spec[64];
 	netmsg_t msg;
 	int player, snum;
 
@@ -204,6 +204,9 @@ void Prox_SendPlayerStats(sv_t *qtv, oproxy_t *prox)
 
 	for (player = 0; player < MAX_CLIENTS; player++)
 	{
+		if (*qtv->players[player].userinfo && atoi(Info_ValueForKey(qtv->players[player].userinfo, "*spectator", spec, sizeof(spec))))
+			continue; // that spec, ignore him
+
 		for (snum = 0; snum < MAX_STATS; snum++)
 		{
 			if (qtv->players[player].stats[snum])
@@ -242,6 +245,9 @@ void Prox_SendInitialPlayers(sv_t *qtv, oproxy_t *prox, netmsg_t *msg)
 		if (!qtv->players[i].active) // interesting, is this set to false if player disconnect from server?
 			continue;
 
+		if (*qtv->players[i].userinfo && atoi(Info_ValueForKey(qtv->players[i].userinfo, "*spectator", buffer, sizeof(buffer))))
+			continue; // that spec, ignore him
+
 		flags =   (DF_ORIGIN << 0) | (DF_ORIGIN << 1) | (DF_ORIGIN << 2)
 				| (DF_ANGLES << 0) | (DF_ANGLES << 1) | (DF_ANGLES << 2) // angles is something what changed frequently, so may be not send it?
 				| DF_EFFECTS
@@ -250,9 +256,6 @@ void Prox_SendInitialPlayers(sv_t *qtv, oproxy_t *prox, netmsg_t *msg)
 				| (qtv->players[i].gibbed ? DF_GIB  : 0)
 				| DF_WEAPONFRAME // do we so really need it?
 				| DF_MODEL; // generally, that why we wrote this function, so YES send this
-
-		if (*qtv->players[i].userinfo && atoi(Info_ValueForKey(qtv->players[i].userinfo, "*spectator", buffer, sizeof(buffer))))
-			flags = DF_MODEL; // oh, that spec, just sent his model, may be even better ignore him?
 
 		WriteByte (msg, svc_playerinfo);
 		WriteByte (msg, i);
