@@ -1260,10 +1260,15 @@ int QTV_ParseMVD(sv_t *qtv)
 			Net_ReadStream(qtv); // FIXME: remove me
 
 		qtv->parsetime = nextpackettime;
-
-		if (qtv->src.type != SRC_BAD) // parse called even when source is closed, that set wrong reconnect time for demos
-			qtv->NextConnectAttempt = qtv->curtime + (qtv->src.type == SRC_DEMO ? DEMO_RECONNECT_TIME : RECONNECT_TIME);
 	}
+
+	// Advance reconnect time in two cases: 
+	//	1) when we have src 
+	//  2) when we forwarded something (actually it must be when we still have something to forward, but i'm too lazy and that not really required)
+	// Well, may be that not the proper way, but should work OK.
+	
+	if (qtv->src.type != SRC_BAD || forwards)
+		qtv->NextConnectAttempt = qtv->curtime + (qtv->src.type == SRC_DEMO ? DEMO_RECONNECT_TIME : RECONNECT_TIME);
 
 	return forwards;
 }
