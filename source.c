@@ -263,15 +263,15 @@ qbool Net_ConnectToTCPServer(sv_t *qtv, char *ip)
 	if (ioctlsocket (qtv->src.s, FIONBIO, &nonblocking) == -1)
 		return false;
 
+	if (!TCP_Set_KEEPALIVE(qtv->src.s))
+		return false;
+
 	if (connect(qtv->src.s, (struct sockaddr *)&qtv->ServerAddress, sizeof(qtv->ServerAddress)) == INVALID_SOCKET)
 	{
 		err = qerrno;
 		if (err != EINPROGRESS && err != EAGAIN && err != EWOULDBLOCK)	//bsd sockets are meant to return EINPROGRESS, but some winsock drivers use EWOULDBLOCK instead. *sigh*...
 			return false;
 	}
-
-	if (!TCP_Set_KEEPALIVE(qtv->src.s))
-		return false;
 
 	//read the notes at the start of this file for what these text strings mean
 	Net_SendQTVConnectionRequest(qtv, NULL, NULL);
