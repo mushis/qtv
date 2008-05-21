@@ -557,7 +557,7 @@ static void apply_pov(sv_t *qtv, oproxy_t *p)
 
 	WriteByte (&msg, svc_stufftext);
 	if (p->pov)
-		snprintf(buf, sizeof(buf), "track %d\n", p->pov - 1);
+		snprintf(buf, sizeof(buf), "track %d\n", qtv->players[(int)bound(0, p->pov - 1, MAX_CLIENTS - 1)].userid);
 	else
 		snprintf(buf, sizeof(buf), "track off\n"); // FIXME
 	WriteData (&msg, buf, strlen(buf) + 1);
