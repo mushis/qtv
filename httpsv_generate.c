@@ -284,7 +284,7 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 		oddrow = !oddrow;
 
 		// 1st cell: watch now button
-		sprintf(buffer, "<td class='wn'><span class=\"qtvfile\"><a href=\"/watch.qtv?sid=%i\">Watch Now!</a></span></td>", streams->streamid);
+		snprintf(buffer, sizeof(buffer), "<td class='wn'><span class=\"qtvfile\"><a href=\"/watch.qtv?sid=%i\">Watch Now!</a></span></td>", streams->streamid);
 		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
 		// 2nd cell: server adress
@@ -420,11 +420,10 @@ void HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamtype
 
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/x-quaketvident", false);
 
-	sprintf(buffer, "[QTV]\r\n"
-					"Stream: %s%s@%s\r\n"
-					"", 
-					streamtype, streamid, hostname);
-
+	snprintf(buffer, sizeof(buffer), "[QTV]\r\n"
+									 "Stream: %s%s@%s\r\n"
+									 "", 
+									 streamtype, streamid, hostname);
 
 	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 }
@@ -589,7 +588,7 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 	s = "</tbody></table>\n";
 	Net_ProxySend(cluster, dest, s, strlen(s));
 
-	sprintf(link, "<P>Total: %i demos</P>", cluster->availdemoscount);
+	snprintf(link, sizeof(link), "<P>Total: %i demos</P>", cluster->availdemoscount);
 	Net_ProxySend(cluster, dest, link, strlen(link));
 
 	HTTPSV_SendHTMLFooter(cluster, dest);
