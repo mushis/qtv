@@ -170,7 +170,7 @@ qbool HTTPSV_GetHeaderField(char *s, char *field, char *buffer, int buffersize)
 	{
 		if (*e == '\n')
 		{
-			*e = '\0';
+			*e = '\0'; // FIXME: guess this do not allow us search headers in this buffer later
 			colon = strchr(s, ':');
 			if (!colon)
 			{
@@ -191,7 +191,7 @@ qbool HTTPSV_GetHeaderField(char *s, char *field, char *buffer, int buffersize)
 						colon++;
 						while (*colon == ' ')
 							colon++;
-						while (buffersize > 1)
+						while (--buffersize > 0)
 						{
 							if (*colon == '\r' || *colon == '\n')
 								break;
