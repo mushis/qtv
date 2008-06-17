@@ -326,7 +326,7 @@ void QTV_SetupFrames(sv_t *qtv)
 		qtv->frame[i].maxents = MAX_DEMO_PACKET_ENTITIES;
 }
 
-qbool QTV_Connect(sv_t *qtv, char *serverurl)
+qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 {
 	char *at;
 	char *ip = NULL;
@@ -334,12 +334,13 @@ qbool QTV_Connect(sv_t *qtv, char *serverurl)
 
 	close_source(qtv, "QTV_Connect");
 
-    // and here we memset() not whole sv_t struct, but start from some offset
+    // And here we memset() not whole sv_t struct, but start from some offset, 
+	// since we want to save some stuff between connections.
 	memset(((unsigned char*)qtv + offset), 0, sizeof(*qtv) - offset);
 
-	// and set as much as possibile fields
+	// And set as much as possibile fields
 	qtv->curtime 			= Sys_Milliseconds();
-	qtv->NextConnectAttempt = Sys_Milliseconds() + RECONNECT_TIME;	//wait half a minuite before trying to reconnect
+	qtv->NextConnectAttempt = Sys_Milliseconds() + RECONNECT_TIME;	// Wait half a minuite before trying to reconnect
 	qtv->io_time			= Sys_Milliseconds();
 
 	qtv->qstate				= qs_parsingQTVheader;
