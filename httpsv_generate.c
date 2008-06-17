@@ -685,14 +685,15 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 	char *footer_fmt = NULL;
 	char *item_fmt = NULL;
 	char *server = NULL;
-	char buffer[2048];
+	char *link_fmt = NULL;
 	char link[1024];
+	char *s = NULL;
 	sv_t *streams;
 	char playerlist[1024];
 	char playername[32];
 	unsigned int name_len = 0;
+	unsigned int item_len = 0;
 	char *pp = NULL;
-	int j = 0;
 	oproxy_t *qtvspec = NULL;
 	char hostname[1024];
 	char tmp[64];
@@ -729,37 +730,38 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 			"</channel>"
 		"</rss>";
 
-	// Send header.
+	link_fmt = "http://%s:%i/watch.qtv?sid=%i";
+
+	// Estimate the size of the item buffer.
+	item_len = strlen(item_fmt) + strlen(link_fmt) + strlen(hostname) + 2048;
+	s = Sys_malloc(item_len);
+
+	// Send RSS header.
 	Net_ProxySend(cluster, dest, header_fmt, strlen(header_fmt));
 
-	// Send items.
+	// Send RSS items.
 	for (streams = cluster->servers; streams; streams = streams->next)
 	{
 		// Skip "tcp:" prefix if any.
 		server = (strncmp(streams->server, "tcp:", sizeof("tcp:") - 1) ? streams->server : streams->server + sizeof("tcp:") - 1);
 
-		snprintf(link, sizeof(link), "http://%s:%i/watch.qtv?sid=%i", hostname, mvdport.integer, streams->streamid);
+		// Set the url to the stream.
+		snprintf(link, sizeof(link), link_fmt, hostname, mvdport.integer, streams->streamid);
 
+		playerlist[0] = 0;
 		pp = playerlist;
-		memset(playerlist, 0 , sizeof(playerlist));
 
-		// TODO: Make this more flexible, probably should allocate buffers dynamically for this.
+		// Output the playerlist (this will be shown in the description field of the RSS item).
 		for (qtvspec = streams->proxies; qtvspec; qtvspec = qtvspec->next)
 		{
+			// Get player name and HTMLify it.
 			Info_Get(&qtvspec->ctx, "name", tmp, sizeof(tmp));
 			HTMLprintf(playername, sizeof(playername), true, "%s", tmp);
-			name_len = strlen(playername);
+			snprintf(pp, sizeof(playername), "%s\n", playername);
 
-			if ((pp + name_len + 1) > (playerlist + sizeof(playerlist)))
+			if (!(pp = strrchr(pp, '\n')))
 			{
 				break;
-			}
-
-			sprintf(pp, "%s\n", playername);
-
-			while (*pp && (*pp != '\n'))
-			{
-				pp++;
 			}
 
 			if (*pp == '\n')
@@ -768,11 +770,13 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 			}
 		}
 
-		snprintf(buffer, sizeof(buffer), item_fmt, server, link, playerlist, "", "");
-		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+		snprintf(s, item_len, item_fmt, server, link, playerlist, "", "");
+		Net_ProxySend(cluster, dest, s, strlen(s));
 	}
 
-	// Send footer.
+	Sys_free(s);
+
+	// Send RSS footer.
 	Net_ProxySend(cluster, dest, footer_fmt, strlen(footer_fmt));
 }
 
