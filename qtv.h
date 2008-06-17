@@ -44,19 +44,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#define ECONNREFUSED WSAECONNREFUSED
 	#define ENOTCONN WSAENOTCONN
 
-	//we have special functions to properly terminate sprintf buffers in windows.
-	//we assume other systems are designed with even a minor thought to security.
+	// we have special functions to properly terminate sprintf buffers in windows.
+	// we assume other systems are designed with even a minor thought to security.
 	#if !defined(__MINGW32_VERSION)
-		#define unlink _unlink	//why do MS have to be so awkward?
+		#define unlink _unlink	// why do MS have to be so awkward?
 	#else
-		#define unlink remove	//seems mingw misses something
+		#define unlink remove	// seems mingw misses something
 	#endif
 
 	#ifdef _MSC_VER
-		//okay, so warnings are here to help... they're ugly though.
-		#pragma warning(disable: 4761)	//integral size mismatch in argument
-		#pragma warning(disable: 4244)	//conversion from float to short
-		#pragma warning(disable: 4018)	//signed/unsigned mismatch
+		// okay, so warnings are here to help... they're ugly though.
+		#pragma warning(disable: 4761)	// integral size mismatch in argument
+		#pragma warning(disable: 4244)	// conversion from float to short
+		#pragma warning(disable: 4018)	// signed/unsigned mismatch
+		#pragma warning(disable: 4267)	// size_t -> int conversions
 	#endif
 
 #elif defined(__CYGWIN__)
@@ -681,7 +682,7 @@ qbool			OpenDemoFile(sv_t *qtv, char *demo);
 // this memset to 0 too some data and something also
 void			QTV_SetupFrames(sv_t *qtv);
 // select which method use (demo or tcp or what ever) and connect/open to this source
-qbool			QTV_Connect(sv_t *qtv, char *serverurl);
+qbool			QTV_Connect(sv_t *qtv, const char *serverurl);
 // free() memory and etc, unlink from cluster servers list
 void			QTV_Shutdown(cluster_t *cluster, sv_t *qtv);
 // malloc(qtv) and init, call QTV_Connect and link to servers list
