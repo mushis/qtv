@@ -1,15 +1,21 @@
 <?php
 
 	require "config.php";
+	if (DEBUG_MODE) {
+		error_reporting(E_ALL);
+	}
+	else {
+		error_reporting(0);
+	}
 	
 	$qtvlist = NULL;
 	require "qtvlist.php";
 	
-
 	$cururl = "";
 	$intable = false;
 	$tablelev = 0;
 	$ignoreline = false;
+	$errors = "";
 	
 	function startElement($parser, $name, $attrs)
 	{
@@ -20,7 +26,7 @@
 		
 		// we are entering a row which represents an empty server
 		// so if user wants, we will set ignore flag on
-		if ($name == "TR" && strpos($attrs["CLASS"], "notempty") === false && IGNORE_EMPTY && $tablelev == 1) {
+		if ($name == "TR" && strpos(@$attrs["CLASS"], "notempty") === false && IGNORE_EMPTY && $tablelev == 1) {
 			$ignoreline = true;
 		}
 		
@@ -97,20 +103,21 @@
 		global $intable;
 		global $tablelev;
 		global $cururl;
+		global $errors;
 
 		$intable = false;
 		$tablelev = 0;
 		
 		$cururl = $url;
-		$fp = fopen($url, "r");
+		$fp = @fopen($url, "r");
 		if (!$fp) {
-			echo "<p>Couldn't open {$url}</p>";
+			$errors .= "<p>Couldn't open {$url}</p>";
 			return;
 		}
 		
 		$xml_parser = xml_parser_create();
 		if (!$xml_parser) {
-			echo "<p>Couldn't create XML parser</p>";
+			$errors .= "<p>Couldn't create XML parser</p>";
 			return;
 		}
 		xml_parser_set_option($xml_parser, XML_OPTION_CASE_FOLDING, true);
@@ -124,7 +131,7 @@
 		}
 		
 		xml_parser_free($xml_parser);
-		fclose($f);
+		fclose($fp);
 	}
 
 	include "header.html";
@@ -133,7 +140,10 @@
 		InsertURL($url);
 	}
 
-	
+	if (DEBUG_MODE && strlen($errors)) {
+		echo "</table>";
+		echo "<div id='errors'>".$errors."</div><table>\n";
+	}
 	include "foot.html";
 
 ?>

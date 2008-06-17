@@ -11,7 +11,8 @@ a.qtvfile { font-weight: bold; }
 a:visited { color: #e1cd9b; }
 a:hover { text-decoration: none; }
 li.spectator { color: #666; font-size: 0.9ex; }
-h1 { margin-left: 210px; padding: 1.0em 0; }
+h1 { margin-left: 210px; padding: 1em 0 0 0; }
+p#subtitle { margin-left: 230px; padding: 0 0 0 0; font-size: 90%; margin-bottom: 3em; }
 
 #navigation {
   margin: 0 0 0 210px; display: block;
