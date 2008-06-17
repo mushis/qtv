@@ -136,6 +136,7 @@ void HTTPSV_SendHTMLHeader(cluster_t *cluster, oproxy_t *dest, char *title)
 		"  <meta http-equiv=\"content-type\" content=\"text/html; charset=iso-8859-1\" />\n"
 		"  <title>%s</title>\n"
 		"  <link rel=\"StyleSheet\" href=\"/style.css\" type=\"text/css\" />\n"
+		"  <link rel=\"alternate\" title=\"RSS\" href=\"/rss\" type=\"application/rss+xml\" />\n"
 		"</head>\n"
 		"<body><div id=\"navigation\"><div><p><a href=\"/nowplaying/\">Live</a> | <a href=\"/demos/\">Demos</a> | <a href=\"/admin/\">Admin</a></p></div></div>";
 
@@ -370,7 +371,7 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	{
 		HTTPSV_GenerateDemoDownload(cluster, pend, pend->inbuffer+4+sizeof("/dl/demos/")-1);
 	}
-	else if (!strncmp(pend->inbuffer+4, "/rss/", sizeof("/rss/")-1))
+	else if (!strncmp(pend->inbuffer+4, "/rss", sizeof("/rss")-1))
 	{
 		HTTPSV_GenerateRSS(cluster, pend, "");
 	}
