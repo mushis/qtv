@@ -832,6 +832,7 @@ qbool			HTTPSV_GetHeaderField(char *s, char *field, char *buffer, int buffersize
 char			*HTTPSV_ParsePOST(char *post, char *buffer, int buffersize);
 void			HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend, char *postdata);
 void			HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend);
+qbool			HTTPSV_GetHostname(cluster_t *cluster, oproxy_t *dest, char *hostname, int buffersize);
 
 //
 // httpsv_generate.c
@@ -845,6 +846,7 @@ void			HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest);
 void			HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest, char *imgfilename);
 void			HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name);
 void			HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name);
+void			HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str);
 void			HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest);
 
 

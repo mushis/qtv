@@ -324,7 +324,8 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 //		HTTPSV_GenerateQTVStub(cluster, pend, "file:", pend->inbuffer+10);
 //	}
 	else if (!strncmp(pend->inbuffer+4, "/about", 6))
-	{	//redirect them to our funky website
+	{	
+		// Redirect them to our funky website.
 		s = "HTTP/1.0 302 Found" CRLF
 			"Location: http://qtv.qw-dev.net" CRLF
 			CRLF;
@@ -369,6 +370,10 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	{
 		HTTPSV_GenerateDemoDownload(cluster, pend, pend->inbuffer+4+sizeof("/dl/demos/")-1);
 	}
+	else if (!strncmp(pend->inbuffer+4, "/rss/", sizeof("/rss/")-1))
+	{
+		HTTPSV_GenerateRSS(cluster, pend, "");
+	}
 	else if (!strncmp(pend->inbuffer+4, "/status", sizeof("/status")-1))
 	{
 		HTTPSV_GenerateQTVStatus(cluster, pend);
@@ -381,4 +386,28 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 		Net_ProxySend(cluster, pend, s, strlen(s));
 		HTTPSV_SendHTMLFooter(cluster, pend);
 	}
+}
+
+//
+// Gets the hostname from the header provided by the web client.
+//
+qbool HTTPSV_GetHostname(cluster_t *cluster, oproxy_t *dest, char *hostname, int buffersize)
+{
+	char *s = NULL;
+
+	if (!HTTPSV_GetHeaderField(dest->inbuffer, "Host", hostname, buffersize))
+	{
+		HTTPSV_SendHTTPHeader(cluster, dest, "400", "text/html", true);
+		HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Error");
+
+		s = "Your client did not send a Host field, which is required in HTTP/1.1\n<BR />"
+			"Please try a different browser.\n"
+			"</body>"
+			"</html>";
+
+		Net_ProxySend(cluster, dest, s, strlen(s));
+		return false;
+	}
+
+	return true;
 }

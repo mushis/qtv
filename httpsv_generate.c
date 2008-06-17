@@ -403,18 +403,9 @@ void HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamtype
 	*s = 0;
 	streamid = fname;
 
-
-	if (!HTTPSV_GetHeaderField(dest->inbuffer, "Host", hostname, sizeof(hostname)))
+	// Get the hostname from the header.
+	if (!HTTPSV_GetHostname(cluster, dest, hostname, sizeof(hostname)))
 	{
-		HTTPSV_SendHTTPHeader(cluster, dest, "400", "text/html", true);
-		HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Error");
-
-		s = "Your client did not send a Host field, which is required in HTTP/1.1\n<BR />"
-			"Please try a different browser.\n"
-			"</body>"
-			"</html>";
-
-		Net_ProxySend(cluster, dest, s, strlen(s));
 		return;
 	}
 
@@ -682,6 +673,109 @@ void HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name)
 	}
 
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "application/octet-stream", false);
+}
+
+//========================================================================
+// RSS
+//========================================================================
+
+void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
+{
+	int i;
+	char *header_fmt = NULL;
+	char *footer_fmt = NULL;
+	char *item_fmt = NULL;
+	char *server = NULL;
+	char buffer[2048];
+	char link[1024];
+	sv_t *streams;
+	char title[256];
+	char playerlist[1024];
+	char playername[32];
+	int name_len = 0;
+	char *pp = NULL;
+	int j = 0;
+	oproxy_t *qtvspec = NULL;
+	char hostname[1024];
+	char tmp[64];
+
+	// Get the hostname from the header.
+	if (!HTTPSV_GetHostname(cluster, dest, hostname, sizeof(hostname)))
+	{
+		return;
+	}
+
+	HTTPSV_SendHTTPHeader(cluster, dest, "200", "application/rss+xml", false);
+
+	header_fmt = 
+		"<?xml version=\"1.0\"?>"
+		"<rss version=\"2.0\">"
+			"<channel>"
+				"<title>QTV RSS</title>"
+				"<link></link>" // TODO: Set channel link for RSS.
+				"<description>QTV Current active feeds</description>"
+				"<language>en-us</language>"
+				"<pubDate></pubDate>"; // TODO: Set date when stream started?
+				
+	item_fmt = 
+				"<item>"
+					"<type>text/plain</type>"
+					"<title>%s</title>"
+					"<link>%s</link>"
+					"<description>%s</description>"
+					"<pubDate>%s</pubDate>"
+					"<guid>%s</guid>"
+				"</item>";
+
+	footer_fmt =
+			"</channel>"
+		"</rss>";
+
+	// Send header.
+	Net_ProxySend(cluster, dest, header_fmt, strlen(header_fmt));
+
+	// Send items.
+	for (streams = cluster->servers; streams; streams = streams->next)
+	{
+		// Skip "tcp:" prefix if any.
+		server = (strncmp(streams->server, "tcp:", sizeof("tcp:") - 1) ? streams->server : streams->server + sizeof("tcp:") - 1);
+
+		snprintf(link, sizeof(link), "http://%s:%i/watch.qtv?sid=%i", hostname, mvdport.integer, streams->streamid);
+
+		pp = playerlist;
+		memset(playerlist, 0 , sizeof(playerlist));
+
+		// TODO: Make this more flexible, probably should allocate buffers dynamically for this.
+		for (qtvspec = streams->proxies; qtvspec; qtvspec = qtvspec->next)
+		{
+			Info_Get(&qtvspec->ctx, "name", tmp, sizeof(tmp));
+			HTMLprintf(playername, sizeof(playername), true, "%s", tmp);
+			name_len = strlen(playername);
+
+			if ((pp + name_len + 1) > (playerlist + sizeof(playerlist)))
+			{
+				break;
+			}
+
+			sprintf(pp, "%s\n", playername);
+
+			while (*pp && (*pp != '\n'))
+			{
+				pp++;
+			}
+
+			if (*pp == '\n')
+			{
+				pp++;
+			}
+		}
+
+		snprintf(buffer, sizeof(buffer), item_fmt, server, link, playerlist, "", "");
+		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+	}
+
+	// Send footer.
+	Net_ProxySend(cluster, dest, footer_fmt, strlen(footer_fmt));
 }
 
 //========================================================================
