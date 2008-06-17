@@ -681,7 +681,6 @@ void HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name)
 
 void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 {
-	int i;
 	char *header_fmt = NULL;
 	char *footer_fmt = NULL;
 	char *item_fmt = NULL;
@@ -689,10 +688,9 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 	char buffer[2048];
 	char link[1024];
 	sv_t *streams;
-	char title[256];
 	char playerlist[1024];
 	char playername[32];
-	int name_len = 0;
+	unsigned int name_len = 0;
 	char *pp = NULL;
 	int j = 0;
 	oproxy_t *qtvspec = NULL;
