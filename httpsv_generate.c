@@ -697,6 +697,7 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 	oproxy_t *qtvspec = NULL;
 	char hostname[1024];
 	char tmp[64];
+	int player;
 
 	// Get the hostname from the header.
 	if (!HTTPSV_GetHostname(cluster, dest, hostname, sizeof(hostname)))
@@ -752,21 +753,23 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 		pp = playerlist;
 
 		// Output the playerlist (this will be shown in the description field of the RSS item).
-		for (qtvspec = streams->proxies; qtvspec; qtvspec = qtvspec->next)
+		for (player = 0; player < MAX_CLIENTS; player++)
 		{
-			// Get player name and HTMLify it.
-			Info_Get(&qtvspec->ctx, "name", tmp, sizeof(tmp));
-			HTMLprintf(playername, sizeof(playername), true, "%s", tmp);
-			snprintf(pp, sizeof(playername), "%s\n", playername);
-
-			if (!(pp = strrchr(pp, '\n')))
+			if (IsPlayer(&streams->players[player]))
 			{
-				break;
-			}
+				Info_ValueForKey(streams->players[player].userinfo, "name", tmp, sizeof(tmp));
+				HTMLprintf(playername, sizeof(playername), true, "%s", tmp);
+				snprintf(pp, sizeof(playername), "%s\n", playername);
 
-			if (*pp == '\n')
-			{
-				pp++;
+				if (!(pp = strrchr(pp, '\n')))
+				{
+					break;
+				}
+
+				if (*pp == '\n')
+				{
+					pp++;
+				}
 			}
 		}
 
