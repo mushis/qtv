@@ -158,40 +158,50 @@ void HTTPSV_SendHTMLFooter(cluster_t *cluster, oproxy_t *dest)
 	Net_ProxySend(cluster, dest, s, strlen(s));
 }
 
-qbool HTTPSV_GetHeaderField(char *s, char *field, char *buffer, int buffersize)
+qbool HTTPSV_GetHeaderField(const char *s, const char *field, char *buffer, int buffersize)
 {
-	char *e;
-	char *colon;
+	char *start = NULL;
+	char *end = NULL;
+	char *copy = NULL;
+	char *colon = NULL;
+	qbool status = false;
 	int fieldnamelen = strlen(field);
+	#define EAT_WHITESPACE(str) while (*str && (*str == ' ' || *str == '\t')) str++;
 
 	buffer[0] = 0;
 
-	e = s;
-	while(*e)
+	copy = Sys_strdup(s);
+	start = end = copy;
+
+	while (*end)
 	{
-		if (*e == '\n')
+		if (*end == '\n')
 		{
-			*e = '\0'; // FIXME: guess this do not allow us search headers in this buffer later
-			colon = strchr(s, ':');
+			*end = '\0';
+			colon = strchr(start, ':');
+			
 			if (!colon)
 			{
-				if (!strncmp(field, s, fieldnamelen))
+				// Header exists, but has no value. (Not sure if this is proper according to RFC).
+				if (!strncmp(field, start, fieldnamelen))
 				{
-					if (s[fieldnamelen] <= ' ')
+					if (start[fieldnamelen] <= ' ')
 					{
-						return true;
+						status = true;
+						break;
 					}
 				}
 			}
 			else
 			{
-				if (fieldnamelen == colon - s)
+				if (fieldnamelen == colon - start)
 				{
-					if (!strncmp(field, s, colon-s))
+					if (!strncmp(field, start, colon - start))
 					{
 						colon++;
-						while (*colon == ' ')
-							colon++;
+						
+						EAT_WHITESPACE(colon);
+
 						while (--buffersize > 0)
 						{
 							if (*colon == '\r' || *colon == '\n')
@@ -199,17 +209,21 @@ qbool HTTPSV_GetHeaderField(char *s, char *field, char *buffer, int buffersize)
 							*buffer++ = *colon++;
 						}
 						*buffer = 0;
-						return true;
+						
+						status = true;
+						break;
 					}
 				}
-
 			}
-			s = e+1;
+			start = end + 1;
 		}
 
-		e++;
+		end++;
 	}
-	return false;
+
+	Sys_free(copy);
+
+	return status;
 }
 
 char *HTTPSV_ParsePOST(char *post, char *buffer, int buffersize)
@@ -261,6 +275,7 @@ void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend, char *postdata)
 {
 	char tempbuf[512];
 	char *s;
+	char *postpath = pend->inbuffer + sizeof("POST ") - 1;
 	int len;
 
 	if (!HTTPSV_GetHeaderField(pend->inbuffer, "Content-Length", tempbuf, sizeof(tempbuf)))
@@ -276,8 +291,9 @@ void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend, char *postdata)
 	}
 
 	len = max(0, atoi(tempbuf));
-	if (pend->inbuffersize + len >= sizeof(pend->inbuffer)-20)
-	{	//too much data
+	if (pend->inbuffersize + len >= sizeof(pend->inbuffer) - 20)
+	{	
+		// Too much data.
 		pend->flushing = true;
 		return;
 	}
@@ -285,9 +301,9 @@ void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend, char *postdata)
 	len = postdata - (char*)pend->inbuffer + len;
 
 	if (len > pend->inbuffersize)
-		return;	//still need the body
+		return;	// Still need the body.
 
-	if (!strncmp(pend->inbuffer+5, "/admin", 6))
+	if (!strncmp(postpath, "/admin", 6))
 	{
 		HTTPSV_GenerateAdmin(cluster, pend, 0, postdata);
 	}
@@ -308,7 +324,7 @@ void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend, char *postdata)
 void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 {
 	char *s;
-	char *getpath = pend->inbuffer + 4;
+	char *getpath = pend->inbuffer + sizeof("GET ") - 1;
 
 	if (!strncmp(getpath, "/nowplaying", 11))
 	{
@@ -351,15 +367,15 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	}
 	else if (!strncmp(getpath, "/qtvbg01.png", sizeof("/qtvbg01.png")-1))
 	{
-		HTTPSV_GenerateHTMLBackGroundImg(cluster, pend, "qtvbg01.png");
+		HTTPSV_GenerateImage(cluster, pend, "qtvbg01.png");
 	}
 	else if (!strncmp(getpath, "/stream.png", sizeof("/stream.png")-1))
 	{
-		HTTPSV_GenerateHTMLBackGroundImg(cluster, pend, "stream.png");
+		HTTPSV_GenerateImage(cluster, pend, "stream.png");
 	}
 	else if (!strncmp(getpath, "/save.png", sizeof("/save.png")-1))
 	{
-		HTTPSV_GenerateHTMLBackGroundImg(cluster, pend, "save.png");
+		HTTPSV_GenerateImage(cluster, pend, "save.png");
 	}
 	else if (!strncmp(getpath, "/levelshots/", sizeof("/levelshots/")-1))
 	{

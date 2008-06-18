@@ -585,15 +585,16 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 	HTTPSV_SendHTMLFooter(cluster, dest);
 }
 
-void HTTPSV_GenerateHTMLBackGroundImg(cluster_t *cluster, oproxy_t *dest, char *imgfilename)
+void HTTPSV_GenerateImage(cluster_t *cluster, oproxy_t *dest, char *imgfilename)
 {
 	int s;
 
 	if (dest->buffer_file)
-		Sys_Error("HTTPSV_GenerateHTMLBackGroundImg: dest->buffer_file");
+		Sys_Error("HTTPSV_GenerateImage: dest->buffer_file");
 	
 	dest->buffer_file = FS_OpenFile(HTMLFILESPATH, imgfilename, &s);
-	if (!dest->buffer_file) {
+	if (!dest->buffer_file) 
+	{
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
 	}
