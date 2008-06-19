@@ -43,7 +43,7 @@ static const char qfont_table[256] = {
 	'x', 'y', 'z', '{', '|', '}', '~', '<'
 };
 
-void HTMLprintf(char *outb, int outl, qbool qfont, char *fmt, ...)
+void HTMLprintf(char *outb, int outl, qbool qfont, const char *fmt, ...)
 {
 	va_list val;
 	char qfmt[8192*4];
@@ -57,6 +57,9 @@ void HTMLprintf(char *outb, int outl, qbool qfont, char *fmt, ...)
 	outl -= 5;
 	while (outl > 0 && *inb)
 	{
+		if (qfont)
+			*inb = qfont_table[*(unsigned char*)inb];
+
 		if (*inb == '<')
 		{
 			*outb++ = '&';
@@ -84,11 +87,7 @@ void HTMLprintf(char *outb, int outl, qbool qfont, char *fmt, ...)
 		}
 		else
 		{
-			if (qfont)
-				*outb++ = qfont_table[*(unsigned char*)inb];
-			else
-				*outb++ = *inb;
-
+			*outb++ = *inb;
 			outl -= 1;
 		}
 		inb++;
