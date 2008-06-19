@@ -310,175 +310,18 @@ static qbool SV_CheckForHTTPRequest(cluster_t *cluster, oproxy_t *pend)
 	return true;
 }
 
-// Returns true if the pending proxy should be unlinked
-// truth does not imply that it should be freed/released, just unlinked.
-// FIXME: split me ffs!
-static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
+static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 {
-	char *s;
-	char *e;
-	char *colon;
+	qbool raw = false;
+	sv_t *qtv = pend->defaultstream;
+	char *colon = NULL;
 	char userinfo[sizeof(pend->inbuffer)] = {0};
 	float usableversion = 0;
 	int parse_end;
-	qbool raw;
-	sv_t *qtv;
-
-	pend->inbuffer[pend->inbuffersize] = 0; // So strings functions are happy.
-
-	// Check if this proxy is timing out.
-	SV_CheckProxyTimeout(cluster, pend);
-	
-	/*
-	if (pend->io_time + max(10 * 1000, 1000 * downstream_timeout.integer) <= cluster->curtime)
-	{
-		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, pending stream timeout, dropping\n", pend->id);
-		if (developer.integer > 1)
-			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
-
-		pend->drop = true;
-	}
-	*/
-
-	if (pend->drop)
-	{
-		// Free memory/handles and indicate we want this stream client unlinked by returning true.
-		SV_FreeProxy(pend);
-		return true; 
-	}
-
-	Net_TryFlushProxyBuffer(cluster, pend);
-
-	if (pend->flushing)
-	{
-		SV_ReadUntilDrop(pend);
-
-		/*
-		// Peform reading on buffer file if we have empty buffer.
-		if (!pend->_buffersize_ && pend->buffer_file)
-		{
-			pend->_buffersize_ += fread(pend->_buffer_, 1, pend->_buffermaxsize_, pend->buffer_file);
-
-			if (!pend->_buffersize_)
-			{
-				fclose(pend->buffer_file);
-				pend->buffer_file = NULL;
-			}
-		}
-
-		// Ok we have empty buffer, now we can drop.
-		if (!pend->_buffersize_) 
-		{
-			Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, empty buffer, dropping\n", pend->id);
-			if (developer.integer > 1)
-				Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
-
-			pend->drop = true;
-		}
-		*/
-
-		// NOTE: if flushing is true, we do not peform any reading below, just wait until buffer is empty, then drop.
-		return false;
-	}
-
-	// Try receiving data from the client and make sure it's of a valid type (HTTP or QTV).
-	if (!SV_ReceivePendingProxyRequest(cluster, pend))
-	{
-		return false;
-	}
-
-	/*
-	len = sizeof(pend->inbuffer) - pend->inbuffersize - 1;
-	len = recv(pend->sock, pend->inbuffer + pend->inbuffersize, len, 0);
-	
-	// Remote side closed connection.
-	if (len == 0)
-	{
-		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, remove side closed connection, dropping\n", pend->id);
-		if (developer.integer > 1)
-			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
-
-		pend->drop = true;
-		return false;
-	}
-
-	// No new data, or read error.
-	if (len < 0) 
-	{
-		return false;
-	}
-
-	pend->io_time = cluster->curtime; // Update IO activity.
-
-	pend->inbuffersize += len;
-	pend->inbuffer[pend->inbuffersize] = 0; // So strings functions are happy.
-
-	if (pend->inbuffersize < 5)
-		return false; 	// Don't have enough yet.
-
-	// Make sure we have a request we understand.
-	if (     strncmp(pend->inbuffer, "QTV\r", 4)
-	    &&   strncmp(pend->inbuffer, "QTV\n", 4)
-	    && ( !allow_http.integer 
-	    		|| (    strncmp(pend->inbuffer, "GET ",  4)
-	    		     && strncmp(pend->inbuffer, "POST ", 5)
-	    		   )
-		   )
-	   )
-	{	
-		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, unknown client, dropping\n", pend->id);
-		if (developer.integer > 1)
-			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
-	
-		// I have no idea what the smeg you are.
-		pend->drop = true;
-		return false;
-	}
-
-	// Make sure there's a double \n somewhere.
-	for (s = pend->inbuffer; *s; s++)
-	{
-		if (s[0] == '\n' && (s[1] == '\n' || (s[1] == '\r' && s[2] == '\n')))
-			break;
-	}
-
-	if (!*s)
-		return false; // Don't have enough yet.
-	*/
-
-	// Parse HTTP request.
-	SV_CheckForHTTPRequest(cluster, pend);
-
-	/*
-	if (!strncmp(pend->inbuffer, "POST ", 5))
-	{
-		if (s[0] == '\n' && s[1] == '\n')
-			s += 2;
-		else if (s[0] == '\n' && s[1] == '\r' && s[2] == '\n')
-			s += 3;
-
-		HTTPSV_PostMethod(cluster, pend, s);
-
-		return false;	// Not keen on this..
-	}
-	else if (!strncmp(pend->inbuffer, "GET ", 4))
-	{
-		HTTPSV_GetMethod(cluster, pend);
-
-		pend->flushing = true;
-
-		return false;
-	}
-	*/
-
-	raw = false;
-	qtv = pend->defaultstream;
-
-	e = pend->inbuffer;
-	s = e;
+	char *e = pend->inbuffer;
+	char *s = e;
 
 	// Parse a QTV request.
-	// TODO: Put in separate function.
 	while (*e)
 	{
 		if (*e == '\n' || *e == '\r')
@@ -499,26 +342,6 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 					else if (!strcmp(s, "SOURCELIST"))
 					{
 						SV_ReadSourceListRequest(cluster, pend);
-
-						/*
-						// Lists sources that are currently playing.
-						Net_ProxyPrintf(pend, "%s", QTV_SV_HEADER(pend, QTV_VERSION));
-
-						if (!cluster->servers)
-						{
-							Net_ProxyPrintf(pend, "PERROR: No sources currently available\n");
-						}
-						else
-						{
-							for (qtv = cluster->servers; qtv; qtv = qtv->next)
-								Net_ProxyPrintf(pend, "ASOURCE: %i: %15s: %15s\n", qtv->streamid, qtv->server, qtv->hostname);
-
-							qtv = NULL;
-						}
-
-						Net_ProxyPrintf(pend, "\n");
-						pend->flushing = true;
-						*/
 					}
 					else if (!strcmp(s, "REVERSE"))
 					{	
@@ -528,70 +351,10 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 					else if (!strcmp(s, "RECEIVE"))
 					{
 						qtv = SV_ReadReceiveRequest(cluster, pend);
-
-						/*
-						// A client connection request without a source.
-						if (cluster->NumServers == 1)
-						{	
-							// Only one stream anyway.
-							qtv = cluster->servers;
-						}
-						else
-						{	
-							// Try and hunt down an explicit stream (rather than a user-recorded one).
-							int numfound = 0;
-							sv_t *suitable = NULL;
-							
-							for (qtv = cluster->servers; qtv; qtv = qtv->next)
-							{
-								if (!qtv->DisconnectWhenNooneIsWatching)
-								{
-									suitable = qtv;
-									numfound++;
-								}
-							}
-
-							if (numfound == 1)
-								qtv = suitable;
-						}
-
-						if (!qtv)
-						{
-							Net_ProxyPrintf(pend, "%s"
-												  "PERROR: Multiple streams are currently playing\n\n",
-												  QTV_SV_HEADER(pend, QTV_VERSION));
-							pend->flushing = true;
-						}*/
 					}
 					else if (!strcmp(s, "DEMOLIST"))
 					{	
 						SV_ReadDemoListRequest(cluster, pend);
-
-						/*
-						// Lists sources that are currently playing.
-						int i;
-
-						Cluster_BuildAvailableDemoList(cluster);
-
-						Net_ProxyPrintf(pend, "%s", QTV_SV_HEADER(pend, QTV_VERSION));
-
-						if (!cluster->availdemoscount)
-						{
-							Net_ProxyPrintf(pend, "PERROR: No demos currently available\n");
-						}
-						else
-						{
-							for (i = 0; i < cluster->availdemoscount; i++)
-							{
-								Net_ProxyPrintf(pend, "ADEMO: %i: %15s\n", cluster->availdemos[i].size, cluster->availdemos[i].name);
-							}
-
-							qtv = NULL;
-						}
-
-						Net_ProxyPrintf(pend, "\n");
-						pend->flushing = true;
-						*/
 					}
 					else if (!strcmp(s, "AUTH"))
 					{
@@ -610,21 +373,6 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 					if (!strcmp(s, "VERSION"))
 					{
 						usableversion = SV_ReadVersionRequest(colon);
-
-						/*
-						usableversion = atof(colon);
-
-						switch ((int)usableversion)
-						{
-							case 1:
-								// Got a usable version.
-								break;
-							default:
-								// Not recognised.
-								usableversion = 0;
-								break;
-						}
-						*/
 					}
 					else if (!strcmp(s, QTV_EZQUAKE_EXT))
 					{
@@ -638,49 +386,10 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 					else if (!strcmp(s, "SOURCE"))
 					{
 						qtv = SV_ReadSourceRequest(cluster, colon);
-
-						/*
-						// Connects, creating a new source.
-						while (*colon == ' ')
-							colon++;
-						for (s = colon; *s; s++)
-						{
-							if (*s < '0' || *s > '9')
-								break;
-						}
-
-						if (*s)
-						{
-							qtv = QTV_NewServerConnection(cluster, colon, "", false, true, true, false);
-						}
-						else
-						{
-							// Numerical source, use a stream id.
-							for (qtv = cluster->servers; qtv; qtv = qtv->next)
-							{
-								if (qtv->streamid == atoi(colon))
-									break;
-							}
-						}
-						*/
 					}
 					else if (!strcmp(s, "DEMO"))
 					{
 						qtv = SV_ReadDemoRequest(cluster, pend, colon);
-
-						/*
-						// Starts a demo off the server... source does the same thing though...
-						char buf[256];
-	
-						snprintf(buf, sizeof(buf), "demo:%s", colon);
-						qtv = QTV_NewServerConnection(cluster, buf, "", false, true, true, false);
-						if (!qtv)
-						{
-							Net_ProxyPrintf(pend, "%s"
-												  "PERROR: couldn't open demo\n\n",
-												  QTV_SV_HEADER(pend, QTV_VERSION));
-							pend->flushing = true;
-						}*/
 					}
 					else if (!strcmp(s, "AUTH"))
 					{	
@@ -770,6 +479,52 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 	Prox_UpdateProxiesUserList(qtv, pend, QUL_ADD);
 
 	Net_SendConnectionMVD(qtv, pend);
+
+	return true;
+}
+
+// Returns true if the pending proxy should be unlinked
+// truth does not imply that it should be freed/released, just unlinked.
+static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
+{
+	pend->inbuffer[pend->inbuffersize] = 0; // So strings functions are happy.
+
+	// Check if this proxy is timing out.
+	SV_CheckProxyTimeout(cluster, pend);
+
+	if (pend->drop)
+	{
+		// Free memory/handles and indicate we want this stream client unlinked by returning true.
+		SV_FreeProxy(pend);
+		return true; 
+	}
+
+	Net_TryFlushProxyBuffer(cluster, pend);
+
+	if (pend->flushing)
+	{
+		SV_ReadUntilDrop(pend);
+
+		// NOTE: if flushing is true, we do not peform any reading below, just wait until buffer is empty, then drop.
+		return false;
+	}
+
+	// Try receiving data from the client and make sure it's of a valid type (HTTP or QTV).
+	if (!SV_ReceivePendingProxyRequest(cluster, pend))
+	{
+		return false;
+	}
+
+	// Parse HTTP request.
+	if (!SV_CheckForHTTPRequest(cluster, pend))
+	{
+		return false;
+	}
+
+	if (!SV_CheckForQTVRequest(cluster, pend))
+	{
+		return false;
+	}
 
 	return true;
 }
