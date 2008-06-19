@@ -234,7 +234,7 @@ static qbool SV_ReceivePendingProxyRequest(cluster_t *cluster, oproxy_t *pend)
 	// Remote side closed connection.
 	if (len == 0)
 	{
-		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, remove side closed connection, dropping\n", pend->id);
+		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, remote side closed connection, dropping\n", pend->id);
 		if (developer.integer > 1)
 			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
 
