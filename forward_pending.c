@@ -683,7 +683,7 @@ void SV_CheckMVDPort(cluster_t *cluster)
 {
     static unsigned int last_time_check = 0;
 
-	int newp = bound(0, mvdport.integer, 64000); // FIXME: which actual value is max?
+	int newp = bound(0, mvdport.integer, 65535);
 
 	if (cluster->tcpsocket == INVALID_SOCKET && newp && last_time_check + 30 * 1000 < cluster->curtime)
 		mvdport.modified = true; // time to time attempt open port if not open
