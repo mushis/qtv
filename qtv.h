@@ -686,7 +686,7 @@ qbool			QTV_Connect(sv_t *qtv, const char *serverurl);
 // free() memory and etc, unlink from cluster servers list
 void			QTV_Shutdown(cluster_t *cluster, sv_t *qtv);
 // malloc(qtv) and init, call QTV_Connect and link to servers list
-sv_t			*QTV_NewServerConnection(cluster_t *cluster, char *server, char *password, 
+sv_t			*QTV_NewServerConnection(cluster_t *cluster, const char *server, char *password, 
 								qbool force, qbool autoclose, qbool noduplicates, qbool query);
 // parse qtv connection header
 qbool			QTV_ParseHeader(sv_t *qtv);
@@ -831,7 +831,7 @@ void			HTTPSV_SendHTMLHeader(cluster_t *cluster, oproxy_t *dest, char *title);
 void			HTTPSV_SendHTMLFooter(cluster_t *cluster, oproxy_t *dest);
 qbool			HTTPSV_GetHeaderField(const char *s, const char *field, char *buffer, int buffersize);
 char			*HTTPSV_ParsePOST(char *post, char *buffer, int buffersize);
-void			HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend, char *postdata);
+void			HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend); //, char *postdata);
 void			HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend);
 qbool			HTTPSV_GetHostname(cluster_t *cluster, oproxy_t *dest, char *hostname, int buffersize);
 

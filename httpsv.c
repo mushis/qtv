@@ -271,12 +271,33 @@ char *HTTPSV_ParsePOST(char *post, char *buffer, int buffersize)
 	return post;
 }
 
-void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend, char *postdata)
+void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend) //, char *postdata)
 {
 	char tempbuf[512];
 	char *s;
 	char *postpath = pend->inbuffer + sizeof("POST ") - 1;
+	char *postdata = NULL;
 	int len;
+
+	// Get the post data.
+	{
+		for (s = pend->inbuffer; *s; s++)
+		{
+			if (s[0] == '\n' && (s[1] == '\n' || (s[1] == '\r' && s[2] == '\n')))
+				break;
+		}
+
+		if (s[0] == '\n' && s[1] == '\n')
+		{
+			s += 2;
+		}
+		else if (s[0] == '\n' && s[1] == '\r' && s[2] == '\n')
+		{
+			s += 3;
+		}
+
+		postdata = s;
+	}
 
 	if (!HTTPSV_GetHeaderField(pend->inbuffer, "Content-Length", tempbuf, sizeof(tempbuf)))
 	{

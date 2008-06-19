@@ -493,7 +493,7 @@ void QTV_Shutdown(cluster_t *cluster, sv_t *qtv)
 	Sys_free(qtv);
 }
 
-sv_t *QTV_NewServerConnection(cluster_t *cluster, char *server, char *password, qbool force, qbool autoclose, qbool noduplicates, qbool query)
+sv_t *QTV_NewServerConnection(cluster_t *cluster, const char *server, char *password, qbool force, qbool autoclose, qbool noduplicates, qbool query)
 {
 	sv_t *qtv;
 

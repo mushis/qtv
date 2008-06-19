@@ -27,7 +27,290 @@ char *QTV_SV_HEADER(oproxy_t *prox, float qtv_ver)
 	return header;
 }
 
-// returns true if the pending proxy should be unlinked
+static void SV_ReadSourceListRequest(cluster_t *cluster, oproxy_t *pend)
+{
+	sv_t *qtv = NULL;
+
+	// Lists sources that are currently playing.
+	Net_ProxyPrintf(pend, "%s", QTV_SV_HEADER(pend, QTV_VERSION));
+
+	if (!cluster->servers)
+	{
+		Net_ProxyPrintf(pend, "PERROR: No sources currently available\n");
+	}
+	else
+	{
+		for (qtv = cluster->servers; qtv; qtv = qtv->next)
+			Net_ProxyPrintf(pend, "ASOURCE: %i: %15s: %15s\n", qtv->streamid, qtv->server, qtv->hostname);
+	}
+
+	Net_ProxyPrintf(pend, "\n");
+	pend->flushing = true;
+}
+
+static sv_t *SV_ReadReceiveRequest(cluster_t *cluster, oproxy_t *pend)
+{
+	sv_t *qtv = NULL;
+
+	// A client connection request without a source.
+	if (cluster->NumServers == 1)
+	{	
+		// Only one stream anyway.
+		qtv = cluster->servers;
+	}
+	else
+	{	
+		// Try and hunt down an explicit stream (rather than a user-recorded one).
+		int numfound = 0;
+		sv_t *suitable = NULL;
+		
+		for (qtv = cluster->servers; qtv; qtv = qtv->next)
+		{
+			if (!qtv->DisconnectWhenNooneIsWatching)
+			{
+				suitable = qtv;
+				numfound++;
+			}
+		}
+
+		if (numfound == 1)
+			qtv = suitable;
+	}
+
+	if (!qtv)
+	{
+		Net_ProxyPrintf(pend, "%s"
+							  "PERROR: Multiple streams are currently playing\n\n",
+							  QTV_SV_HEADER(pend, QTV_VERSION));
+		pend->flushing = true;
+	}
+
+	return qtv;
+}
+
+static void SV_ReadDemoListRequest(cluster_t *cluster, oproxy_t *pend)
+{
+	// Lists sources that are currently playing.
+	int i;
+
+	Cluster_BuildAvailableDemoList(cluster);
+
+	Net_ProxyPrintf(pend, "%s", QTV_SV_HEADER(pend, QTV_VERSION));
+
+	if (!cluster->availdemoscount)
+	{
+		Net_ProxyPrintf(pend, "PERROR: No demos currently available\n");
+	}
+	else
+	{
+		for (i = 0; i < cluster->availdemoscount; i++)
+		{
+			Net_ProxyPrintf(pend, "ADEMO: %i: %15s\n", cluster->availdemos[i].size, cluster->availdemos[i].name);
+		}
+
+		//qtv = NULL;
+	}
+
+	Net_ProxyPrintf(pend, "\n");
+	pend->flushing = true;
+}
+
+static sv_t *SV_ReadSourceRequest(cluster_t *cluster, const char *sourcename)
+{
+	char *s = NULL;
+	sv_t *qtv = NULL;
+
+	// Connects, creating a new source.
+	while (*sourcename == ' ')
+		sourcename++;
+	for (s = (char *)sourcename; *s; s++)
+	{
+		if (*s < '0' || *s > '9')
+			break;
+	}
+
+	if (*s)
+	{
+		qtv = QTV_NewServerConnection(cluster, sourcename, "", false, true, true, false);
+	}
+	else
+	{
+		// Numerical source, use a stream id.
+		for (qtv = cluster->servers; qtv; qtv = qtv->next)
+		{
+			if (qtv->streamid == atoi(sourcename))
+				break;
+		}
+	}
+
+	return qtv;
+}
+
+static sv_t *SV_ReadDemoRequest(cluster_t *cluster, oproxy_t *pend, const char *demoname)
+{
+	// Starts a demo off the server... source does the same thing though...
+	char buf[256];
+	sv_t *qtv = NULL;
+
+	snprintf(buf, sizeof(buf), "demo:%s", demoname);
+	qtv = QTV_NewServerConnection(cluster, buf, "", false, true, true, false);
+	if (!qtv)
+	{
+		Net_ProxyPrintf(pend, "%s"
+							  "PERROR: couldn't open demo\n\n",
+							  QTV_SV_HEADER(pend, QTV_VERSION));
+		pend->flushing = true;
+	}
+
+	return qtv;
+}
+
+static float SV_ReadVersionRequest(const char *version)
+{
+	float usableversion = atof(version);
+
+	switch ((int)usableversion)
+	{
+		case 1:
+			// Got a usable version.
+			break;
+		default:
+			// Not recognised.
+			usableversion = 0;
+			break;
+	}
+
+	return usableversion;
+}
+
+static void SV_CheckProxyTimeout(cluster_t *cluster, oproxy_t *pend)
+{
+	if (pend->io_time + max(10 * 1000, 1000 * downstream_timeout.integer) <= cluster->curtime)
+	{
+		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, pending stream timeout, dropping\n", pend->id);
+		if (developer.integer > 1)
+			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
+
+		pend->drop = true;
+	}
+}
+
+static void SV_ReadUntilDrop(oproxy_t *pend)
+{
+	// Peform reading on buffer file if we have empty buffer.
+	if (!pend->_buffersize_ && pend->buffer_file)
+	{
+		pend->_buffersize_ += fread(pend->_buffer_, 1, pend->_buffermaxsize_, pend->buffer_file);
+
+		if (!pend->_buffersize_)
+		{
+			fclose(pend->buffer_file);
+			pend->buffer_file = NULL;
+		}
+	}
+
+	// Ok we have empty buffer, now we can drop.
+	if (!pend->_buffersize_) 
+	{
+		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, empty buffer, dropping\n", pend->id);
+		if (developer.integer > 1)
+			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
+
+		pend->drop = true;
+	}
+}
+
+//
+// Receives a request from a stream client and makes sure it's something we recognize (HTTP or QTV).
+//
+static qbool SV_ReceivePendingProxyRequest(cluster_t *cluster, oproxy_t *pend)
+{
+	int len;
+	char *s = NULL;
+
+	len = sizeof(pend->inbuffer) - pend->inbuffersize - 1;
+	len = recv(pend->sock, pend->inbuffer + pend->inbuffersize, len, 0);
+	
+	// Remote side closed connection.
+	if (len == 0)
+	{
+		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, remove side closed connection, dropping\n", pend->id);
+		if (developer.integer > 1)
+			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
+
+		pend->drop = true;
+		return false;
+	}
+
+	// No new data, or read error.
+	if (len < 0) 
+	{
+		return false;
+	}
+
+	pend->io_time = cluster->curtime; // Update IO activity.
+
+	pend->inbuffersize += len;
+	pend->inbuffer[pend->inbuffersize] = 0; // So strings functions are happy.
+
+	if (pend->inbuffersize < 5)
+		return false; 	// Don't have enough yet.
+
+	// Make sure we have a request we understand.
+	if (     strncmp(pend->inbuffer, "QTV\r", 4)
+		&&   strncmp(pend->inbuffer, "QTV\n", 4)
+		&& ( !allow_http.integer 
+    			|| (    strncmp(pend->inbuffer, "GET ",  4)
+    				 && strncmp(pend->inbuffer, "POST ", 5)
+    			   )
+		   )
+	   )
+	{	
+		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, unknown client, dropping\n", pend->id);
+		if (developer.integer > 1)
+			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
+	
+		// I have no idea what the smeg you are.
+		pend->drop = true;
+		return false;
+	}
+
+	// Make sure there's a double \n somewhere.
+	for (s = pend->inbuffer; *s; s++)
+	{
+		if (s[0] == '\n' && (s[1] == '\n' || (s[1] == '\r' && s[2] == '\n')))
+			break;
+	}
+
+	if (!*s)
+		return false; // Don't have enough yet.
+
+	return true;
+}
+
+static qbool SV_CheckForHTTPRequest(cluster_t *cluster, oproxy_t *pend)
+{
+	char *s = NULL;
+
+	if (!strncmp(pend->inbuffer, "POST ", 5))
+	{
+		HTTPSV_PostMethod(cluster, pend);
+
+		return false;	// Not keen on this..
+	}
+	else if (!strncmp(pend->inbuffer, "GET ", 4))
+	{
+		HTTPSV_GetMethod(cluster, pend);
+
+		pend->flushing = true;
+
+		return false;
+	}
+
+	return true;
+}
+
+// Returns true if the pending proxy should be unlinked
 // truth does not imply that it should be freed/released, just unlinked.
 // FIXME: split me ffs!
 static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
@@ -37,12 +320,16 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 	char *colon;
 	char userinfo[sizeof(pend->inbuffer)] = {0};
 	float usableversion = 0;
-	int len, parse_end;
+	int parse_end;
 	qbool raw;
 	sv_t *qtv;
 
-	pend->inbuffer[pend->inbuffersize] = 0; // so strings functions are happy
+	pend->inbuffer[pend->inbuffersize] = 0; // So strings functions are happy.
 
+	// Check if this proxy is timing out.
+	SV_CheckProxyTimeout(cluster, pend);
+	
+	/*
 	if (pend->io_time + max(10 * 1000, 1000 * downstream_timeout.integer) <= cluster->curtime)
 	{
 		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, pending stream timeout, dropping\n", pend->id);
@@ -51,18 +338,23 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 
 		pend->drop = true;
 	}
+	*/
 
 	if (pend->drop)
 	{
+		// Free memory/handles and indicate we want this stream client unlinked by returning true.
 		SV_FreeProxy(pend);
-		return true;
+		return true; 
 	}
 
 	Net_TryFlushProxyBuffer(cluster, pend);
 
 	if (pend->flushing)
 	{
-		// peform reading on buffer file if we have empty buffer
+		SV_ReadUntilDrop(pend);
+
+		/*
+		// Peform reading on buffer file if we have empty buffer.
 		if (!pend->_buffersize_ && pend->buffer_file)
 		{
 			pend->_buffersize_ += fread(pend->_buffer_, 1, pend->_buffermaxsize_, pend->buffer_file);
@@ -74,7 +366,8 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 			}
 		}
 
-		if (!pend->_buffersize_) // ok we have empty buffer, now we can drop
+		// Ok we have empty buffer, now we can drop.
+		if (!pend->_buffersize_) 
 		{
 			Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, empty buffer, dropping\n", pend->id);
 			if (developer.integer > 1)
@@ -82,14 +375,24 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 
 			pend->drop = true;
 		}
+		*/
 
-		// NOTE: if flushing is true, we do not peform any reading below, just wait when buffer will empty, then dropping
+		// NOTE: if flushing is true, we do not peform any reading below, just wait until buffer is empty, then drop.
 		return false;
 	}
 
+	// Try receiving data from the client and make sure it's of a valid type (HTTP or QTV).
+	if (!SV_ReceivePendingProxyRequest(cluster, pend))
+	{
+		return false;
+	}
+
+	/*
 	len = sizeof(pend->inbuffer) - pend->inbuffersize - 1;
 	len = recv(pend->sock, pend->inbuffer + pend->inbuffersize, len, 0);
-	if (len == 0)  // remote side closed connection
+	
+	// Remote side closed connection.
+	if (len == 0)
 	{
 		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, remove side closed connection, dropping\n", pend->id);
 		if (developer.integer > 1)
@@ -99,19 +402,21 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 		return false;
 	}
 
-	if (len < 0) // no new data, or read error
+	// No new data, or read error.
+	if (len < 0) 
 	{
 		return false;
 	}
 
-	pend->io_time = cluster->curtime; // update IO activity
+	pend->io_time = cluster->curtime; // Update IO activity.
 
 	pend->inbuffersize += len;
-	pend->inbuffer[pend->inbuffersize] = 0; // so strings functions are happy
+	pend->inbuffer[pend->inbuffersize] = 0; // So strings functions are happy.
 
 	if (pend->inbuffersize < 5)
-		return false; 	//don't have enough yet
+		return false; 	// Don't have enough yet.
 
+	// Make sure we have a request we understand.
 	if (     strncmp(pend->inbuffer, "QTV\r", 4)
 	    &&   strncmp(pend->inbuffer, "QTV\n", 4)
 	    && ( !allow_http.integer 
@@ -125,29 +430,36 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 		if (developer.integer > 1)
 			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
 	
-		//I have no idea what the smeg you are.
+		// I have no idea what the smeg you are.
 		pend->drop = true;
 		return false;
 	}
 
-	//make sure there's a double \n somewhere
+	// Make sure there's a double \n somewhere.
 	for (s = pend->inbuffer; *s; s++)
+	{
 		if (s[0] == '\n' && (s[1] == '\n' || (s[1] == '\r' && s[2] == '\n')))
 			break;
+	}
 
 	if (!*s)
-		return false;	//don't have enough yet
+		return false; // Don't have enough yet.
+	*/
 
+	// Parse HTTP request.
+	SV_CheckForHTTPRequest(cluster, pend);
+
+	/*
 	if (!strncmp(pend->inbuffer, "POST ", 5))
 	{
-		if      (s[0] == '\n' && s[1] == '\n')
+		if (s[0] == '\n' && s[1] == '\n')
 			s += 2;
 		else if (s[0] == '\n' && s[1] == '\r' && s[2] == '\n')
 			s += 3;
 
 		HTTPSV_PostMethod(cluster, pend, s);
 
-		return false;	//not keen on this..
+		return false;	// Not keen on this..
 	}
 	else if (!strncmp(pend->inbuffer, "GET ", 4))
 	{
@@ -157,19 +469,23 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 
 		return false;
 	}
+	*/
 
 	raw = false;
-
 	qtv = pend->defaultstream;
 
 	e = pend->inbuffer;
 	s = e;
-	while(*e)
+
+	// Parse a QTV request.
+	// TODO: Put in separate function.
+	while (*e)
 	{
 		if (*e == '\n' || *e == '\r')
 		{
 			*e = '\0';
 			colon = strchr(s, ':');
+
 			if (*s)
 			{
 				if (!colon)
@@ -178,10 +494,14 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 
 					if (!strcmp(s, "QTV"))
 					{
-						//just a qtv request
+						// Just a qtv request.
 					}
 					else if (!strcmp(s, "SOURCELIST"))
-					{	//lists sources that are currently playing
+					{
+						SV_ReadSourceListRequest(cluster, pend);
+
+						/*
+						// Lists sources that are currently playing.
 						Net_ProxyPrintf(pend, "%s", QTV_SV_HEADER(pend, QTV_VERSION));
 
 						if (!cluster->servers)
@@ -198,21 +518,30 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 
 						Net_ProxyPrintf(pend, "\n");
 						pend->flushing = true;
+						*/
 					}
 					else if (!strcmp(s, "REVERSE"))
-					{	//this is actually a server trying to connect to us
-						//start up a new stream
+					{	
+						// This is actually a server trying to connect to us
+						// start up a new stream.
 					}
 					else if (!strcmp(s, "RECEIVE"))
-					{	//a client connection request without a source
+					{
+						qtv = SV_ReadReceiveRequest(cluster, pend);
+
+						/*
+						// A client connection request without a source.
 						if (cluster->NumServers == 1)
-						{	//only one stream anyway
+						{	
+							// Only one stream anyway.
 							qtv = cluster->servers;
 						}
 						else
-						{	//try and hunt down an explicit stream (rather than a user-recorded one)
+						{	
+							// Try and hunt down an explicit stream (rather than a user-recorded one).
 							int numfound = 0;
 							sv_t *suitable = NULL;
+							
 							for (qtv = cluster->servers; qtv; qtv = qtv->next)
 							{
 								if (!qtv->DisconnectWhenNooneIsWatching)
@@ -221,19 +550,25 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 									numfound++;
 								}
 							}
+
 							if (numfound == 1)
 								qtv = suitable;
 						}
+
 						if (!qtv)
 						{
 							Net_ProxyPrintf(pend, "%s"
 												  "PERROR: Multiple streams are currently playing\n\n",
 												  QTV_SV_HEADER(pend, QTV_VERSION));
 							pend->flushing = true;
-						}
+						}*/
 					}
 					else if (!strcmp(s, "DEMOLIST"))
-					{	//lists sources that are currently playing
+					{	
+						SV_ReadDemoListRequest(cluster, pend);
+
+						/*
+						// Lists sources that are currently playing.
 						int i;
 
 						Cluster_BuildAvailableDemoList(cluster);
@@ -247,17 +582,20 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 						else
 						{
 							for (i = 0; i < cluster->availdemoscount; i++)
+							{
 								Net_ProxyPrintf(pend, "ADEMO: %i: %15s\n", cluster->availdemos[i].size, cluster->availdemos[i].name);
+							}
 
 							qtv = NULL;
 						}
 
 						Net_ProxyPrintf(pend, "\n");
 						pend->flushing = true;
+						*/
 					}
 					else if (!strcmp(s, "AUTH"))
 					{
-						//part of the connection process, can be ignored if there's no password
+						// Part of the connection process, can be ignored if there's no password.
 					}
 					else
 					{
@@ -267,27 +605,30 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 				else
 				{
 					*colon++ = '\0';
-
 					Sys_DPrintf(NULL, "qtv cl, got (%s) (%s)\n", s, colon);
 
 					if (!strcmp(s, "VERSION"))
 					{
+						usableversion = SV_ReadVersionRequest(colon);
+
+						/*
 						usableversion = atof(colon);
 
-						switch((int)usableversion)
+						switch ((int)usableversion)
 						{
-						case 1:
-							//got a usable version
-							break;
-						default:
-							//not recognised.
-							usableversion = 0;
-							break;
+							case 1:
+								// Got a usable version.
+								break;
+							default:
+								// Not recognised.
+								usableversion = 0;
+								break;
 						}
+						*/
 					}
 					else if (!strcmp(s, QTV_EZQUAKE_EXT))
 					{
-						// we set this ASAP
+						// We set this ASAP.
 						pend->qtv_ezquake_ext = (atoi(colon) & QTV_EZQUAKE_EXT_NUM);
 					}
 					else if (!strcmp(s, "RAW"))
@@ -295,24 +636,40 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 						raw = atoi(colon);
 					}
 					else if (!strcmp(s, "SOURCE"))
-					{	//connects, creating a new source
+					{
+						qtv = SV_ReadSourceRequest(cluster, colon);
+
+						/*
+						// Connects, creating a new source.
 						while (*colon == ' ')
 							colon++;
 						for (s = colon; *s; s++)
+						{
 							if (*s < '0' || *s > '9')
 								break;
+						}
+
 						if (*s)
+						{
 							qtv = QTV_NewServerConnection(cluster, colon, "", false, true, true, false);
+						}
 						else
 						{
-							//numerical source, use a stream id.
+							// Numerical source, use a stream id.
 							for (qtv = cluster->servers; qtv; qtv = qtv->next)
+							{
 								if (qtv->streamid == atoi(colon))
 									break;
+							}
 						}
+						*/
 					}
 					else if (!strcmp(s, "DEMO"))
-					{	//starts a demo off the server... source does the same thing though...
+					{
+						qtv = SV_ReadDemoRequest(cluster, pend, colon);
+
+						/*
+						// Starts a demo off the server... source does the same thing though...
 						char buf[256];
 	
 						snprintf(buf, sizeof(buf), "demo:%s", colon);
@@ -323,15 +680,16 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 												  "PERROR: couldn't open demo\n\n",
 												  QTV_SV_HEADER(pend, QTV_VERSION));
 							pend->flushing = true;
-						}
+						}*/
 					}
 					else if (!strcmp(s, "AUTH"))
-					{	//lists the demos available on this proxy
-						//part of the connection process, can be ignored if there's no password
+					{	
+						// Lists the demos available on this proxy
+						// part of the connection process, can be ignored if there's no password.
 					}
 					else if (!strcmp(s, "USERINFO"))
 					{
-						strlcpy(userinfo, colon, sizeof(userinfo)); //can't use it right now, qtv may be NULL atm
+						strlcpy(userinfo, colon, sizeof(userinfo)); // Can't use it right now, qtv may be NULL atm.
 					}
 					else
 					{
@@ -339,16 +697,17 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 					}
 				}
 			}
-			s = e+1;
+
+			s = e + 1;
 		}
 
 		e++;
 	}
 
-//
-//  skip connection part in input buffer but not whole buffer because there may be some command from client alredy
-//
-	parse_end = e - (char*)pend->inbuffer;
+	//
+	// Skip connection part in input buffer but not whole buffer because there may be some command from client already.
+	//
+	parse_end = e - (char *)pend->inbuffer;
 	if (parse_end > 0 && parse_end < sizeof(pend->inbuffer))
 	{
 		pend->inbuffersize -= parse_end;
@@ -356,7 +715,7 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 	}
 	else
 	{
-		pend->inbuffersize = 0; // something wrong, just skip all input buffer
+		pend->inbuffersize = 0; // Something wrong, just skip all input buffer.
 	}
 
 	pend->qtv_clversion = usableversion;
@@ -407,7 +766,7 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 	Info_Convert(&pend->ctx, userinfo);
 	Prox_FixName(qtv, pend);
 
-	// send message to all proxies what we have new client
+	// Send message to all proxies what we have new client.
 	Prox_UpdateProxiesUserList(qtv, pend, QUL_ADD);
 
 	Net_SendConnectionMVD(qtv, pend);
@@ -420,7 +779,7 @@ void SV_ReadPendingProxies(cluster_t *cluster)
 	oproxy_t *pend, *pend2, *pend3;
 
 	// unlink (probably) from the head
-	while(cluster->pendingproxies)
+	while (cluster->pendingproxies)
 	{
 		pend = cluster->pendingproxies->next;
 		if (SV_ReadPendingProxy(cluster, cluster->pendingproxies))
@@ -430,7 +789,7 @@ void SV_ReadPendingProxies(cluster_t *cluster)
 	}
 
 	// unlink (probably) from the body/tail
-	for(pend = cluster->pendingproxies; pend && pend->next; )
+	for (pend = cluster->pendingproxies; pend && pend->next; )
 	{
 		pend2 = pend->next;
 		pend3 = pend2->next;
@@ -446,7 +805,7 @@ void SV_ReadPendingProxies(cluster_t *cluster)
 	}
 }
 
-// just allocate memory and set some fields, do not perform any linkage to any list
+// Just allocate memory and set some fields, do not perform any linkage to any list.
 oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv)
 {
 	oproxy_t *prox = Sys_malloc(sizeof(*prox));
@@ -481,7 +840,7 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv)
 	return prox;
 }
 
-// just free memory and handles, do not perfrom removing from any list
+// Just free memory and handles, do not perfrom removing from any list.
 void SV_FreeProxy(oproxy_t *prox)
 {
 	if (prox->defaultstream)

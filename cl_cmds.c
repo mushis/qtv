@@ -314,7 +314,7 @@ Clcmd_CompleteDownoload
 This is a sub routine for  Clcmd_NextDownload_f(), called when download complete, we set up some fields for prox.
 */
 
-static void Clcmd_CompleteDownoload(sv_t *qtv, oproxy_t *prox)
+static void Clcmd_CompleteDownload(sv_t *qtv, oproxy_t *prox)
 {
 	if (prox->download)
 		fclose (prox->download);
@@ -380,7 +380,7 @@ static qbool Sub_Clcmd_NextDownload (sv_t *qtv, oproxy_t *prox)
 
 	if (prox->downloadcount == prox->downloadsize)
 	{
-		Clcmd_CompleteDownoload(qtv, prox);
+		Clcmd_CompleteDownload(qtv, prox);
 		return true; // we done all we want
 	}
 
@@ -465,7 +465,7 @@ static void Clcmd_Download_f(sv_t *qtv, oproxy_t *prox)
 		goto deny_download;
 
 	// close previous download if any
-	Clcmd_CompleteDownoload(qtv, prox);
+	Clcmd_CompleteDownload(qtv, prox);
 
 	// lowercase name (needed for casesen file systems)
 	for (p = name; *p; p++)

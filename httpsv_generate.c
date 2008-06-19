@@ -732,7 +732,7 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 			"</channel>"
 		"</rss>";
 
-	link_fmt = "http://%s:%i/watch.qtv?sid=%i";
+	link_fmt = "http://%s/watch.qtv?sid=%i";
 
 	// Estimate the size of the item buffer.
 	item_len = strlen(item_fmt) + strlen(link_fmt) + strlen(hostname) + 2048;
@@ -748,7 +748,7 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 		server = (strncmp(streams->server, "tcp:", sizeof("tcp:") - 1) ? streams->server : streams->server + sizeof("tcp:") - 1);
 
 		// Set the url to the stream.
-		snprintf(link, sizeof(link), link_fmt, hostname, mvdport.integer, streams->streamid);
+		snprintf(link, sizeof(link), link_fmt, hostname, streams->streamid);
 
 		playerlist[0] = 0;
 		pp = playerlist;
