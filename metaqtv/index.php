@@ -26,6 +26,71 @@
 	$errors = "";
 	$ignore_empty = IGNORE_EMPTY && !isset($_GET["full"]);
 	
+	// outpu buffers
+	$output_arr = array();
+	$output_buf = "";
+	$output_val = "";
+	
+	// when not false we are inside an element which contains number of observers info
+	$inobservers = false;
+	
+	// type of server line
+	$line_type = false;
+	
+	function output($s)
+	{
+		global $output_buf;
+		
+		$output_buf .= $s;
+	}
+	
+	function output_setval($v)
+	{
+		global $output_val;
+		
+		$output_val .= $v;
+	}
+	
+	function output_finish()
+	{
+		global $output_arr;
+		global $output_buf;
+		global $output_val;
+		global $line_type;
+		
+		$ov = (int) trim($output_val);
+		if ($line_type == "empty") $ov = -1;
+		array_push($output_arr, array( 0 => $output_buf, 1 => $ov, 2 => count($output_arr) ));
+		
+		$output_buf = "";
+		$output_val = "";
+	}
+	
+	function cmp_rows($a, $b)
+	{
+		if ($a[1] == $b[1]) {
+			return ($a[2] < $b[2]) ? -1 : 1;
+		}
+		else return ($a[1] > $b[1] ? -1 : 1);
+	}
+	
+	function output_dump()
+	{
+		global $output_arr;
+		global $ignore_empty;
+		
+		if ($ignore_empty) {
+			usort($output_arr, "cmp_rows");
+		}
+		
+		foreach ($output_arr as $r)
+		{
+			echo $r[0];
+		}
+		
+		$output_arr = array();
+	}
+	
 	function startElement($parser, $name, $attrs)
 	{
 		global $intable;
@@ -33,38 +98,50 @@
 		global $cururl;
 		global $ignoreline;
 		global $ignore_empty;
+		global $inobservers;
+		global $line_type;
 		
+		if ($tablelev == 1 && $name == "tr") {
+			if (strpos(@$attrs["class"], "nebottom") !== false) $line_type = "second";
+			else if (strpos(@$attrs["class"], "netop") !== false) $line_type = "first";
+			else $line_type = "empty";
+		}
+
 		// we are entering a row which represents an empty server
 		// so if user wants, we will set ignore flag on
-		if ($name == "TR" && strpos(@$attrs["CLASS"], "notempty") === false && $ignore_empty && $tablelev == 1) {
-			$ignoreline = true;
+		if ($name == "tr" && $ignore_empty && $tablelev == 1) {
+			$ignoreline = $line_type == "empty";
 		}
 		
 		if ($ignoreline) {
 			return;
 		}
 		
+		if (@$attrs["class"] == "observers" || $inobservers) {
+			$inobservers = $name;
+		}
+		
 		if ($intable) {
-			echo "<".$name;
+			output("<".$name);
 			
 			foreach($attrs as $k => $v) {
-				if ($k == "HREF" || $k == "SRC") {
+				if ($k == "href" || $k == "src") {
 					if ($v[0] == "/") {
 						$v = substr($v, 1);
 					}
 					$v = $cururl.$v;
 				}
-				echo ' '.htmlspecialchars($k).'="'.htmlspecialchars($v).'"';
+				output(' '.htmlspecialchars($k).'="'.htmlspecialchars($v).'"');
 			}
 			
-			echo ">";
+			output(">");
 		}
 		
-		if (!$intable && $name == "TABLE" && $attrs["ID"] == "nowplaying") {
+		if (!$intable && @$attrs["id"] == "nowplaying") {
 			$intable = true;
 		}
 		
-		if ($intable && $name == "TABLE") {
+		if ($intable && $name == "table") {
 			$tablelev++;
 		}		
 	}
@@ -74,19 +151,14 @@
 		global $intable;
 		global $tablelev;
 		global $ignoreline;
-		
-		if ($name == "TR") {
-			if ($ignoreline) {
-				$ignoreline = false;
-				return;
-			}
-		}
+		global $inobservers;
+		global $line_type;
 		
 		if ($ignoreline) {
 			return;
 		}
 		
-		if ($intable && $name == "TABLE") {
+		if ($intable && $name == "table") {
 			$tablelev--;
 			if (!$tablelev) {
 				$intable = false;
@@ -94,16 +166,29 @@
 		}
 		
 		if ($intable) {
-			echo "</".$name.">";
+			output ("</".$name.">");
+		}
+		
+		if ($name == "tr" && $tablelev == 1 && ($line_type == "second" || ($line_type == "empty"))) {
+			output_finish();
+		}
+		
+		if ($inobservers == $name) {
+			$inobservers = false;
 		}
 	}
 	
 	function cdata($parser, $d) {
 		global $intable;
 		global $ignoreline;
+		global $inobservers;
 		
 		if ($intable && !$ignoreline) {
-			echo $d;
+			output($d);
+		}
+		
+		if ($inobservers == "span" && !$ignoreline) {
+			output_setval($d);
 		}
 	}
 	
@@ -130,7 +215,7 @@
 			$errors .= "<p>Couldn't create XML parser</p>";
 			return;
 		}
-		xml_parser_set_option($xml_parser, XML_OPTION_CASE_FOLDING, true);
+		xml_parser_set_option($xml_parser, XML_OPTION_CASE_FOLDING, false);
 		xml_set_element_handler($xml_parser, "startElement", "endElement");
 		xml_set_character_data_handler($xml_parser, "cdata");
 		
@@ -150,6 +235,7 @@
 	foreach ($qtvlist as $url => $name) {
 		echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</td></tr>";
 		InsertURL($url);
+		output_dump();
 	}
 
 	if (DEBUG_MODE && strlen($errors)) {
