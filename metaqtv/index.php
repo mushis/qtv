@@ -199,9 +199,11 @@
 		global $tablelev;
 		global $cururl;
 		global $errors;
+		global $ignoreline;
 
 		$intable = false;
 		$tablelev = 0;
+		$ignoreline = false;
 		
 		$cururl = $url;
 		$fp = @fopen($url, "r");
