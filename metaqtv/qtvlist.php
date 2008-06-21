@@ -3,8 +3,8 @@
 	/// \file qtvlist.php
 	
 	$qtvlist = array(
-		"http://vrr.itam.cas.cz:30000/",
-		"http://qw.suomicom.fi:28000/",
+		"http://qw.suomicom.fi:28000/" => "Suomicom",
+		"http://147.231.20.214:30000/" => "Lamicka",
 	);
 	
 ?>

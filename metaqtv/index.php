@@ -24,6 +24,7 @@
 	$tablelev = 0;
 	$ignoreline = false;
 	$errors = "";
+	$ignore_empty = IGNORE_EMPTY && !isset($_GET["full"]);
 	
 	function startElement($parser, $name, $attrs)
 	{
@@ -31,10 +32,11 @@
 		global $tablelev;
 		global $cururl;
 		global $ignoreline;
+		global $ignore_empty;
 		
 		// we are entering a row which represents an empty server
 		// so if user wants, we will set ignore flag on
-		if ($name == "TR" && strpos(@$attrs["CLASS"], "notempty") === false && IGNORE_EMPTY && $tablelev == 1) {
+		if ($name == "TR" && strpos(@$attrs["CLASS"], "notempty") === false && $ignore_empty && $tablelev == 1) {
 			$ignoreline = true;
 		}
 		
@@ -144,7 +146,9 @@
 
 	include "header.html";
 	
-	foreach ($qtvlist as $url) {
+	$i = 0;
+	foreach ($qtvlist as $url => $name) {
+		echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</td></tr>";
 		InsertURL($url);
 	}
 

@@ -52,6 +52,13 @@ padding:0;
   text-align: center;
 }
 #nowplaying tr.odd { background-color: #8a8166; }
+#nowplaying tr.qtvsep td { 
+	background-color: #62717e;
+	font-weight: 900; font-size: 1.1em;
+}
+#nowplaying tr.qtvsep td a {
+	
+}
 #nowplaying tr { margin:0; padding:0; }
 #nowplaying td.wn { width: 200px; }
 #nowplaying td.wn span a, #nowplaying td.wn span a:visited {
