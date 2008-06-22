@@ -233,11 +233,18 @@
 
 	include "header.html";
 	
-	$i = 0;
-	foreach ($qtvlist as $url => $name) {
-		echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</td></tr>";
-		InsertURL($url);
+	if ($ignore_empty) {
+		foreach ($qtvlist as $url => $name) {
+			InsertURL($url);
+		}
 		output_dump();
+	}
+	else {
+		foreach ($qtvlist as $url => $name) {
+			echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</td></tr>";
+			InsertURL($url);
+			output_dump();
+		}
 	}
 
 	if (DEBUG_MODE && strlen($errors)) {
