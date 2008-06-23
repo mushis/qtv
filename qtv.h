@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #ifdef _WIN32
 	#include <conio.h>
-	#include <winsock.h>	//this includes windows.h and is the reason for much compiling slowness with windows builds.
+	#include <winsock.h>	// This includes windows.h and is the reason for much compiling slowness with windows builds.
 	#include <mmsystem.h>
 	#include <stdlib.h>
 
@@ -44,16 +44,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#define ECONNREFUSED WSAECONNREFUSED
 	#define ENOTCONN WSAENOTCONN
 
-	// we have special functions to properly terminate sprintf buffers in windows.
+	// We have special functions to properly terminate sprintf buffers in windows.
 	// we assume other systems are designed with even a minor thought to security.
 	#if !defined(__MINGW32_VERSION)
-		#define unlink _unlink	// why do MS have to be so awkward?
+		#define unlink _unlink	// Why do MS have to be so awkward?
 	#else
-		#define unlink remove	// seems mingw misses something
+		#define unlink remove	// Seems mingw misses something.
 	#endif
 
 	#ifdef _MSC_VER
-		// okay, so warnings are here to help... they're ugly though.
+		// Okay, so warnings are here to help... they're ugly though.
 		#pragma warning(disable: 4761)	// integral size mismatch in argument
 		#pragma warning(disable: 4244)	// conversion from float to short
 		#pragma warning(disable: 4018)	// signed/unsigned mismatch
@@ -161,16 +161,16 @@ extern "C" {
 
 //======================================
 
-#define PROXY_VERSION "1.00b"	// release version of QTV (not protocol)
-#define QTV_VERSION			1.0f		// we are support up to this QTV version
+#define PROXY_VERSION "1.00b"			// Release version of QTV (not protocol).
+#define QTV_VERSION			1.0f		// we are support up to this QTV version.
 
 // { QTV_EZQUAKE_EXT
 
 #define QTV_EZQUAKE_EXT		"QTV_EZQUAKE_EXT"
 
-#define QTV_EZQUAKE_EXT_DOWNLOAD	(1<<0)		// well, this is not just download, but also different connection process
-#define QTV_EZQUAKE_EXT_SETINFO		(1<<1)		// does't qtv server/client support setinfo
-#define QTV_EZQUAKE_EXT_QTVUSERLIST	(1<<2)		// does't qtv server/client support qtvuserlist command
+#define QTV_EZQUAKE_EXT_DOWNLOAD	(1<<0)		// Well, this is not just download, but also different connection process.
+#define QTV_EZQUAKE_EXT_SETINFO		(1<<1)		// Doesn't qtv server/client support setinfo.
+#define QTV_EZQUAKE_EXT_QTVUSERLIST	(1<<2)		// Doesn't qtv server/client support qtvuserlist command.
 
 #define QTV_EZQUAKE_EXT_NUM ( QTV_EZQUAKE_EXT_DOWNLOAD | QTV_EZQUAKE_EXT_SETINFO | QTV_EZQUAKE_EXT_QTVUSERLIST )
 
@@ -195,23 +195,23 @@ extern "C" {
 #define	MAX_MVD_SIZE			(MSG_BUF_SIZE - 100)
 
 #define MAX_PROXY_INBUFFER		4096
-#define MAX_PROXY_BUFFER 		(1<<16)	// must be power-of-two, 1<<16 is 2^16 = 65536
-#define PREFERED_PROXY_BUFFER	(1<<15) // the ammount of data we try to leave in our input buffer (must be large enough to contain any single mvd frame)
+#define MAX_PROXY_BUFFER 		(1<<16)					// must be power-of-two, 1<<16 is 2^16 = 65536
+#define PREFERED_PROXY_BUFFER	(1<<15)					// the ammount of data we try to leave in our input buffer (must be large enough to contain any single mvd frame)
 #define MAX_PROXY_UPSTREAM 		2048
 
-#define MAX_PROXY_INFOS			128			// how much settings (count, not bytes) may have one client 
+#define MAX_PROXY_INFOS			128						// How many settings (count, not bytes) one client may have.
 
 #define MAX_MSGLEN 				1450
 #define	FILE_TRANSFER_BUF_SIZE	((MAX_MSGLEN) - 100)
 
 
-#define DEMOS_UPDATE_TIME		(1000 * 60) // update demos not so fast, this save CPU time
+#define DEMOS_UPDATE_TIME		(1000 * 60)				// Update demos not so fast, this save CPU time.
 
 #define RECONNECT_TIME			(1000 * 30)
-#define DEMO_RECONNECT_TIME		(1000 * 2)  // if demo end, start play it again faster, do not wait 30 seconds
+#define DEMO_RECONNECT_TIME		(1000 * 2)				// If demo end, start play it again faster, do not wait 30 seconds.
 
 // I turned this off atm, probably cause problems
-//#define SOCKET_CLOSE_TIME		(10*60)		// seconds OS wait before finally close socket, this way we can loose data, but at least ports will be accessible
+//#define SOCKET_CLOSE_TIME		(10*60)					// Seconds OS wait before finally close socket, this way we can loose data, but at least ports will be accessible
 
 //======================================
 
@@ -220,13 +220,15 @@ extern "C" {
 #include "cvar.h"
 #include "info.h"
 
-typedef struct {
+typedef struct 
+{
 	char name[128];
 	int size;
 	int time, smalltime;
 } availdemo_t;
 
-typedef struct {
+typedef struct 
+{
 	unsigned int readpos;
 	unsigned int cursize;
 	unsigned int maxsize;
@@ -237,27 +239,31 @@ typedef struct {
 //	qbool allowoverflow;
 } netmsg_t;
 
-typedef struct { // FIXME: hehe, nice struct
-
+// FIXME: hehe, nice struct
+typedef struct 
+{
 	unsigned int incoming_sequence;
-
 } netchan_t;
 
 
 //======================================
 
-typedef struct { // hrm, why we need this type?
+// hrm, why we need this type?
+typedef struct 
+{ 
 	char name[MAX_QPATH];
 } filename_t;
 
-typedef struct {
+typedef struct 
+{
 	short origin[3];
 	unsigned char soundindex;
 	unsigned char volume;
 	unsigned char attenuation;
 } staticsound_t;
 
-typedef struct {
+typedef struct 
+{
 	float gravity;
 	float maxspeed;
 	float spectatormaxspeed;
@@ -270,7 +276,8 @@ typedef struct {
 	float friction;
 } movevars_t;
 
-typedef struct {
+typedef struct 
+{
 	unsigned char frame;
 	unsigned char modelindex;
 	unsigned char skinnum;
@@ -281,7 +288,8 @@ typedef struct {
 	unsigned char weaponframe;
 } player_state_t;
 
-typedef struct {
+typedef struct 
+{
 	unsigned int stats[MAX_STATS];
 	char userinfo[MAX_USERINFO];
 
@@ -299,7 +307,8 @@ typedef struct {
 	player_state_t old;
 } playerinfo_t;
 
-typedef struct {
+typedef struct 
+{
 	unsigned char frame;
 	unsigned char modelindex;
 	unsigned char colormap;
@@ -309,15 +318,15 @@ typedef struct {
 	unsigned char effects;
 } entity_state_t;
 
-typedef struct {
-
+typedef struct
+{
 	entity_state_t baseline;
-
 } entity_t;
 
 #define MAX_DEMO_PACKET_ENTITIES 300
 
-typedef struct {
+typedef struct 
+{
 	int oldframe;
 	int numents;
 	int maxents;
@@ -331,7 +340,8 @@ typedef struct {
 
 #define MAX_FP_CMDS (10)
 
-typedef struct fp_cmd_s {
+typedef struct fp_cmd_s 
+{
 	unsigned int locked;
 	unsigned int cmd_time[MAX_FP_CMDS];
 	int   last_cmd;
@@ -342,53 +352,55 @@ typedef unsigned char netadr_t[64];
 
 typedef struct sv_s sv_t;
 
-//'other proxy', these are mvd stream clients.
-typedef struct oproxy_s {
+//
+// "Other proxy" - These are MVD stream clients.
+//
+typedef struct oproxy_s 
+{
 	qbool			flushing;
 	qbool			drop;
 
-	qbool			connected_at_least_once; // connection sequence was completed at least once
+	qbool			connected_at_least_once;		// Connection sequence was completed at least once.
 
 	sv_t			*defaultstream;
 
-	FILE			*file;	//recording a demo
-	SOCKET			sock;	//playing to a proxy
+	FILE			*file;							// Recording a demo.
+	SOCKET			sock;							// Playing to a proxy.
 
 	unsigned char	inbuffer[MAX_PROXY_INBUFFER];
-	unsigned int	inbuffersize;	//amount of data available.
+	unsigned int	inbuffersize;					// Amount of data available.
 
-	FILE			*buffer_file; // well, we can't always put whole file in _buffer_[MAX_PROXY_BUFFER],
-								  // so instead we put chunk of file in buffer then flush to client,
-								  // then put next chunk and etc.
+	FILE			*buffer_file;					// Well, we can't always put whole file in _buffer_[MAX_PROXY_BUFFER],
+													// so instead we put chunk of file in buffer then flush to client,
+													// then put next chunk and etc.
 
 	unsigned char	*_buffer_;
 	unsigned int	_buffersize_;
-	unsigned int	_buffermaxsize_; // by default its MAX_PROXY_BUFFER
-	unsigned int	_bufferautoadjustmaxsize_; // default is 0, means disabled,
-											   // well this must allow have really huge buffer,
-											   // so buffer will be expanded maximum to this size when needed.
+	unsigned int	_buffermaxsize_;				// By default its MAX_PROXY_BUFFER
+	unsigned int	_bufferautoadjustmaxsize_;		// default is 0, means disabled,
+													// well this must allow have really huge buffer,
+													// so buffer will be expanded maximum to this size when needed.
 
 
-	unsigned int	init_time; // when this client was created, so we can timeout it
-	unsigned int	io_time; // when was IO activity, so we can timeout it
+	unsigned int	init_time;						// When this client was created, so we can timeout it.
+	unsigned int	io_time;						// When was IO activity, so we can timeout it.
 
-	int				id; // user id for this client
-	int				pov; // which player id this client tracks, zero if freefly
-	int				follow_id; // which qtv client we follow
+	int				id;								// User id for this client.
+	int				pov;							// Which player id this client tracks, zero if freefly.
+	int				follow_id;						// Which qtv client we follow.
 
-	fp_cmd_t		fp_s; // say flood protect
+	fp_cmd_t		fp_s;							// Say flood protect.
 
-	float			qtv_clversion; // client version, float
-	int				qtv_ezquake_ext; // qtv ezquake extensions
+	float			qtv_clversion;					// Client version, float.
+	int				qtv_ezquake_ext;				// QTV ezQuake extensions.
 
-	ctxinfo_t		ctx; // info context, we store here user setting like name and etc
+	ctxinfo_t		ctx;							// info context, we store here user setting like name and etc.
 
-//{ download related
+	// Download related
 	FILE			*download;
-	int				downloadsize;			// total bytes
-	int				downloadcount;			// bytes sent
+	int				downloadsize;					// Total bytes.
+	int				downloadcount;					// Bytes sent.
 	int				file_percent;
-//}
 
 	struct			oproxy_s *next;
 } oproxy_t;
@@ -396,114 +408,126 @@ typedef struct oproxy_s {
 
 #define MAX_LASTSCORES 32
 
-typedef struct lastscores_s { // our lastscore struct
-	char			date[sizeof("Feb 29, 19:00")]; // date
-	char			type[16];			// game type, like duel team etc
-	char			map[32];			// map name, dm6 dm3 etc
-	char			e1[64];				// first team/person
-	char			s1[64];				// scores for first team/person
-	char			e2[64];				// second team/person
-	char			s2[64];				// scores for second
+//
+// Our lastscore struct
+//
+typedef struct lastscores_s 
+{ 
+	char			date[sizeof("Feb 29, 19:00")];	// Date.
+	char			type[16];						// Game type, like duel team etc.
+	char			map[32];						// Map name, dm6 dm3 etc.
+	char			e1[64];							// First team/person.
+	char			s1[64];							// Scores for first team/person.
+	char			e2[64];							// Second team/person.
+	char			s2[64];							// Scores for second.
 } lastscores_t;
 
-typedef	enum {
+//
+// Source type enum
+//
+typedef	enum 
+{
 		SRC_BAD = 0,
 		SRC_DEMO,
 		SRC_TCP
-} src_t; // source type enum
+} src_t; 
 
 //
-// NOTE: if you change source_s you probably need to take a look in close_source() and init_source() also
+// NOTE: If you change source_s you probably need to take a look in close_source() and init_source() also
 //
-typedef struct source_s { // our source struct
-	src_t			type;		// sources type, so we know we use file or socket or whatever
+typedef struct source_s 
+{
+	src_t			type;		// Sources type, so we know we use file or socket or whatever.
 
-	FILE			*f;			// file
-	int				f_size;		// file size
+	FILE			*f;			// File pointer.
+	int				f_size;		// File size.
 
-	SOCKET			s;			// socket
+	SOCKET			s;			// Socket.
 
 } source_t;
 
 //
-// NOTE: all this states do not represet is our qtv connected to server or not, since we may have some data
-//       in internal qtv buffers and successfully stream data to qtv clients and at the same time be not connected to server.
+// NOTE: All these states do not represent if we're connected to a server or not, since we may have some data
+//       in internal QTV buffers and successfully stream data to QTV clients and at the same time be not connected to server.
 //
-typedef enum {
-	qs_parsingQTVheader,	// we in process parsing qtv answer
-	qs_parsingconnection,	// we need recive some data before will be able stream
-	qs_active				// we are ready forward/stream data
+typedef enum 
+{
+	qs_parsingQTVheader,	// In process of parsing a QTV answer.
+	qs_parsingconnection,	// We need to recieve some data before will be able stream.
+	qs_active				// We are ready to forward/stream data.
 } qtv_state_t;
 
-struct sv_s {	//details about a server connection (also known as stream)
-
-	struct sv_s		*next;					// next cluster->servers connection
-
-	char			ConnectPassword[64];	// password given to server
-	char			server[MAX_QPATH];		// something like tcp:localhost:25000 or demo:dag_vs_griffin_dm6.mvd
-	int				streamid;				// unique stream/source id
-
-	qbool			ServerQuery;			// we quering some info from server/qtv but not trying stream something
-	qbool			DisconnectWhenNooneIsWatching; // no comments
-
-	oproxy_t		*proxies;				// list of clients for this QTV stream
-
-	// { lastscores
-	lastscores_t	lastscores[MAX_LASTSCORES];	// here we store lastscores
-	int				lastscores_idx;				// index, well it helps understand where to save new lastscore
-	// }
-
 //
-// fields above saved on each QTV_Connect()
+// Server - Details about a server connection (also known as stream).
 //
+struct sv_s 
+{
+	struct sv_s		*next;							// Next cluster->servers connection.
 
-// ======= !!!! READ ME !!!! =======
-// we need memset(qtv, 0, sizeof(sv_s)) on each QTV_Connect(), so we will be sure all reset properly,
-// but some fields need to be saved between connections, like password and server name,
-// so we memset() not whole sv_s struct, but only part after this variable "mem_set_point",
-// so if you need save field between connections put it above this variable, otherwise below
-//
+	char			ConnectPassword[64];			// Password given to server.
+	char			server[MAX_QPATH];				// Something like tcp:localhost:25000 or demo:dag_vs_griffin_dm6.mvd
+	int				streamid;						// Unique stream/source id.
+
+	qbool			ServerQuery;					// We're quering some info from server/qtv but not trying stream something.
+	qbool			DisconnectWhenNooneIsWatching;	// No comments.
+
+	oproxy_t		*proxies;						// List of clients for this QTV stream.
+
+	// Lastscores
+	lastscores_t	lastscores[MAX_LASTSCORES];		// Here we store lastscores.
+	int				lastscores_idx;					// Index, well it helps understand where to save new lastscore.
+
+	//
+	// Fields above saved on each QTV_Connect()
+	//
+
+	// ======= !!!! READ ME !!!! =======
+	// we need memset(qtv, 0, sizeof(sv_s)) on each QTV_Connect(), so we will be sure all reset properly,
+	// but some fields need to be saved between connections, like password and server name,
+	// so we memset() not whole sv_s struct, but only part after this variable "mem_set_point",
+	// so if you need save field between connections put it above this variable, otherwise below
+	//
 
 	char			mem_set_point;
 
-// ======= !!!! READ ME !!!! =======
+	// ======= !!!! READ ME !!!! =======
 
-//
-// fields below AUTOMATICALY set to 0 on each QTV_Connect()
-//
+	//
+	// Fields below AUTOMATICALY set to 0 on each QTV_Connect()
+	//
 
 	// hm, I am not sure where I must put drop, put it here for now, so it reset to 0 on QTV_Connect, hope that right
-	qbool			drop;						// something bad, close/free this sv_t
+	qbool			drop;						// Something bad, close/free this sv_t.
 
-	netadr_t		ServerAddress;				// hrm, ip:port for socket
+	netadr_t		ServerAddress;				// ip:port for socket
 
-	float			svversion;					// server/upstream version, NOTE it float: 1.0 or 1.1 or 1.2 and so on...
+	float			svversion;					// Server/upstream version, NOTE it float: 1.0 or 1.1 or 1.2 and so on...
 
 	// UpStream, requests to qtv
 	unsigned char	UpstreamBuffer[MAX_PROXY_UPSTREAM];
 	int				UpstreamBufferSize;
 
 	// DownStream, answers on request and sure MVD stream at some point
-	unsigned char	buffer[MAX_PROXY_BUFFER];	// this doesn't cycle
-	int				buffersize;					// it memmoves down
+	unsigned char	buffer[MAX_PROXY_BUFFER];	// This doesn't cycle.
+	int				buffersize;					// It memmoves down.
 
-	qtv_state_t		qstate;						// in which state our qtv
+	qtv_state_t		qstate;						// In which state our qtv.
 
-	// different times in milleseconds
+	// Different times in milleseconds.
 	unsigned int	parsetime;
 	unsigned int	curtime;
 
-	unsigned int	io_time; // when was IO activity, so we can timeout it
+	unsigned int	io_time;					// When was IO activity, so we can timeout it.
 
-	unsigned int	NextConnectAttempt;			// time of next reconnect attempt
+	unsigned int	NextConnectAttempt;			// Time of next reconnect attempt.
 
-	char			status[64];					// set this to status, which this sv_t in
+	char			status[64];					// Set this to status, which this sv_t is in.
 
-	source_t		src;						// our source type
+	source_t		src;						// Our source type.
 
-// ============= something what we fill after parsing data =============
+	// ============= We fill this after parsing data =============
 
-	netchan_t		netchan; // FIXME: this will be memset to 0 on each QTV_Connect(), correct?
+	netchan_t		netchan;					// FIXME: this will be memset to 0 on each QTV_Connect(), correct?
 
 	char			mapname[256];
 	char			hostname[MAX_QPATH];
@@ -513,7 +537,7 @@ struct sv_s {	//details about a server connection (also known as stream)
 
 	int				clservercount;
 
-// below fields better memset() to 0 on each level change
+	// Below fields better memset() to 0 on each level change.
 	playerinfo_t	players[MAX_CLIENTS];
 	filename_t		modellist[MAX_MODELS];
 	filename_t		soundlist[MAX_SOUNDS];
@@ -530,34 +554,35 @@ struct sv_s {	//details about a server connection (also known as stream)
 
 };
 
-typedef struct cluster_s {
-	SOCKET tcpsocket;					// tcp listening socket (for mvd and listings and stuff)
+typedef struct cluster_s 
+{
+	SOCKET tcpsocket;					// Tcp listening socket (for mvd and listings and stuff).
 
-	char commandinput[512]; 			// our console input buffer
-	int inputlength; 					// how much data we have in console buffer, after user press enter buffer sent to interpreter and this set to 0
+	char commandinput[512]; 			// Our console input buffer.
+	int inputlength; 					// How much data we have in the console buffer, after user presses enter the buffer is sent to the interpreter and this is set to 0.
 
-	char info[MAX_SERVERINFO_STRING];	// used by cvars which mirrored in serverinfo, this is useless unless UDP will be added to our project
+	char info[MAX_SERVERINFO_STRING];	// Used by cvars which mirrored in serverinfo, this is useless unless UDP will be added to our project.
 
-	unsigned int curtime;				// milleseconds
+	unsigned int curtime;				// Milliseconds.
 
-	qbool wanttoexit;					// is this set to true our program will decide to die
+	qbool wanttoexit;					// If this is set to true our program will decide to die.
 
-	int buildnumber;					// just our buildnumber
+	int buildnumber;					// Just our buildnumber.
 
-	int nextstreamid;                   // this is used to assign id for new source
+	int nextstreamid;                   // This is used to assign id for new source.
 
-	sv_t *servers;						// list of connection to servers
-	int NumServers;						// how much servers in list
+	sv_t *servers;						// List of connection to servers.
+	int NumServers;						// How many servers that are in the list.
 
-	int	numproxies;						// how much clients we have
+	int	numproxies;						// How much clients we have.
 
-	oproxy_t *pendingproxies;			// incoming request queued here, after request is served it unlinked from here
+	oproxy_t *pendingproxies;			// Incoming request are queued here, after a request is served it's unlinked from here.
 
-	availdemo_t availdemos[2048];		// lala, insane... but we support it, I checked
+	availdemo_t availdemos[2048];		// lala, insane... but we support it, I checked.
 	int availdemoscount;
-	unsigned int last_demos_update;		// milleseconds, last time when Cluster_BuildAvailableDemoList() was issued, saving CPU time
+	unsigned int last_demos_update;		// Miliseconds, last time when Cluster_BuildAvailableDemoList() was issued, saving CPU time
 
-	int nextUserId;						// out clients need name/userid
+	int nextUserId;						// Out clients need name/userid.
 
 } cluster_t;
 
@@ -566,11 +591,8 @@ typedef struct cluster_s {
 //
 
 extern			cvar_t developer, shownet, hostname, admin_password;
-
 extern			cluster_t g_cluster;
-
 extern			qbool cluster_initialized;
-
 void			Cluster_BuildAvailableDemoList(cluster_t *cluster);
 
 //
@@ -580,13 +602,12 @@ void			Cluster_BuildAvailableDemoList(cluster_t *cluster);
 extern char		*redirect_buf;
 extern int		redirect_buf_size;
 
-void			Sys_RedirectStart(char *buf, int size); // so Sys_Printf() messages goes to redirect_buf[] too
+void			Sys_RedirectStart(char *buf, int size);				// So Sys_Printf() messages goes to redirect_buf[] too.
 void			Sys_RedirectStop(void);
 
 unsigned int	Sys_Milliseconds (void);
 void			Sys_Printf (cluster_t *cluster, char *fmt, ...);
-// this is just wrapper for Sys_Printf(), but print nothing if developer 0
-void			Sys_DPrintf(cluster_t *cluster, char *fmt, ...);
+void			Sys_DPrintf(cluster_t *cluster, char *fmt, ...);	// This is just wrapper for Sys_Printf(), but print nothing if developer 0
 void			Sys_Exit(int code);
 void			Sys_Error (char *error, ...);
 int				Sys_Build_Number (void);
@@ -594,17 +615,13 @@ void			*Sys_malloc (size_t size);
 char			*Sys_strdup (const char *src);
 #define			Sys_free(ptr) if(ptr) { free(ptr); ptr = NULL; }
 
-// return file extension with dot, or empty string if dot not found at all
-const char		*Sys_FileExtension (const char *in);
-// absolute paths are prohibited
-qbool			Sys_SafePath(const char *in);
-// return file size, use it on file which open in BINARY mode
-int				Sys_FileLength (FILE *f);
-// open file in BINARY mode and return file size, if open failed then -1 returned
-int				Sys_FileOpenRead (const char *path, FILE **hndl);
+const char		*Sys_FileExtension (const char *in);				// Return file extension with dot, or empty string if dot not found at all.
+qbool			Sys_SafePath(const char *in);						// Absolute paths are prohibited.
+int				Sys_FileLength (FILE *f);							// Return file size, use it on file which open in BINARY mode.
+int				Sys_FileOpenRead (const char *path, FILE **hndl);	// Open file in BINARY mode and return file size, if open failed then -1 returned.
 
-// qqshka - hmm, seems in C this is macroses, i don't like macroses,
-// however this functions work wrong on unsigned types!!!
+// qqshka - hmm, seems in C these are macros, i don't like macros,
+// however this functions work incorrectly on unsigned types!!!
 #undef max
 #undef min
 
@@ -622,12 +639,9 @@ double			bound( double a, double b, double c );
 
 void			Sys_ReadSTDIN(cluster_t *cluster, fd_set socketset);
 
-// Replace char in string
-void			Sys_ReplaceChar(char *s, char from, char to);
-// our hash function
-unsigned long	Sys_HashKey(const char *str);
-// just convert uptime seconds in days hours and minutes
-void			Get_Uptime(int uptime_seconds, int *days, int *h, int *m);
+void			Sys_ReplaceChar(char *s, char from, char to);		// Replace char in string
+unsigned long	Sys_HashKey(const char *str);						// Hash function.
+void			Get_Uptime(int uptime_seconds, int *days, int *h, int *m); // Converts uptime seconds to days hours and minutes.
 
 
 //
@@ -637,11 +651,8 @@ void			Get_Uptime(int uptime_seconds, int *days, int *h, int *m);
 #define MAX_COM_TOKEN	1024
 extern char		com_token[MAX_COM_TOKEN];
 
-// Parse a token out of a string
-char			*COM_Parse (char *data);
-
-// fte token function
-char			*COM_ParseToken (char *data, char *out, int outsize, const char *punctuation);
+char			*COM_Parse (char *data);							// Parse a token out of a string
+char			*COM_ParseToken (char *data, char *out, int outsize, const char *punctuation); // FTE token function
 
 //
 // source.c
@@ -663,47 +674,61 @@ extern cvar_t	parse_delay;
 #define dem_mask		7
 
 
-// checking is buffer contain at least one parse able packet
+// Checking is buffer contain at least one parse able packet.
 int				SV_ConsistantMVDData(unsigned char *buffer, int remaining);
-// read upstream (mvd or connection header), forawrd stream to clients/qtvs
+
+// Read upstream (mvd or connection header), forawrd stream to clients/qtvs
 qbool			Net_ReadStream(sv_t *qtv);
-// put string in upstream queue, used memcpy(), that mean we not relay on nul termination but on size
+
+// Puts specified string in upstream queue, uses memcpy(), which means we don't rely on nul-termination but on size.
 void			Net_QueueUpstream(sv_t *qtv, int size, char *buffer);
-// same but with var args
+
+// Same but with var args.
 void			Net_UpstreamPrintf(sv_t *qtv, char *fmt, ...);
-// actualy write string to socket
+
+// Actualy write string to socket.
 qbool			Net_WriteUpStream(sv_t *qtv);
-// send connection request to qtv via upstream
+
+// Send connection request to qtv via upstream.
 void			Net_SendQTVConnectionRequest(sv_t *qtv, char *authmethod, char *challenge);
-// connect to qtv/server via TCP
+
+// Connect to qtv/server via TCP
 qbool			Net_ConnectToTCPServer(sv_t *qtv, char *ip);
-// open demo file on file system and use it as source
+
+// Open demo file on file system and use it as source.
 qbool			OpenDemoFile(sv_t *qtv, char *demo);
-// this memset to 0 too some data and something also
+
+// This memset to 0 too some data and something also.
 void			QTV_SetupFrames(sv_t *qtv);
-// select which method use (demo or tcp or what ever) and connect/open to this source
+
+// Select which method use (demo or tcp or what ever) and connect/open to this source.
 qbool			QTV_Connect(sv_t *qtv, const char *serverurl);
-// free() memory and etc, unlink from cluster servers list
+
+// free() memory and etc, unlink from cluster servers list.
 void			QTV_Shutdown(cluster_t *cluster, sv_t *qtv);
-// malloc(qtv) and init, call QTV_Connect and link to servers list
+
+// malloc(qtv) and init, call QTV_Connect and link to servers list.
 sv_t			*QTV_NewServerConnection(cluster_t *cluster, const char *server, char *password, 
 								qbool force, qbool autoclose, qbool noduplicates, qbool query);
-// parse qtv connection header
+// Parse qtv connection header
 qbool			QTV_ParseHeader(sv_t *qtv);
-// check is qtv have source type SRC_DEMO or SRC_TCP, sreamable types in other words, just some small utility
+
+// Check is qtv have source type SRC_DEMO or SRC_TCP, sreamable types in other words, just some small utility.
 qbool			IsSourceStream(sv_t *qtv);
-// parse mvd and store data in some structs,
-// so we can generate initial connection mvd data to clients which connect in midle action,
-// this is a main qtv's trick
+
+// Parse mvd and store data in some structs, so we can generate initial 
+// connection mvd data to clients which connects in the middle of the action,
+// this is a main qtv's trick.
 int				QTV_ParseMVD(sv_t *qtv);
-// main hook to source.c module called from main.c, here we read/write/parse streams, connects/reconnects/shutdown sources
+
+// Main hook to source.c module called from main.c, here we read/write/parse streams, connects/reconnects/shutdown sources.
 void			QTV_Run(cluster_t *cluster, sv_t *qtv);
 
 //
 // source_cmds.c
 //
 
-// add source related commands
+// Add source related commands.
 void			Source_Init(void);
 
 //
@@ -734,7 +759,8 @@ qbool			TCP_Set_KEEPALIVE(int sock);
 //
 
 void			InitNetMsg	(netmsg_t *b, char *buffer, int bufferlength);
-//probably not the place for these any more..
+
+// FIXME: Probably not the place for these any more..
 unsigned char	ReadByte	(netmsg_t *b);
 unsigned short	ReadShort	(netmsg_t *b);
 unsigned int	ReadLong	(netmsg_t *b);
@@ -746,7 +772,8 @@ void			WriteByte	(netmsg_t *b, unsigned char c);
 void			WriteShort	(netmsg_t *b, unsigned short l);
 void			WriteLong	(netmsg_t *b, unsigned int l);
 void			WriteFloat	(netmsg_t *b, float f);
-//no null terminator, convienience function.
+
+// No null terminator, convienience function.
 void			WriteString2(netmsg_t *b, const char *str);
 void			WriteString (netmsg_t *b, const char *str);
 void			WriteData	(netmsg_t *b, const char *data, int length);
@@ -759,21 +786,27 @@ extern cvar_t	downstream_timeout;
 
 void			Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox);
 void			Net_ProxySend(cluster_t *cluster, oproxy_t *prox, char *buffer, int length);
-// printf() to downstream to particular "proxy", handy in some cases, instead of Net_ProxySend()
+
+// printf() to downstream to particular "proxy", handy in some cases, instead of Net_ProxySend()-
 void			Net_ProxyPrintf(oproxy_t *prox, char *fmt, ...);
 void			Prox_SendMessage(cluster_t *cluster, oproxy_t *prox, char *buf, int length, int dem_type, unsigned int playermask);
+
 // send text as "svc_print" to particular "proxy"
 void			Prox_Printf(cluster_t *cluster, oproxy_t *prox, int dem_type, unsigned int playermask, int level, char *fmt, ...);
+
 // FIXME: move to different file, forward.c intended keep something different than this raw protocol things
 void			Prox_SendPlayerStats(sv_t *qtv, oproxy_t *prox);
+
 // FIXME: move to different file, forward.c intended keep something different than this raw protocol things
 void			Prox_SendInitialPlayers(sv_t *qtv, oproxy_t *prox, netmsg_t *msg);
 void			Net_SendConnectionMVD(sv_t *qtv, oproxy_t *prox);
 oproxy_t		*Net_FileProxy(sv_t *qtv, char *filename);
 qbool			Net_StopFileProxy(sv_t *qtv);
-//forward the stream on to connected clients
+
+// Forward the stream on to connected clients.
 void			SV_ForwardStream(sv_t *qtv, char *buffer, int length);
-// register some vars
+
+// Register some vars.
 void			Forward_Init(void);
 
 //
@@ -784,25 +817,29 @@ extern cvar_t	mvdport;
 extern cvar_t	maxclients;
 extern cvar_t	allow_http;
 
-// this just can't be done as macro, so I wrote this function
-// just generate qtv server header
+// This just can't be done as macro, so I wrote this function
+// just generates qtv server header.
 char			*QTV_SV_HEADER(oproxy_t *prox, float qtv_ver);
 
-// look for any other proxies wanting to muscle in on the action
+// Look for any other proxies wanting to muscle in on the action.
 void			SV_ReadPendingProxies(cluster_t *cluster);
-// serve pending proxies
+
+// Serve pending proxies.
 void			SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv);
-// check changes of mvdport variable and do appropriate action
+
+// Check changes of mvdport variable and do appropriate action.
 void			SV_CheckMVDPort(cluster_t *cluster);
-// register some vars
+
+// Register some vars.
 void			Pending_Init(void);
 
-// just allocate memory and set some fields, do not perform any linkage to any list
+// Just allocate memory and set some fields, do not perform any linkage to any list.
 oproxy_t		*SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv);
-// just free memory and handles, do not perfrom removing from any list
+
+// Just free memory and handles, do not perfrom removing from any list.
 void			SV_FreeProxy(oproxy_t *prox);
 
-// this will check what prox do not have duplicate name
+// This will check what prox do not have duplicate name.
 void			Prox_FixName(sv_t *qtv, oproxy_t *prox);
 
 //
@@ -811,7 +848,8 @@ void			Prox_FixName(sv_t *qtv, oproxy_t *prox);
 
 void			BuildServerData(sv_t *tv, netmsg_t *msg, int servercount);
 int				SendList(sv_t *qtv, int first, const filename_t *list, int svc, netmsg_t *msg);
-// returns the next prespawn 'buffer' number to use, or -1 if no more
+
+// Returns the next prespawn 'buffer' number to use, or -1 if no more.
 int				Prespawn(sv_t *qtv, int curmsgsize, netmsg_t *msg, int bufnum, int thisplayer);
 void			Prox_SendInitialEnts(sv_t *qtv, oproxy_t *prox, netmsg_t *msg);
 
@@ -864,18 +902,20 @@ void			Proxy_ReadProxies(sv_t *qtv);
 void			Cl_Cmds_Init(void);
 unsigned int	Clcmd_UsersCount(const sv_t *qtv);
 
-typedef enum {
+typedef enum 
+{
 
 	QUL_NONE = 0,	//
-	QUL_ADD,		// user joined
-	QUL_CHANGE,		// user changed something like name or something
-	QUL_DEL			// user dropped
+	QUL_ADD,		// User joined.
+	QUL_CHANGE,		// User changed something like name or something.
+	QUL_DEL			// User dropped.
 
 } qtvuserlist_t;
 
-// send userlist message about "prox" to all proxies
+// Send userlist message about "prox" to all proxies.
 void			Prox_UpdateProxiesUserList(sv_t *qtv, oproxy_t *prox, qtvuserlist_t action);
-// send userlist to this "prox", do it once, so we do not send it on each level change
+
+// Send userlist to this "prox", do it once, so we do not send it on each level change.
 void			Prox_SendInitialUserList(sv_t *qtv, oproxy_t *prox);
 
 
@@ -884,7 +924,8 @@ void			Prox_SendInitialUserList(sv_t *qtv, oproxy_t *prox);
 //
 
 FILE			*FS_OpenFile(char *gamedir, char *filename, int *size);
-// open and load file in memory.
+
+// Open and load file in memory.
 // may be used in two ways: 
 // 1) user provide buffer, in this case "size" provides buffer size.
 // 2) or function automatically allocate it, in this case need _FREE_ memory when it no more needed.
