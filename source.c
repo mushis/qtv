@@ -1109,18 +1109,20 @@ float GuessPlaybackSpeed(sv_t *qtv)
 	return demospeed;
 }
 
-//we will read out as many packets as we can until we're up to date
-//note: this can cause real issues when we're overloaded for any length of time
-//each new packet comes with a leading msec byte (msecs from last packet)
-//then a type, an optional destination mask, and a 4byte size.
-//the 4 byte size is probably excessive, a short would do.
-//some of the types have thier destination mask encoded inside the type byte, yielding 8 types, and 32 max players.
+// We will read out as many packets as we can until we're up to date
+// note: this can cause real issues when we're overloaded for any length of time
+// each new packet comes with a leading msec byte (msecs from last packet)
+// then a type, an optional destination mask, and a 4byte size.
+// the 4 byte size is probably excessive, a short would do.
+// some of the types have their destination mask encoded inside the type byte, yielding 8 types, and 32 max players.
 
 
-//if we've no got enough data to read a new packet, we print a message and wait an extra two seconds. this will add a pause, connected clients will get the same pause, and we'll just try to buffer more of the game before playing.
-//we'll stay 2 secs behind when the tcp stream catches up, however. This could be bad especially with long up-time.
-//All timings are in msecs, which is in keeping with the mvd times, but means we might have issues after 72 or so days.
-//the following if statement will reset the parse timer. It might cause the game to play too soon, the buffersize checks in the rest of the function will hopefully put it back to something sensible.
+// If we've no got enough data to read a new packet, we print a message and wait an extra two seconds. this will add a pause, 
+// connected clients will get the same pause, and we'll just try to buffer more of the game before playing.
+// we'll stay 2 secs behind when the tcp stream catches up, however. This could be bad especially with long up-time.
+// All timings are in msecs, which is in keeping with the mvd times, but means we might have issues after 72 or so days.
+// the following if statement will reset the parse timer. It might cause the game to play too soon, the buffersize checks 
+// in the rest of the function will hopefully put it back to something sensible.
 
 int QTV_ParseMVD(sv_t *qtv)
 {
@@ -1132,19 +1134,21 @@ int QTV_ParseMVD(sv_t *qtv)
 
 	unsigned int length, nextpackettime;
 	unsigned char *buffer;
+	unsigned char message_type;
 
 	if (qtv->qstate <= qs_parsingQTVheader)
-		return 0; // we are not ready to parse
+		return 0; // We are not ready to parse.
 
 	demospeed = max(0.001, GuessPlaybackSpeed(qtv));
 
 	while (qtv->curtime >= qtv->parsetime)
 	{
 		if (qtv->buffersize < 2)
-		{	//not enough stuff to play.
+		{	
+			// Not enough stuff to play.
 			if (qtv->curtime > qtv->parsetime)
 			{
-				qtv->parsetime = qtv->curtime + 2 * 1000;	//add two seconds
+				qtv->parsetime = qtv->curtime + 2000;	// Add two seconds.
 				if (IsSourceStream(qtv))
 					Sys_Printf(NULL, "Not enough buffered #1\n");
 			}
@@ -1152,57 +1156,64 @@ int QTV_ParseMVD(sv_t *qtv)
 		}
 
 		buffer = qtv->buffer;
+		message_type = buffer[1] & dem_mask;
 
-		switch (qtv->buffer[1]&dem_mask)
+		switch (message_type)
 		{
-		case dem_set:
-			length = 10;
+			case dem_set:
+			{
+				length = 10;
 
-			if (qtv->buffersize < length)
-			{	//not enough stuff to play.
-				qtv->parsetime = qtv->curtime + 2 * 1000;	//add two seconds
-				if (IsSourceStream(qtv))
-					Sys_Printf(NULL, "Not enough buffered #2\n");
+				if (qtv->buffersize < length)
+				{	
+					// Not enough stuff to play.
+					qtv->parsetime = qtv->curtime + 2 * 1000;	// Add two seconds.
+					if (IsSourceStream(qtv))
+						Sys_Printf(NULL, "Not enough buffered #2\n");
+
+					continue;
+				}
+
+				qtv->parsetime += buffer[0];	// Well this was pointless.
+
+				// We're about to destroy this data, so it had better be forwarded by now!
+				if (qtv->buffersize < length)
+					Sys_Error ("QTV_ParseMVD: qtv->buffersize < length");
+
+				forwards++;
+				SV_ForwardStream(qtv, qtv->buffer, length);
+				qtv->buffersize -= length;
+				memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize);
 
 				continue;
 			}
-			qtv->parsetime += buffer[0];	//well this was pointless
-
-			//we're about to destroy this data, so it had better be forwarded by now!
-			if (qtv->buffersize < length)
-				Sys_Error ("QTV_ParseMVD: qtv->buffersize < length");
-
-			forwards++;
-			SV_ForwardStream(qtv, qtv->buffer, length);
-			qtv->buffersize -= length;
-			memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize);
-
-			continue;
-
-		case dem_multiple:
-			lengthofs = 6;
-			break; // step out of switch()
-
-		default:
-
-			lengthofs = 2;
-			break; // step out of switch()
+			case dem_multiple:
+			{
+				lengthofs = 6;
+				break; // Break switch().
+			}
+			default:
+			{
+				lengthofs = 2;
+				break; // Break switch().
+			}
 		}
 
 		if (qtv->buffersize < lengthofs + 4)
-		{	//the size parameter doesn't fit.
+		{	
+			// The size parameter doesn't fit.
 			if (IsSourceStream(qtv))
 				Sys_Printf(NULL, "Not enough buffered #3\n");
-			qtv->parsetime = qtv->curtime + 2 * 1000;	//add two seconds
+			qtv->parsetime = qtv->curtime + 2000;	// Add two seconds
 			break;
 		}
 
-		// fixme: that with respect to byte order?
-		length = (buffer[lengthofs]<<0) + (buffer[lengthofs+1]<<8) + (buffer[lengthofs+2]<<16) + (buffer[lengthofs+3]<<24);
+		length = LittleLong(*((int *)&buffer[lengthofs]));
 
 		if (length > MAX_MVD_SIZE)
-		{	//FIXME: THIS SHOULDN'T HAPPEN!
-			//Blame the upstream proxy!
+		{	
+			// FIXME: THIS SHOULDN'T HAPPEN!
+			// Blame the upstream proxy!
 			Sys_Printf(NULL, "Warning: corrupt input packet (%i) too big! Flushing and reconnecting!\n", length);
 
 			close_source(qtv, "QTV_ParseMVD");
@@ -1215,8 +1226,8 @@ int QTV_ParseMVD(sv_t *qtv)
 		{
 			if (IsSourceStream(qtv))
 				Sys_Printf(NULL, "Not enough buffered #4\n");
-			qtv->parsetime = qtv->curtime + 2 * 1000;	//add two seconds
-			break;	//can't parse it yet.
+			qtv->parsetime = qtv->curtime + 2000;	// Add two seconds.
+			break;	// Can't parse it yet.
 		}
 
 		packettime     = (float)buffer[0] / demospeed;
@@ -1225,29 +1236,39 @@ int QTV_ParseMVD(sv_t *qtv)
 		if (nextpackettime >= qtv->curtime)
 			break;
 
-		switch(qtv->buffer[1]&dem_mask)
+		switch (message_type)
 		{
-		case dem_multiple:
-			// fixme: that with respect to byte order?
-			ParseMessage(qtv, buffer + lengthofs + 4, length, qtv->buffer[1]&dem_mask,
-				(buffer[lengthofs-4]<<0) + (buffer[lengthofs-3]<<8) + (buffer[lengthofs-2]<<16) + (buffer[lengthofs-1]<<24));
-			break;
-		case dem_single:
-		case dem_stats:
-			ParseMessage(qtv, buffer + lengthofs + 4, length, qtv->buffer[1]&dem_mask, 1<<(qtv->buffer[1]>>3));
-			break;
-		case dem_read:
-		case dem_all:
-			ParseMessage(qtv, buffer + lengthofs + 4, length, qtv->buffer[1]&dem_mask, 0xffffffff);
-			break;
-		default:
-			Sys_Printf(NULL, "Message type %i\n", qtv->buffer[1]&dem_mask);
-			break;
+			case dem_multiple:
+			{
+				// Read the player mask.
+				unsigned int mask = LittleLong(*((unsigned int *)&buffer[lengthofs - 4])); 
+				ParseMessage(qtv, buffer + lengthofs + 4, length, message_type, mask);
+				break;
+			}
+			case dem_single:
+			case dem_stats:
+			{
+				int playernum = (buffer[1] >> 3);	// These are directed to a single player. 
+				unsigned int mask = 1 << playernum; // Set the appropriate bit in the bit mask.
+				ParseMessage(qtv, buffer + lengthofs + 4, length, message_type, mask);
+				break;
+			}
+			case dem_read:
+			case dem_all:
+			{
+				ParseMessage(qtv, buffer + lengthofs + 4, length, message_type, 0xffffffff);
+				break;
+			}
+			default:
+			{
+				Sys_Printf(NULL, "Message type %i\n", message_type);
+				break;
+			}
 		}
 
-		length = lengthofs + 4 + length;	//make length be the length of the entire packet
+		length = lengthofs + 4 + length;	// Make length be the length of the entire packet
 
-		//we're about to destroy this data, so it had better be forwarded by now!
+		// We're about to destroy this data, so it had better be forwarded by now!
 		if (qtv->buffersize < length)
 			Sys_Error ("QTV_ParseMVD: qtv->buffersize < length");
 
@@ -1256,7 +1277,7 @@ int QTV_ParseMVD(sv_t *qtv)
 		qtv->buffersize -= length;
 		memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize);
 
-// qqshka: this was in original qtv, cause overflow in some cases
+		// qqshka: This was in original qtv, cause overflow in some cases.
 		if (qtv->src.type == SRC_DEMO)
 			Net_ReadStream(qtv); // FIXME: remove me
 
