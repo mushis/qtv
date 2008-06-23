@@ -332,8 +332,8 @@ void Net_SendConnectionMVD_1_0(sv_t *qtv, oproxy_t *prox)
 		msg.cursize = 0;
 	}
 
-	//playerstates arn't actually delta-compressed, so the first send (simply forwarded from server) entirly replaces the old.
-	// not really, we need send something from what client/other proxy/whatever will deltaing
+	// Playerstates aren't actually delta-compressed, so the first send (simply forwarded from server) entirly replaces the old.
+	// not really, we need send something from what client/other proxy/whatever will be deltaing
 	// at least model index is really required, otherwise we got invisible models!
 	Prox_SendInitialPlayers(qtv, prox, &msg);
 	Prox_SendMessage(&g_cluster, prox, msg.data, msg.cursize, dem_read, (unsigned)-1);
@@ -452,7 +452,7 @@ qbool Net_StopFileProxy(sv_t *qtv)
 */
 
 //
-//forward the stream on to connected clients
+// Forward the stream on to connected clients.
 //
 void SV_ForwardStream(sv_t *qtv, char *buffer, int length)
 {
@@ -460,7 +460,7 @@ void SV_ForwardStream(sv_t *qtv, char *buffer, int length)
 
 	CheckMVDConsistancy(buffer, 0, length);
 
-	// timeout check
+	// Timeout check.
 	for (prox = qtv->proxies; prox; prox = prox->next)
 	{
 #if 0 // debug
@@ -469,9 +469,9 @@ void SV_ForwardStream(sv_t *qtv, char *buffer, int length)
 #endif
 
 		if (prox->file)
-			continue; // timeout valid for socket only
+			continue; // Timeout valid for socket only.
 
-		// FIXME: this will drop down stream if our qtv not connected since we does't have any activity on downstream socket
+		// FIXME: This will drop down stream if our qtv not connected since we don't have any activity on downstream socket.
 		if (prox->io_time + max(RECONNECT_TIME + 10 * 1000, 1000 * downstream_timeout.integer) <= qtv->curtime)
 		{
 			Sys_Printf(NULL, "down stream proxy timeout\n");
@@ -479,7 +479,7 @@ void SV_ForwardStream(sv_t *qtv, char *buffer, int length)
 		}
 	}
 
-	// drop some proxies in head, if dropable
+	// Drop some proxies in head, if dropable.
 	while (qtv->proxies && qtv->proxies->drop)
 	{
 		next = qtv->proxies->next;
@@ -489,7 +489,7 @@ void SV_ForwardStream(sv_t *qtv, char *buffer, int length)
 
 	for (prox = qtv->proxies; prox; prox = prox->next)
 	{
-		// drop some proxies after "prox", if dropable
+		// Drop some proxies after "prox", if dropable.
 		while (prox->next && prox->next->drop)
 		{
 			next = prox->next->next;
@@ -497,22 +497,22 @@ void SV_ForwardStream(sv_t *qtv, char *buffer, int length)
 			prox->next = next;
 		}
 
-		// we're trying to empty thier buffer, NOTE: we use prox->flushing == true so it does't trigger when flushing is PS_WAIT_MODELLIST and etc
+		// We're trying to empty their buffer, NOTE: we use prox->flushing == true so it does't trigger when flushing is PS_WAIT_MODELLIST and etc.
 		if (prox->flushing == true)
-			if (!prox->_buffersize_) // ok, they have empty buffer
-				if (qtv->qstate == qs_active) // ok, our qtv is ready
-					Net_SendConnectionMVD(qtv, prox); // resend the connection info and set flushing to false
+			if (!prox->_buffersize_) // ok, they have empty buffer.
+				if (qtv->qstate == qs_active) // ok, our qtv is ready.
+					Net_SendConnectionMVD(qtv, prox); // Resend the connection info and set flushing to false.
 
 		if (prox->drop)
 			continue;
 
-		// add the new data if not flushing and we have appropriate qtv state.
+		// Add the new data if not flushing and we have appropriate qtv state.
 		// in most cases flushing mean client does't have proper game state, so add new data is useless or just wrong.
 		// so we wait untill Net_SendConnectionMVD() will set flushing to false.
 		if (!prox->flushing && qtv->qstate >= qs_parsingconnection)
 			Net_ProxySend(&g_cluster, prox, buffer, length);
 
-		// try and flush it
+		// Try and flush it.
 		Net_TryFlushProxyBuffer(&g_cluster, prox);
 	}
 }

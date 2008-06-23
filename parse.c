@@ -22,13 +22,13 @@ static void ParseServerData(sv_t *tv, netmsg_t *m, int to, unsigned int playerma
 	protocol = ReadLong(m);
 	if (protocol != PROTOCOL_VERSION)
 	{
-		ParseError(m); // FIXME: WTF, we need drop proxy insdead?
+		ParseError(m); // FIXME: WTF, we need drop proxy instead?
 		return;
 	}
 
 	tv->qstate = qs_parsingconnection;
 
-	tv->clservercount = ReadLong(m);	//we don't care about server's servercount, it's all reliable data anyway.
+	tv->clservercount = ReadLong(m);	// We don't care about server's servercount, it's all reliable data anyway.
 
 	ReadString(m, tv->gamedir, sizeof(tv->gamedir));
 
@@ -38,12 +38,12 @@ static void ParseServerData(sv_t *tv, netmsg_t *m, int to, unsigned int playerma
 	ReadString(m, tv->mapname, sizeof(tv->mapname));
 
 	qw = !strcmp(tv->gamedir, "qw");
-	// show Gamedir if different than qw
+	// Show Gamedir if different than qw.
 	Sys_Printf(NULL, "---------------------\n");
 	Sys_Printf(NULL, "Map: %s%s%s\n", tv->mapname, qw ? "" : "\nGamedir: ", qw ? "" : tv->gamedir);
 	Sys_Printf(NULL, "---------------------\n");
 
-	// get the movevars
+	// Get the movevars.
 	tv->movevars.gravity			= ReadFloat(m);
 	tv->movevars.stopspeed			= ReadFloat(m);
 	tv->movevars.maxspeed			= ReadFloat(m);
@@ -70,12 +70,12 @@ static void ParseServerData(sv_t *tv, netmsg_t *m, int to, unsigned int playerma
 
 	tv->cdtrack			  = 0;
 
-	QTV_SetupFrames(tv); // this memset to 0 too some data and something also
+	QTV_SetupFrames(tv); // This memset to 0 too some data and something also.
 
 	strlcpy(tv->status, "Receiving soundlist", sizeof(tv->status));
 
 	for (prox = tv->proxies; prox; prox = prox->next)
-		if (prox->qtv_ezquake_ext & QTV_EZQUAKE_EXT_DOWNLOAD) // we need it for clients with full download support
+		if (prox->qtv_ezquake_ext & QTV_EZQUAKE_EXT_DOWNLOAD) // We need it for clients with full download support.
 			prox->flushing = true;
 }
 
@@ -114,7 +114,7 @@ static void ParseStufftext(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 		text[strlen(text)-1] = '\0';
 		text[strlen(text)-1] = '\0';
 
-		//copy over the server's serverinfo
+		// Copy over the server's serverinfo.
 		strlcpy(tv->serverinfo, text+16, sizeof(tv->serverinfo));
 
 		Info_ValueForKey(tv->serverinfo, "*qtv", value, sizeof(value));
@@ -123,18 +123,19 @@ static void ParseStufftext(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 		else
 			fromproxy = false;
 
-		//add on our extra infos
+		// Add on our extra infos.
 		Info_SetValueForStarKey(tv->serverinfo, "*qtv", qtv_version, sizeof(tv->serverinfo));
 //		Info_SetValueForStarKey(tv->serverinfo, "*z_ext", Z_EXT_STRING, sizeof(tv->serverinfo));
 
 		Info_ValueForKey(tv->serverinfo, "hostname", tv->hostname, sizeof(tv->hostname));
 
-		//change the hostname (the qtv's hostname with the server's hostname in brackets)
+		// Change the hostname (the qtv's hostname with the server's hostname in brackets)
 		Info_ValueForKey(tv->serverinfo, "hostname", value, sizeof(value));
-		if (fromproxy && strchr(value, '(') && value[strlen(value)-1] == ')')	//already has brackets
-		{	//the fromproxy check is because it's fairly common to find a qw server with brackets after it's name.
+		if (fromproxy && strchr(value, '(') && value[strlen(value)-1] == ')')	// Already has brackets.
+		{	
+			// The from-proxy check is because it's fairly common to find a qw server with brackets after it's name.
 			char *s;
-			s = strchr(value, '(');	//so strip the parent proxy's hostname, and put our hostname first, leaving the origional server's hostname within the brackets
+			s = strchr(value, '(');	// So strip the parent proxy's hostname, and put our hostname first, leaving the origional server's hostname within the brackets.
 			snprintf(text, sizeof(text), "%s %s", hostname.string, s);
 		}
 		else
@@ -150,7 +151,7 @@ static void ParseStufftext(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 	}
 	else if (!strncmp(text, "cmd ", 4))
 	{
-		return;	//commands the game server asked for are pointless.
+		return;	// Commands the game server asked for are pointless.
 	}
 	else if (!strncmp(text, "reconnect", 9))
 	{
@@ -158,7 +159,7 @@ static void ParseStufftext(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 	}
 	else if (!strncmp(text, "packet ", 7))
 	{
-		tv->drop = true;	//this shouldn't ever happen
+		tv->drop = true;	// This should never happen.
 		return;
 	}
 	else if (!strncmp(text, "//finalscores ", sizeof("//finalscores ") - 1))
@@ -179,14 +180,14 @@ static void ParseStufftext(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 		strlcpy(tv->lastscores[k_ls].e2,   Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].e2));
 		strlcpy(tv->lastscores[k_ls].s2,   Cmd_Argv(arg++), sizeof(tv->lastscores[k_ls].s2));
 
-		// something goes wrong
+		// Something goes wrong.
 		if ( !tv->lastscores[k_ls].date[0] )
 		{
 			memset(&tv->lastscores[k_ls], 0, sizeof(tv->lastscores[k_ls]));	
 			return;
 		}
 
-		// check do we have same lastcores alredy, and ignore it if we have
+		// Check do we have same lastcores alredy, and ignore it if we have.
 		for ( i = 0; i < MAX_LASTSCORES; i++ )
 		{
 			if ( i == k_ls || !tv->lastscores[i].date[0] )
@@ -201,7 +202,7 @@ static void ParseStufftext(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 				 && !strcmp(tv->lastscores[i].s2,   tv->lastscores[k_ls].s2)
 			   )
 			{
-				// same lastscores, probably someone is watching demo again and again, so do not add million same lastcores
+				// Same lastscores, probably someone is watching demo again and again, so do not add million same lastcores.
 				memset(&tv->lastscores[k_ls], 0, sizeof(tv->lastscores[k_ls]));	
 				return;
 			}
@@ -237,7 +238,7 @@ static void ParseServerinfo(sv_t *tv, netmsg_t *m)
 	ReadString(m, key, sizeof(key));
 	ReadString(m, value, sizeof(value));
 
-	if (strcmp(key, "hostname"))	//don't allow the hostname to change, but allow the server to change other serverinfos.
+	if (strcmp(key, "hostname"))	// Don't allow the hostname to change, but allow the server to change other serverinfos.
 		Info_SetValueForStarKey(tv->serverinfo, key, value, sizeof(tv->serverinfo));
 }
 
@@ -295,7 +296,7 @@ static int ParseList(sv_t *tv, netmsg_t *m, filename_t *list, int to, unsigned i
 	return ReadByte(m);
 }
 
-static void ParseEntityState(entity_state_t *es, netmsg_t *m)	//for baselines/static entities
+static void ParseEntityState(entity_state_t *es, netmsg_t *m)	// For baselines/static entities.
 {
 	int i;
 
@@ -325,7 +326,7 @@ static void ParseStaticSound(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 {
 	if (tv->staticsound_count == MAX_STATICSOUNDS)
 	{
-		tv->staticsound_count--;	// don't be fatal.
+		tv->staticsound_count--;	// Don't be fatal.
 		Sys_Printf(NULL, "Too many static sounds\n");
 	}
 
@@ -353,7 +354,7 @@ void ParseSpawnStatic(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 {
 	if (tv->spawnstatic_count == MAX_STATICENTITIES)
 	{
-		tv->spawnstatic_count--;	// don't be fatal.
+		tv->spawnstatic_count--;	// Don't be fatal.
 		Sys_Printf(NULL, "Too many static entities\n");
 	}
 
@@ -373,8 +374,8 @@ static void ParsePlayerInfo(sv_t *tv, netmsg_t *m, qbool clearoldplayers)
 	if (clearoldplayers)
 	{
 		for (i = 0; i < MAX_CLIENTS; i++)
-		{	//hide players
-			//they'll be sent after this packet.
+		{	// Hide players
+			// they'll be sent after this packet.
 			tv->players[i].active = false;
 		}
 	}
@@ -490,12 +491,12 @@ static void ParseEntityDelta(sv_t *tv, netmsg_t *m, entity_state_t *old, entity_
 static int ExpandFrame(unsigned int newmax, frame_t *frame)
 {
 #if 1
-// qqshka's fixed way
+	// qqshka's fixed way
 
-	return (newmax < frame->maxents ? true : false);
+	return (newmax < frame->maxents);
 
 #else
-// FTE's auto allocation
+	// FTE's auto allocation
 
 	entity_state_t *newents;
 	unsigned short *newnums;
@@ -562,18 +563,15 @@ static void ParsePacketEntities(sv_t *tv, netmsg_t *m, int deltaframe)
 	oldindex = 0;
 	newindex = 0;
 
-//printf("frame\n");
-
 	for(;;)
 	{
 		newnum = readentitynum(m, &flags);
 		if (!newnum)
 		{
-			//end of packet
-			//any remaining old ents need to be copied to the new frame
+			// End of packet
+			// any remaining old ents need to be copied to the new frame
 			while (oldindex < oldcount)
 			{
-//printf("Propogate (spare)\n");
 				if (!ExpandFrame(newindex, newframe))
 					break;
 
@@ -591,7 +589,6 @@ static void ParsePacketEntities(sv_t *tv, netmsg_t *m, int deltaframe)
 			oldnum = oldframe->entnums[oldindex];
 		while(newnum > oldnum)
 		{
-//printf("Propogate (unchanged)\n");
 			if (!ExpandFrame(newindex, newframe))
 				break;
 
@@ -607,11 +604,12 @@ static void ParsePacketEntities(sv_t *tv, netmsg_t *m, int deltaframe)
 		}
 
 		if (newnum < oldnum)
-		{	//this ent wasn't in the last packet
-//printf("add\n");
+		{	
+			// This ent wasn't in the last packet.
+
 			if (flags & U_REMOVE)
-			{	//remove this ent... just don't copy it across.
-				//printf("add\n");
+			{	
+				// Remove this ent... just don't copy it across.
 				continue;
 			}
 
@@ -624,14 +622,15 @@ static void ParsePacketEntities(sv_t *tv, netmsg_t *m, int deltaframe)
 		else if (newnum == oldnum)
 		{
 			if (flags & U_REMOVE)
-			{	//remove this ent... just don't copy it across.
-				//printf("add\n");
+			{	
+				// Remove this ent... just don't copy it across.
 				oldindex++;
 				continue;
 			}
-//printf("Propogate (changed)\n");
+
 			if (!ExpandFrame(newindex, newframe))
 				break;
+
 			ParseEntityDelta(tv, m, &oldframe->ents[oldindex], &newframe->ents[newindex], flags, &tv->entity[newnum], false);
 			newframe->entnums[newindex] = newnum;
 			newindex++;
@@ -641,11 +640,11 @@ static void ParsePacketEntities(sv_t *tv, netmsg_t *m, int deltaframe)
 	}
 
 	newframe->numents = newindex;
-return;
+	return;
 
 /*
 
-	//luckilly, only updated entities are here, so that keeps cpu time down a bit.
+	// Luckilly, only updated entities are here, so that keeps cpu time down a bit.
 	for (;;)
 	{
 		flags = ReadShort(m);
@@ -1109,15 +1108,15 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 			break;
 
 		case svc_disconnect:
-			//Spike:
-			//mvdsv safely terminates it's mvds with an svc_disconnect.
-			//the client is meant to read that and disconnect without reading the intentionally corrupt packet following it.
-			//however, our demo playback is chained and looping and buffered.
-			//so we've already found the end of the source file and restarted parsing.
-			//so there's very little we can do except crash ourselves on the EndOfDemo text following the svc_disconnect
-			//that's a bad plan, so just stop reading this packet.
+			// Spike:
+			// mvdsv safely terminates it's mvds with an svc_disconnect.
+			// the client is meant to read that and disconnect without reading the intentionally corrupt packet following it.
+			// however, our demo playback is chained and looping and buffered.
+			// so we've already found the end of the source file and restarted parsing.
+			// so there's very little we can do except crash ourselves on the EndOfDemo text following the svc_disconnect
+			// that's a bad plan, so just stop reading this packet.
 
-			//qqshka: no, we trying parse it
+			// qqshka: no, we trying parse it
 
 			ParseDisconnect(tv, &buf);
 			break;

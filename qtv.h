@@ -358,7 +358,7 @@ typedef struct sv_s sv_t;
 typedef struct oproxy_s 
 {
 	qbool			flushing;
-	qbool			drop;
+	qbool			drop;							// This proxy is droppable.
 
 	qbool			connected_at_least_once;		// Connection sequence was completed at least once.
 

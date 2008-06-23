@@ -363,7 +363,6 @@ void HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamtype
 	char hostname[64];
 	char buffer[1024];
 
-
 	char fname[256];
 	s = fname;
 	while (*streamid > ' ')

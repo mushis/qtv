@@ -61,40 +61,45 @@ qbool TCP_Set_KEEPALIVE(int sock)
 {
 	int		iOptVal = 1;
 
-	if (sock == INVALID_SOCKET) {
+	if (sock == INVALID_SOCKET)
+	{
 		Sys_Printf(NULL, "TCP_Set_KEEPALIVE: invalid socket\n");
 		return false;
 	}
 
-	if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (void*)&iOptVal, sizeof(iOptVal)) == -1) {
+	if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (void*)&iOptVal, sizeof(iOptVal)) == -1) 
+	{
 		Sys_Printf (NULL, "TCP_Set_KEEPALIVE: setsockopt SO_KEEPALIVE: (%i): %s\n", qerrno, strerror (qerrno));
 		return false;
 	}
 
 #if defined(__linux__)
 
-//	The time (in seconds) the connection needs to remain idle before TCP starts sending keepalive probes, 
-//  if the socket option SO_KEEPALIVE has been set on this socket.
+	//	The time (in seconds) the connection needs to remain idle before TCP starts sending keepalive probes, 
+	//  if the socket option SO_KEEPALIVE has been set on this socket.
 
 	iOptVal = 60;
 
-	if (setsockopt(sock, SOL_TCP, TCP_KEEPIDLE, (void*)&iOptVal, sizeof(iOptVal)) == -1) {
+	if (setsockopt(sock, SOL_TCP, TCP_KEEPIDLE, (void*)&iOptVal, sizeof(iOptVal)) == -1) 
+	{
 		Sys_Printf (NULL, "TCP_Set_KEEPALIVE: setsockopt TCP_KEEPIDLE: (%i): %s\n", qerrno, strerror(qerrno));
 		return false;
 	}
 
-//  The time (in seconds) between individual keepalive probes.
+	//  The time (in seconds) between individual keepalive probes.
 	iOptVal = 30;
 
-	if (setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, (void*)&iOptVal, sizeof(iOptVal)) == -1) {
+	if (setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, (void*)&iOptVal, sizeof(iOptVal)) == -1) 
+	{
 		Sys_Printf (NULL, "TCP_Set_KEEPALIVE: setsockopt TCP_KEEPINTVL: (%i): %s\n", qerrno, strerror(qerrno));
 		return false;
 	}
 
-//  The maximum number of keepalive probes TCP should send before dropping the connection. 
+	//  The maximum number of keepalive probes TCP should send before dropping the connection. 
 	iOptVal = 6;
 
-	if (setsockopt(sock, SOL_TCP, TCP_KEEPCNT, (void*)&iOptVal, sizeof(iOptVal)) == -1) {
+	if (setsockopt(sock, SOL_TCP, TCP_KEEPCNT, (void*)&iOptVal, sizeof(iOptVal)) == -1) 
+	{
 		Sys_Printf (NULL, "TCP_Set_KEEPALIVE: setsockopt TCP_KEEPCNT: (%i): %s\n", qerrno, strerror(qerrno));
 		return false;
 	}
@@ -151,7 +156,7 @@ SOCKET Net_TCPListenPort(int port)
 		return INVALID_SOCKET;
 	}
 
-	if (listen(sock, 3) == -1)	//don't listen for too many clients.
+	if (listen(sock, 3) == -1)	// Don't listen for too many clients.
 	{
 		closesocket(sock);
 		return INVALID_SOCKET;
