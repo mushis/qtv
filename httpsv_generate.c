@@ -394,10 +394,21 @@ void HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamtype
 			else if (*streamid >= '0' && *streamid <= '9')
 				*s += *streamid-'0';
 
+			// Don't let hackers try adding extra commands to it.
+   			if (*s == '$' || *s == ';' || *s == '\r' || *s == '\n')
+   				continue;
+
 			s++;
 		}
+		else if (*streamid == '$' || *streamid == ';' || *streamid == '\r' || *streamid == '\n')
+   		{
+   			// Don't let hackers try adding extra commands to it.
+   			streamid++;
+   		}
 		else
+		{
 			*s++ = *streamid++;
+		}
 	}
 	*s = 0;
 	streamid = fname;
