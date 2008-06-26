@@ -89,7 +89,8 @@
 // look svc.h for details
 
 #define SVC(svc) svc,
-typedef enum {
+typedef enum 
+{
 	#include "svc.h"
 } svcOps_e;
 #undef SVC

@@ -6,10 +6,12 @@
 
 // since svc code transfered over byte, than it nor more than 256
 #define SVC(svc) #svc,
-char *svc_strings[256] = {
-#include "svc.h"
+char *svc_strings[] = 
+{
+	#include "svc.h"
 };
 #undef SVC
+#define svc_strings_size (sizeof(svc_strings) / sizeof(svc_strings[0]))
 
 #define ParseError(m) (m)->cursize = (m)->cursize+1	//
 
@@ -978,7 +980,7 @@ void ParseLightstyle(sv_t *tv, netmsg_t *m)
 	else
 	{
 		Sys_Printf(NULL, "svc_lightstyle: invalid lightstyle index (%i)\n", style);
-		while (ReadByte(m))	//suck out the message.
+		while (ReadByte(m))	// Suck out the message.
 		{
 		}
 	}
@@ -986,8 +988,6 @@ void ParseLightstyle(sv_t *tv, netmsg_t *m)
 
 void ParseNails(sv_t *tv, netmsg_t *m, qbool nails2)
 {
-	//FIXME: this function just parse nails but do not save it, so client does't see it?
-
 	int count = (unsigned char)ReadByte(m);
 	int i;
 
@@ -1022,24 +1022,24 @@ void ParseDownload(sv_t *tv, netmsg_t *m)
 
 void ParseDisconnect(sv_t *tv, netmsg_t *m)
 {
-#define ENDOFDEMO "EndOfDemo" // this is what mvdsv append to end of demo/stream
+	#define ENDOFDEMO "EndOfDemo" // this is what mvdsv append to end of demo/stream
 
 	char EndOfDemo[256] = {0};
 
 	ReadString(m, EndOfDemo, sizeof(EndOfDemo));
 
 	if (strcmp(EndOfDemo, ENDOFDEMO))
-		Sys_Printf(NULL, "WARNING: non standart disconnect message '%s'\n", EndOfDemo);
+		Sys_Printf(NULL, "WARNING: non standard disconnect message '%s'\n", EndOfDemo);
 }
 
-void ShowMvdHeaderInfo(int length, int to, int mask)
+void ShowMvdHeaderInfo(sv_t *tv, int length, int to, int mask)
 {
 	char *str_to = "unknown";
 
 	if (!shownet.integer)
 		return;
 
-	switch(to)
+	switch (to)
 	{
 		case dem_multiple:
 			str_to = "dem_multiple";
@@ -1061,7 +1061,36 @@ void ShowMvdHeaderInfo(int length, int to, int mask)
 			break;
 	}
 
-	Sys_Printf(NULL, "mvd msg: size: %4d type: %s mask: %d\n", length, str_to, mask);
+	Sys_Printf(NULL, "MVD msg: size: %4d type: %s mask: 0x%x\n", length, str_to, mask);
+
+	// List the names of the players that will receive this message.
+	if ((shownet.integer >= 2) && (to != dem_all) && (to != dem_read))
+	{
+		int player;
+		qbool first = true;
+		char name[64];
+
+		Sys_Printf(NULL, "  [");
+		
+		for (player = 0; player < MAX_CLIENTS; player++)
+		{	
+			// Is this player supposed to receive the message?
+			if (mask & (1 << player))
+			{
+				Info_ValueForKey(tv->players[player].userinfo, "name", name, sizeof(name));
+				
+				if (!first)
+				{
+					Sys_Printf(NULL, ", ");
+				}
+
+				Sys_Printf(NULL, name);
+				first = false;
+			}
+		}
+
+		Sys_Printf(NULL, "]\n");
+	}
 }
 
 void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
@@ -1072,7 +1101,7 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 	qbool clearoldplayers = true;
 
 	if (shownet.integer)
-		ShowMvdHeaderInfo(length, to, mask);
+		ShowMvdHeaderInfo(tv, length, to, mask);
 
 	buf.cursize = length;
 	buf.maxsize = length;
@@ -1080,16 +1109,14 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 	buf.data = buffer;
 	buf.startpos = 0;
 
-	while(buf.readpos < buf.cursize)
+	while (buf.readpos < buf.cursize)
 	{
-//		Sys_Printf(NULL, "%d %d\n", buf.readpos, buf.cursize);
-
 		if (buf.readpos > buf.cursize)
 		{
 			Sys_Printf(NULL, "Read past end of parse buffer\n");
 			return;
 		}
-//		printf("%i\n", buf.buffer[0]);
+
 		buf.startpos = buf.readpos;
 
 		svc = ReadByte(&buf);
@@ -1099,238 +1126,272 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 
 		switch (svc)
 		{
-		case svc_bad:
-			ParseError(&buf);
-			Sys_Printf(NULL, "ParseMessage: svc_bad\n");
-			return;
-		case svc_nop:	//quakeworld isn't meant to send these.
-			Sys_Printf(NULL, "nop\n");
-			break;
-
-		case svc_disconnect:
-			// Spike:
-			// mvdsv safely terminates it's mvds with an svc_disconnect.
-			// the client is meant to read that and disconnect without reading the intentionally corrupt packet following it.
-			// however, our demo playback is chained and looping and buffered.
-			// so we've already found the end of the source file and restarted parsing.
-			// so there's very little we can do except crash ourselves on the EndOfDemo text following the svc_disconnect
-			// that's a bad plan, so just stop reading this packet.
-
-			// qqshka: no, we trying parse it
-
-			ParseDisconnect(tv, &buf);
-			break;
-
-		case svc_updatestat:
-			ParseUpdateStat(tv, &buf, to, mask);
-			break;
-
-//#define	svc_version			4	// [long] server version
-//#define	svc_setview			5	// [short] entity number
-		case svc_sound:
-			ParseSound(tv, &buf, to, mask);
-			break;
-//#define	svc_time			7	// [float] server time
-
-		case svc_print:
-			ParsePrint(tv, &buf, to, mask);
-			break;
-
-		case svc_stufftext:
-			ParseStufftext(tv, &buf, to, mask);
-			break;
-
-		case svc_setangle:
-			ReadByte(&buf);
-
-#if 0
-			tv->proxyplayerangles[0] = ReadByte(&buf)*360.0/255;
-			tv->proxyplayerangles[1] = ReadByte(&buf)*360.0/255;
-			tv->proxyplayerangles[2] = ReadByte(&buf)*360.0/255;
-#else
-			ReadByte(&buf);
-			ReadByte(&buf);
-			ReadByte(&buf);
-#endif
-
-			break;
-
-		case svc_serverdata:
-			ParseServerData(tv, &buf, to, mask);
-			break;
-
-		case svc_lightstyle:
-			ParseLightstyle(tv, &buf);
-			break;
-
-//#define	svc_updatename		13	// [qbyte] [string]
-
-		case svc_updatefrags:
-			ParseUpdateFrags(tv, &buf, to, mask);
-			break;
-
-//#define	svc_clientdata		15	// <shortbits + data>
-//#define	svc_stopsound		16	// <see code>
-//#define	svc_updatecolors	17	// [qbyte] [qbyte] [qbyte]
-
-		case svc_particle:
-			ReadShort(&buf);
-			ReadShort(&buf);
-			ReadShort(&buf);
-			ReadByte(&buf);
-			ReadByte(&buf);
-			ReadByte(&buf);
-			ReadByte(&buf);
-			ReadByte(&buf);
-			break;
-
-		case svc_damage:
-			ParseDamage(tv, &buf, to, mask);
-			break;
-
-		case svc_spawnstatic:
-			ParseSpawnStatic(tv, &buf, to, mask);
-			break;
-
-//#define	svc_spawnstatic2	21
-		case svc_spawnbaseline:
-			ParseBaseline(tv, &buf, to, mask);
-			break;
-
-		case svc_temp_entity:
-			ParseTempEntity(tv, &buf, to, mask);
-			break;
-
-		case svc_setpause:	// [qbyte] on / off
-			/* tv->ispaused = */ ReadByte(&buf);
-			break;
-
-//#define	svc_signonnum		25	// [qbyte]  used for the signon sequence
-
-		case svc_centerprint:
-			ParseCenterprint(tv, &buf, to, mask);
-			break;
-
-//#define	svc_killedmonster	27
-//#define	svc_foundsecret		28
-
-		case svc_spawnstaticsound:
-			ParseStaticSound(tv, &buf, to, mask);
-			break;
-
-		case svc_intermission:
-			ParseIntermission(tv, &buf, to, mask);
-			break;
-
-//#define	svc_finale			31		// [string] text
-
-		case svc_cdtrack:
-			ParseCDTrack(tv, &buf, to, mask);
-			break;
-
-//#define svc_sellscreen		33
-
-//#define svc_cutscene		34	//hmm... nq only... added after qw tree splitt?
-
-		case svc_smallkick:
-		case svc_bigkick:
-			break;
-
-		case svc_updateping:
-			ParseUpdatePing(tv, &buf, to, mask);
-			break;
-
-		case svc_updateentertime:
-			ParseUpdateEnterTime(tv, &buf, to, mask);
-			break;
-
-		case svc_updatestatlong:
-			ParseUpdateStatLong(tv, &buf, to, mask);
-			break;
-
-		case svc_muzzleflash:
-			ReadShort(&buf);
-			break;
-
-		case svc_updateuserinfo:
-			ParseUpdateUserinfo(tv, &buf, to, mask);
-			break;
-
-		case svc_download:	// [short] size [size bytes]
-			ParseDownload(tv, &buf);
-			break;
-
-		case svc_playerinfo:
-			ParsePlayerInfo(tv, &buf, clearoldplayers);
-			clearoldplayers = false;
-			break;
-
-		case svc_nails:
-			ParseNails(tv, &buf, false);
-			break;
-
-		case svc_chokecount:
-			ReadByte(&buf);
-			break;
-
-		case svc_modellist:
-			i = ParseList(tv, &buf, tv->modellist, to, mask);
-			if (!i)
+			case svc_bad:
 			{
-/*
-				int j;
-
-				tv->numinlines = 0;
-				for (j = 2; j < 256; j++)
-				{
-					if (*tv->modellist[j].name != '*')
-						break;
-					tv->numinlines = j;
-				}
-*/
-				strlcpy(tv->status, "Prespawning", sizeof(tv->status));
+				ParseError(&buf);
+				Sys_Printf(NULL, "ParseMessage: svc_bad\n");
+				return;
 			}
-			break;
+			case svc_nop:	// Quakeworld isn't meant to send these.
+			{
+				Sys_Printf(NULL, "svc_nop\n");
+				break;
+			}
+			case svc_disconnect:
+			{
+				// Spike:
+				// mvdsv safely terminates it's mvds with an svc_disconnect.
+				// the client is meant to read that and disconnect without reading the intentionally corrupt packet following it.
+				// however, our demo playback is chained and looping and buffered.
+				// so we've already found the end of the source file and restarted parsing.
+				// so there's very little we can do except crash ourselves on the EndOfDemo text following the svc_disconnect
+				// that's a bad plan, so just stop reading this packet.
 
-		case svc_soundlist:
-			i = ParseList(tv, &buf, tv->soundlist, to, mask);
-			if (!i)
-				strlcpy(tv->status, "Receiving modellist", sizeof(tv->status));
-			break;
+				// qqshka: no, we trying parse it
 
-		case svc_packetentities:
-//			FlushPacketEntities(tv);
-			ParsePacketEntities(tv, &buf, -1);
-			break;
+				ParseDisconnect(tv, &buf);
+				break;
+			}
+			case svc_updatestat:
+			{
+				ParseUpdateStat(tv, &buf, to, mask);
+				break;
+			}
+			// svc_version			4	// [long] server version
+			// svc_setview			5	// [short] entity number
+			case svc_sound:
+			{
+				ParseSound(tv, &buf, to, mask);
+				break;
+			}
+			// svc_time			7	// [float] server time
+			case svc_print:
+			{
+				ParsePrint(tv, &buf, to, mask);
+				break;
+			}
+			case svc_stufftext:
+			{
+				ParseStufftext(tv, &buf, to, mask);
+				break;
+			}
+			case svc_setangle:
+			{
+				ReadByte(&buf);
+				#if 0
+				tv->proxyplayerangles[0] = ReadByte(&buf)*360.0/255;
+				tv->proxyplayerangles[1] = ReadByte(&buf)*360.0/255;
+				tv->proxyplayerangles[2] = ReadByte(&buf)*360.0/255;
+				#else
+				ReadByte(&buf);
+				ReadByte(&buf);
+				ReadByte(&buf);
+				#endif
+				break;
+			}
+			case svc_serverdata:
+			{
+				ParseServerData(tv, &buf, to, mask);
+				break;
+			}
+			case svc_lightstyle:
+			{
+				ParseLightstyle(tv, &buf);
+				break;
+			}
+			// svc_updatename		13	// [qbyte] [string]
+			case svc_updatefrags:
+			{
+				ParseUpdateFrags(tv, &buf, to, mask);
+				break;
+			}
+			// svc_clientdata		15	// <shortbits + data>
+			// svc_stopsound		16	// <see code>
+			// svc_updatecolors		17	// [qbyte] [qbyte] [qbyte]
+			case svc_particle:
+			{
+				ReadShort(&buf);
+				ReadShort(&buf);
+				ReadShort(&buf);
+				ReadByte(&buf);
+				ReadByte(&buf);
+				ReadByte(&buf);
+				ReadByte(&buf);
+				ReadByte(&buf);
+				break;
+			}
+			case svc_damage:
+			{
+				ParseDamage(tv, &buf, to, mask);
+				break;
+			}
+			case svc_spawnstatic:
+			{
+				ParseSpawnStatic(tv, &buf, to, mask);
+				break;
+			}
+			// svc_spawnstatic2	21
+			case svc_spawnbaseline:
+			{
+				ParseBaseline(tv, &buf, to, mask);
+				break;
+			}
+			case svc_temp_entity:
+			{
+				ParseTempEntity(tv, &buf, to, mask);
+				break;
+			}
+			case svc_setpause:	// [qbyte] on / off
+			{
+				ReadByte(&buf);
+				break;
+			}
+			// svc_signonnum		25	// [qbyte]  used for the signon sequence
+			case svc_centerprint:
+			{
+				ParseCenterprint(tv, &buf, to, mask);
+				break;
+			}
+			//	svc_killedmonster	27
+			//	svc_foundsecret		28
+			case svc_spawnstaticsound:
+			{
+				ParseStaticSound(tv, &buf, to, mask);
+				break;
+			}
+			case svc_intermission:
+			{
+				ParseIntermission(tv, &buf, to, mask);
+				break;
+			}
+			// svc_finale			31		// [string] text
+			case svc_cdtrack:
+			{
+				ParseCDTrack(tv, &buf, to, mask);
+				break;
+			}
+			// svc_sellscreen		33
+			case svc_smallkick:
+			case svc_bigkick:
+				break;
+			case svc_updateping:
+			{
+				ParseUpdatePing(tv, &buf, to, mask);
+				break;
+			}
+			case svc_updateentertime:
+			{
+				ParseUpdateEnterTime(tv, &buf, to, mask);
+				break;
+			}
+			case svc_updatestatlong:
+			{
+				ParseUpdateStatLong(tv, &buf, to, mask);
+				break;
+			}
+			case svc_muzzleflash:
+			{
+				ReadShort(&buf);
+				break;
+			}
+			case svc_updateuserinfo:
+			{
+				ParseUpdateUserinfo(tv, &buf, to, mask);
+				break;
+			}
+			case svc_download:	// [short] size [size bytes]
+			{
+				ParseDownload(tv, &buf);
+				break;
+			}
+			case svc_playerinfo:
+			{
+				ParsePlayerInfo(tv, &buf, clearoldplayers);
+				clearoldplayers = false;
+				break;
+			}
+			case svc_nails:
+			{			
+				ParseNails(tv, &buf, false);
+				break;
+			}
+			case svc_chokecount:
+			{
+				ReadByte(&buf);
+				break;
+			}
+			case svc_modellist:
+			{
+				i = ParseList(tv, &buf, tv->modellist, to, mask);
+				if (!i)
+				{
+					strlcpy(tv->status, "Prespawning", sizeof(tv->status));
+				}
+				break;
+			}
+			case svc_soundlist:
+			{
+				i = ParseList(tv, &buf, tv->soundlist, to, mask);
+				if (!i)
+					strlcpy(tv->status, "Receiving modellist", sizeof(tv->status));
+				break;
+			}
+			case svc_packetentities:
+			{
+				ParsePacketEntities(tv, &buf, -1);
+				break;
+			}
+			case svc_deltapacketentities:
+			{
+				ParsePacketEntities(tv, &buf, ReadByte(&buf));
+				break;
+			}
+			case svc_entgravity:		// Gravity change, for prediction
+			{
+				ReadFloat(&buf);
+				break;
+			}
+			case svc_maxspeed:
+			{
+				ReadFloat(&buf);
+				break;
+			}
+			case svc_setinfo:
+			{
+				ParseSetInfo(tv, &buf);
+				break;
+			}
+			case svc_serverinfo:
+			{
+				ParseServerinfo(tv, &buf);
+				break;
+			}
+			case svc_updatepl:
+			{
+				ParsePacketloss(tv, &buf, to, mask);
+				break;
+			}
+			case svc_nails2:
+			{
+				ParseNails(tv, &buf, true);
+				break;
+			}
+			default:
+			{
+				unsigned int message_type = (unsigned int)ReadByte(&buf);
+				buf.readpos = buf.startpos;				
+				
+				if ((message_type > 0) && (message_type < svc_strings_size))
+				{
+					Sys_Printf(NULL, "Can't handle %s\n", svc_strings[message_type]);
+				}
+				else
+				{
+					Sys_Printf(NULL, "Can't handle svc %i\n", message_type);
+				}
 
-		case svc_deltapacketentities:
-			ParsePacketEntities(tv, &buf, ReadByte(&buf));
-			break;
-
-//#define svc_maxspeed		49		// maxspeed change, for prediction
-		case svc_entgravity:		// gravity change, for prediction
-			ReadFloat(&buf);
-			break;
-		case svc_maxspeed:
-			ReadFloat(&buf);
-			break;
-		case svc_setinfo:
-			ParseSetInfo(tv, &buf);
-			break;
-		case svc_serverinfo:
-			ParseServerinfo(tv, &buf);
-			break;
-		case svc_updatepl:
-			ParsePacketloss(tv, &buf, to, mask);
-			break;
-		case svc_nails2:
-			ParseNails(tv, &buf, true);
-			break;
-
-		default:
-			buf.readpos = buf.startpos;
-			Sys_Printf(NULL, "Can't handle svc %i\n", (unsigned int)ReadByte(&buf));
-			return;
+				return;
+			}
 		}
 	}
 }
