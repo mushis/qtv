@@ -8,39 +8,43 @@ Contains the control routines
 #ifndef _WIN32
 #include <sys/stat.h>
 #include <dirent.h>
-#endif
+#endif // _WIN32
 
 
-cvar_t developer = {"developer", ""};
-cvar_t shownet   = {"shownet", ""};
+cvar_t developer		= {"developer", ""};
+cvar_t shownet			= {"shownet", ""};
 
-cvar_t hostname = {"hostname", DEFAULT_HOSTNAME};
-cvar_t admin_password = {"admin_password", ""};
+cvar_t hostname			= {"hostname", DEFAULT_HOSTNAME};
+cvar_t admin_password	= {"admin_password", ""};
 
 int SortFilesByDate(const void *a, const void *b) 
 {
-	if (((availdemo_t*)a)->time < ((availdemo_t*)b)->time)
+	const availdemo_t *aa = (availdemo_t*)a;
+	const availdemo_t *bb = (availdemo_t*)b;
+
+	if (aa->time < bb->time)
 		return 1;
-	if (((availdemo_t*)a)->time > ((availdemo_t*)b)->time)
+	if (aa->time > bb->time)
 		return -1;
 
-	if (((availdemo_t*)a)->smalltime < ((availdemo_t*)b)->smalltime)
+	if (aa->smalltime < bb->smalltime)
 		return 1;
-	if (((availdemo_t*)a)->smalltime > ((availdemo_t*)b)->smalltime)
+	if (aa->smalltime > bb->smalltime)
 		return -1;
+
 	return 0;
 }
 
 void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 {
-	if (cluster->last_demos_update && cluster->last_demos_update + DEMOS_UPDATE_TIME > cluster->curtime)
-		return; // do not update demos too fast, this save CPU time
+	if ((cluster->last_demos_update && cluster->last_demos_update + DEMOS_UPDATE_TIME) > cluster->curtime)
+		return; // Do not update demos too fast, this save CPU time.
 
 	cluster->last_demos_update = cluster->curtime;
 
 	cluster->availdemoscount = 0;
 
-#ifdef _WIN32
+	#ifdef _WIN32
 	{
 		WIN32_FIND_DATA ffd;
 		HANDLE h;
@@ -55,6 +59,7 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 			{
 				if (cluster->availdemoscount == sizeof(cluster->availdemos)/sizeof(cluster->availdemos[0]))
 					break;
+
 				strlcpy(cluster->availdemos[cluster->availdemoscount].name, ffd.cFileName, sizeof(cluster->availdemos[0].name));
 				cluster->availdemos[cluster->availdemoscount].size = ffd.nFileSizeLow;
 				cluster->availdemos[cluster->availdemoscount].time = ffd.ftLastWriteTime.dwHighDateTime;
@@ -65,14 +70,14 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 			FindClose(h);
 		}
 	}
-#else
+	#else // _WIN32
 	{
 		DIR *dir;
 		struct dirent *ent;
 		struct stat sb;
 		char fullname[512];
 
-		dir = opendir(demo_dir.string);	//yeek!
+		dir = opendir(demo_dir.string);	// Yeek!
 		if (dir)	
 		{
 			for(;;)
@@ -81,17 +86,21 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 					break;
 
 				ent = readdir(dir);
+				
 				if (!ent)
 					break;
+
 				if (*ent->d_name == '.')
-					continue;	//ignore 'hidden' files
+					continue; // Ignore 'hidden' files.
 
 				if(stricmp(".mvd", Sys_FileExtension(ent->d_name)))
-					continue; // ignore non *.mvd
+					continue; // Ignore non *.mvd
 
 				snprintf(fullname, sizeof(fullname), "%s/%s", demo_dir.string, ent->d_name);
+				
 				if (stat(fullname, &sb))
-					continue;	//some kind of error
+					continue; // Some kind of error.
+
 				strlcpy(cluster->availdemos[cluster->availdemoscount].name, ent->d_name, sizeof(cluster->availdemos[0].name));
 				cluster->availdemos[cluster->availdemoscount].size = sb.st_size;
 				cluster->availdemos[cluster->availdemoscount].time = sb.st_mtime;
@@ -105,13 +114,13 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 			Sys_Printf(cluster, "Couldn't open dir for demo listings\n");
 		}
 	}
-#endif
+	#endif // _WIN32 else
 
 	qsort(cluster->availdemos, cluster->availdemoscount, sizeof(cluster->availdemos[0]), SortFilesByDate);
 }
 
 
-// sleep and handle keyboard input
+// Sleep and handle keyboard input.
 void Cluster_Sleep(cluster_t *cluster)
 {
 	sv_t *sv;
@@ -139,22 +148,23 @@ void Cluster_Sleep(cluster_t *cluster)
 			m = cluster->tcpsocket + 1;
 	}
 
-#ifndef _WIN32
+	#ifndef _WIN32
 	FD_SET(STDIN, &socketset);
 	if (STDIN >= m)
 		m = STDIN + 1;
-#endif
+	#endif _WIN32
 
 
-#ifdef _WIN32
+	#ifdef _WIN32
 
-//	if (!m) // FIXME: my'n windows XP eat 50% CPU if here mvdport 0 and no clients, lame work around, any better solution?
+	//if (!m) // FIXME: my'n windows XP eat 50% CPU if here mvdport 0 and no clients, lame work around, any better solution?
 		Sleep(1);
-#else
+	
+	#else //_WIN32
 
 	usleep(1000);
 
-#endif		
+	#endif // _WIN32 else
 
 	if ( 1 )
 	{
@@ -163,8 +173,8 @@ void Cluster_Sleep(cluster_t *cluster)
 	}
 	else
 	{
-		timeout.tv_sec = 100/1000; // 0 seconds
-		timeout.tv_usec = (100%1000)*1000; // 100 milliseconds timeout
+		timeout.tv_sec = 100/1000;			// 0 seconds.
+		timeout.tv_usec = (100%1000)*1000;	// 100 milliseconds timeout.
 	}
 
 	m = select(m, &socketset, NULL, NULL, &timeout);
@@ -176,7 +186,8 @@ void Cluster_Run(cluster_t *cluster, qbool dowait)
 {
 	sv_t *sv, *old;
 
-	if (g_cluster.curtime > 2000000000) // ~23 days uptime, better restart program now before time wrapping
+	// ~23 days uptime, better restart program now before time wrapping.
+	if (g_cluster.curtime > 2000000000)
 	{
 		Sys_Printf(NULL, "WARNING: Long uptime detected, quit.\n");
 		Sys_Exit(1);
@@ -185,76 +196,80 @@ void Cluster_Run(cluster_t *cluster, qbool dowait)
 	FixSayFloodProtect();
 
 	if (dowait)
-		Cluster_Sleep(cluster); // sleep and serve console input
+		Cluster_Sleep(cluster); // Sleep and serve console input.
 
 	cluster->curtime = Sys_Milliseconds();
 
-	Cbuf_Execute ();	// process console commands
+	Cbuf_Execute(); // Process console commands.
 
-	// Cbuf_Execute() may take some time so set current time again, not sure that right way
+	// Cbuf_Execute() may take some time so set 
+	// current time again, not sure that right way.
 	cluster->curtime = Sys_Milliseconds();
 
 	for (sv = cluster->servers; sv; )
 	{
-		old = sv; // save sv_t in old, because QTV_Run(old) may free(old)
+		old = sv; // Save sv_t in old, because QTV_Run(old) may free(old).
 		sv = sv->next;
 		QTV_Run(cluster, old);
 	}
 
-	SV_CheckMVDPort(cluster); // check changes of mvdport variable and do appropriate action
+	// Check changes of mvdport variable and do appropriate action.
+	SV_CheckMVDPort(cluster); 
 
-	SV_FindProxies(cluster->tcpsocket, cluster, NULL);	// look for any other proxies wanting to muscle in on the action
+	// Look for any other proxies wanting to muscle in on the action.
+	SV_FindProxies(cluster->tcpsocket, cluster, NULL);
 
-	SV_ReadPendingProxies(cluster); // serve pending proxies
+	// Serve pending proxies.
+	SV_ReadPendingProxies(cluster); 
 }
 
 qbool cluster_initialized;
 
-cluster_t g_cluster; // seems fte qtv tryed do not make it global, see no reason for this
+cluster_t g_cluster; // Seems fte qtv tryed do not make it global, see no reason for this.
 
 int main(int argc, char **argv)
 {
-#ifdef SIGPIPE
+	#ifdef SIGPIPE
 	signal(SIGPIPE, SIG_IGN);
-#endif
+	#endif
 
-#ifdef _WIN32
+	#ifdef _WIN32
 	{
 		WSADATA discard;
 		WSAStartup(MAKEWORD(2,0), &discard);
 	}
-#endif
+	#endif // _WIN32
 
 	memset(&g_cluster, 0, sizeof(g_cluster));
 
 	g_cluster.tcpsocket   = INVALID_SOCKET;
 	g_cluster.buildnumber = Sys_Build_Number();
-	g_cluster.nextUserId  = 1; // let count users from 1
+	g_cluster.nextUserId  = 1; // Lets count users from 1.
 
-	Info_Init();	// info strings init
-	Cbuf_Init ();	// command buffer init
-	Cmd_Init ();	// register basic commands
-	Cl_Cmds_Init ();// init client commands
-	Cvar_Init ();	// variable system init
-	Source_Init (); // add source related commands
-	Forward_Init(); // register some vars
-	Pending_Init ();// register some vars
+	Info_Init();	// Info strings init.
+	Cbuf_Init();	// Command buffer init.
+	Cmd_Init();		// Register basic commands.
+	Cl_Cmds_Init();	// Init client commands.
+	Cvar_Init();	// Variable system init.
+	Source_Init();	// Add source related commands.
+	Forward_Init(); // Register some vars.
+	Pending_Init();	// Register some vars.
 
-	Cvar_Register (&developer);
-	Cvar_Register (&shownet);
+	Cvar_Register(&developer);
+	Cvar_Register(&shownet);
 
-	Cvar_Register (&hostname);
-	Cvar_Register (&admin_password);
+	Cvar_Register(&hostname);
+	Cvar_Register(&admin_password);
 
 	cluster_initialized = true;
 
 	Sys_Printf(&g_cluster, "QTV %s, build %i (build date: %s)\n", PROXY_VERSION, g_cluster.buildnumber, BUILD_DATE);
 
-	// process command line arguments
-	Cmd_StuffCmds (argc, argv);
-	Cbuf_Execute ();
+	// Process command line arguments.
+	Cmd_StuffCmds(argc, argv);
+	Cbuf_Execute();
 
-	while (!g_cluster.wanttoexit)
+	while (!g_cluster.wanttoexit) 
 	{
 		Cluster_Run(&g_cluster, true);
 	}

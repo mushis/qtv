@@ -466,7 +466,7 @@ struct sv_s
 
 	char			ConnectPassword[64];			// Password given to server.
 	char			server[MAX_QPATH];				// Something like tcp:localhost:25000 or demo:dag_vs_griffin_dm6.mvd
-	int				streamid;						// Unique stream/source id.
+	unsigned int	streamid;						// Unique stream/source id.
 
 	qbool			ServerQuery;					// We're quering some info from server/qtv but not trying stream something.
 	qbool			DisconnectWhenNooneIsWatching;	// No comments.
@@ -493,7 +493,7 @@ struct sv_s
 	// ======= !!!! READ ME !!!! =======
 
 	//
-	// Fields below AUTOMATICALY set to 0 on each QTV_Connect()
+	// Fields below AUTOMATICALLY set to 0 on each QTV_Connect()
 	//
 
 	// hm, I am not sure where I must put drop, put it here for now, so it reset to 0 on QTV_Connect, hope that right
@@ -569,7 +569,7 @@ typedef struct cluster_s
 
 	int buildnumber;					// Just our buildnumber.
 
-	int nextstreamid;                   // This is used to assign id for new source.
+	unsigned int nextstreamid;			// This is used to assign id for new source.
 
 	sv_t *servers;						// List of connection to servers.
 	int NumServers;						// How many servers that are in the list.
@@ -675,7 +675,7 @@ extern cvar_t	parse_delay;
 
 
 // Checking is buffer contain at least one parse able packet.
-int				SV_ConsistantMVDData(unsigned char *buffer, int remaining);
+//int				SV_ConsistantMVDData(unsigned char *buffer, int remaining);
 
 // Read upstream (mvd or connection header), forawrd stream to clients/qtvs
 qbool			Net_ReadStream(sv_t *qtv);

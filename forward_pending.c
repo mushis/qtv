@@ -623,9 +623,9 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv)
 {
 	oproxy_t *prox;
 	SOCKET sock;
-#ifdef SOCKET_CLOSE_TIME
+	#ifdef SOCKET_CLOSE_TIME
 	struct linger	lingeropt;
-#endif
+	#endif
 
 	unsigned long nonblocking = true;
 
@@ -636,8 +636,8 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv)
 		return;
 
 
-#ifdef SOCKET_CLOSE_TIME
-	// hard close: in case of closesocket(), socket will be closen after SOCKET_CLOSE_TIME or earlier
+	#ifdef SOCKET_CLOSE_TIME
+	// hard close: in case of closesocket(), socket will be closed after SOCKET_CLOSE_TIME or earlier
 	memset(&lingeropt, 0, sizeof(lingeropt));
 	lingeropt.l_onoff  = 1;
 	lingeropt.l_linger = SOCKET_CLOSE_TIME;
@@ -648,9 +648,10 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv)
 		closesocket(sock);
 		return;
 	}
-#endif
+	#endif // SOCKET_CLOSE_TIME
 
-	if (ioctlsocket(sock, FIONBIO, &nonblocking) == INVALID_SOCKET) {
+	if (ioctlsocket(sock, FIONBIO, &nonblocking) == INVALID_SOCKET) 
+	{
 		Sys_Printf(NULL, "SV_FindProxies: ioctl FIONBIO: (%i)\n", qerrno);
 		closesocket(sock);
 		return;
@@ -685,8 +686,8 @@ void SV_CheckMVDPort(cluster_t *cluster)
 
 	int newp = bound(0, mvdport.integer, 65535);
 
-	if (cluster->tcpsocket == INVALID_SOCKET && newp && last_time_check + 30 * 1000 < cluster->curtime)
-		mvdport.modified = true; // time to time attempt open port if not open
+	if ((cluster->tcpsocket == INVALID_SOCKET) && newp && (last_time_check + 30 * 1000 < cluster->curtime))
+		mvdport.modified = true; // Time to time attempt to open port if not open.
 
 	if (!mvdport.modified)
 		return;
