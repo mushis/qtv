@@ -197,7 +197,7 @@ static void SV_CheckProxyTimeout(cluster_t *cluster, oproxy_t *pend)
 
 static void SV_ReadUntilDrop(oproxy_t *pend)
 {
-	// Peform reading on buffer file if we have empty buffer.
+	// Peform reading on buffer file if we have an empty buffer.
 	if (!pend->_buffersize_ && pend->buffer_file)
 	{
 		pend->_buffersize_ += fread(pend->_buffer_, 1, pend->_buffermaxsize_, pend->buffer_file);
@@ -529,6 +529,10 @@ static qbool SV_ReadPendingProxy(cluster_t *cluster, oproxy_t *pend)
 	return true;
 }
 
+//
+// Pending proxies are clients that have requests pending,
+// when they have been served they will be unlinked.
+//
 void SV_ReadPendingProxies(cluster_t *cluster)
 {
 	oproxy_t *pend, *pend2, *pend3;
@@ -537,17 +541,23 @@ void SV_ReadPendingProxies(cluster_t *cluster)
 	while (cluster->pendingproxies)
 	{
 		pend = cluster->pendingproxies->next;
+
 		if (SV_ReadPendingProxy(cluster, cluster->pendingproxies))
+		{
 			cluster->pendingproxies = pend;
+		}
 		else
+		{
 			break;
+		}
 	}
 
 	// unlink (probably) from the body/tail
-	for (pend = cluster->pendingproxies; pend && pend->next; )
+	for (pend = cluster->pendingproxies; (pend && pend->next); )
 	{
 		pend2 = pend->next;
 		pend3 = pend2->next;
+
 		if (SV_ReadPendingProxy(cluster, pend2))
 		{
 			pend->next = pend3;
@@ -561,15 +571,17 @@ void SV_ReadPendingProxies(cluster_t *cluster)
 }
 
 // Just allocate memory and set some fields, do not perform any linkage to any list.
+// s = Either a socket or file (demo).
+// socket = Decides if "s" is a socket or a file.
 oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv)
 {
 	oproxy_t *prox = Sys_malloc(sizeof(*prox));
 
-	// { dynamic buffer allocation
+	// Dynamic buffer allocation.
 	prox->_buffermaxsize_ = MAX_PROXY_BUFFER;
 	prox->_buffer_ = Sys_malloc(prox->_buffermaxsize_);
-	// }
 
+	// Set socket/file based on source.
 	prox->sock = (socket ? *(SOCKET*)s : INVALID_SOCKET);
 	prox->file = (socket ?        NULL : (FILE*)s);
 
@@ -583,14 +595,15 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv)
 
 	prox->id			= g_cluster.nextUserId++;
 
-	if(!Info_Set(&prox->ctx, "name", "")) // since infostrings count limited, we reserve at least name
+	// Since infostrings count is limited, we reserve at least the name.
+	if(!Info_Set(&prox->ctx, "name", "")) 
 	{
-		Sys_Printf(NULL, "can't reserve name for client, dropping\n");
+		Sys_Printf(NULL, "Can't reserve name for client, dropping\n");
 		prox->drop = true;
 	}
 
 	if (developer.integer > 1)
-		Sys_DPrintf(NULL, "SV_NewProxy: new proxy id #%d\n", prox->id);
+		Sys_DPrintf(NULL, "SV_NewProxy: New proxy id #%d\n", prox->id);
 
 	return prox;
 }
@@ -634,7 +647,6 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv)
 
 	if ((sock = accept(qtv_sock, NULL, NULL)) == INVALID_SOCKET)
 		return;
-
 
 	#ifdef SOCKET_CLOSE_TIME
 	// hard close: in case of closesocket(), socket will be closed after SOCKET_CLOSE_TIME or earlier

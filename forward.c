@@ -21,7 +21,7 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 	if (prox->drop)
 		return;
 
-	if (prox->_buffersize_ < 0 || prox->_buffersize_ > prox->_buffermaxsize_)
+	if ((prox->_buffersize_ < 0) || (prox->_buffersize_ > prox->_buffermaxsize_))
 	{
 		Sys_Printf(cluster, "Net_TryFlushProxyBuffer: prox->buffersize fucked\n");
 		prox->drop = true;
@@ -29,9 +29,9 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 	}
 
 	if (!prox->_buffersize_)
-		return;	//already flushed.
+		return;	// Already flushed.
 
-//	CheckMVDConsistancy(prox->buffer, 0, prox->buffersize);
+	// CheckMVDConsistancy(prox->buffer, 0, prox->buffersize);
 
 	if (prox->file)
 	{
@@ -45,23 +45,27 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 
 	switch (length)
 	{
-	case 0:	//eof / they disconnected
-// qqshka: think 0 does't mean here they disconnected, so I turned it off
-//		prox->drop = true;
-		break;
-
-	case -1:
-		if (qerrno != EWOULDBLOCK && qerrno != EAGAIN)	//not a problem, so long as we can flush it later.
+		case 0:	// eof / they disconnected
 		{
-			Sys_Printf(cluster, "write error to QTV client, dropping\n");
-			prox->drop = true;	//drop them if we get any errors
+			// qqshka: Think 0 does't mean here they disconnected, so I turned it off.
+			// prox->drop = true;
+			break;
 		}
-		break;
-
-	default:
-		prox->_buffersize_ -= length;
-		memmove(prox->_buffer_, prox->_buffer_ + length, prox->_buffersize_);
-		prox->io_time = cluster->curtime; // update IO activity
+		case -1:
+		{
+			if (qerrno != EWOULDBLOCK && qerrno != EAGAIN)	// Not a problem, so long as we can flush it later.
+			{
+				Sys_Printf(cluster, "write error to QTV client, dropping\n");
+				prox->drop = true;	// Drop them if we get any errors.
+			}
+			break;
+		}
+		default:
+		{
+			prox->_buffersize_ -= length;
+			memmove(prox->_buffer_, prox->_buffer_ + length, prox->_buffersize_);
+			prox->io_time = cluster->curtime; // Update IO activity.
+		}
 	}
 }
 
