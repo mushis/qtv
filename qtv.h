@@ -196,6 +196,7 @@ extern "C" {
 
 #define MAX_PROXY_INBUFFER		4096
 #define MAX_PROXY_BUFFER 		(1<<18)					// must be power-of-two, 1<<18 is 2^18 = 262144 = 256 kilobytes
+#define MAX_OPROXY_BUFFER       (1<<16)					// 64 kilobytes
 #define PREFERED_PROXY_BUFFER	(1<<15)					// the ammount of data we try to leave in our input buffer (must be large enough to contain any single mvd frame)
 #define MAX_PROXY_UPSTREAM 		2048
 

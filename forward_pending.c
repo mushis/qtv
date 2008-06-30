@@ -578,7 +578,7 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv)
 	oproxy_t *prox = Sys_malloc(sizeof(*prox));
 
 	// Dynamic buffer allocation.
-	prox->_buffermaxsize_ = MAX_PROXY_BUFFER;
+	prox->_buffermaxsize_ = MAX_OPROXY_BUFFER;
 	prox->_buffer_ = Sys_malloc(prox->_buffermaxsize_);
 
 	// Set socket/file based on source.
