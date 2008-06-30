@@ -1122,7 +1122,7 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 		svc = ReadByte(&buf);
 
 		if (shownet.integer)
-			Sys_Printf(NULL, "svc: %3d: %s\n", svc, svc_strings[svc] ? svc_strings[svc] : "UNKNOWN");
+			Sys_Printf(NULL, "svc: %3d: %s\n", svc, ( svc >=0 && svc < svc_strings_size && svc_strings[svc] ) ? svc_strings[svc] : "UNKNOWN");
 
 		switch (svc)
 		{
@@ -1378,12 +1378,13 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 			}
 			default:
 			{
-				unsigned int message_type = (unsigned int)ReadByte(&buf);
-				buf.readpos = buf.startpos;				
+				unsigned int message_type;
+				buf.readpos = buf.startpos;
+				message_type = (unsigned int)ReadByte(&buf);
 				
-				if ((message_type > 0) && (message_type < svc_strings_size))
+				if ((message_type >= 0) && (message_type < svc_strings_size))
 				{
-					Sys_Printf(NULL, "Can't handle %s\n", svc_strings[message_type]);
+					Sys_Printf(NULL, "Can't handle %s (%i)\n", svc_strings[message_type], message_type);
 				}
 				else
 				{
