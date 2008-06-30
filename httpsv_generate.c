@@ -704,7 +704,6 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 	char playername[32];
 	unsigned int name_len = 0;
 	unsigned int item_len = 0;
-	char *pp = NULL;
 	oproxy_t *qtvspec = NULL;
 	char hostname[1024];
 	char tmp[64];
@@ -761,7 +760,6 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 		snprintf(link, sizeof(link), link_fmt, hostname, streams->streamid);
 
 		playerlist[0] = 0;
-		pp = playerlist;
 
 		// Output the playerlist (this will be shown in the description field of the RSS item).
 		for (player = 0; player < MAX_CLIENTS; player++)
@@ -770,17 +768,9 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 			{
 				Info_ValueForKey(streams->players[player].userinfo, "name", tmp, sizeof(tmp));
 				HTMLprintf(playername, sizeof(playername), true, "%s", tmp);
-				snprintf(pp, sizeof(playername), "%s\n", playername);
 
-				if (!(pp = strrchr(pp, '\n')))
-				{
-					break;
-				}
-
-				if (*pp == '\n')
-				{
-					pp++;
-				}
+				strlcat(playerlist, playername, sizeof(playerlist));
+				strlcat(playerlist, "\n", sizeof(playerlist));
 			}
 		}
 
