@@ -37,7 +37,7 @@ int SortFilesByDate(const void *a, const void *b)
 
 void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 {
-	if ((cluster->last_demos_update && cluster->last_demos_update + DEMOS_UPDATE_TIME) > cluster->curtime)
+	if (cluster->last_demos_update && cluster->last_demos_update + DEMOS_UPDATE_TIME > cluster->curtime)
 		return; // Do not update demos too fast, this save CPU time.
 
 	cluster->last_demos_update = cluster->curtime;
