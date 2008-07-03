@@ -509,13 +509,13 @@ sv_t *QTV_NewServerConnection(cluster_t *cluster, const char *server, char *pass
 		}
 	}
 
-// FIXME:
-//	if (autoclose)
-//		if (cluster->nouserconnects)
-//			return NULL;
+	// FIXME:
+	//	if (autoclose)
+	//		if (cluster->nouserconnects)
+	//			return NULL;
 
 	if (cluster->NumServers >= maxservers.integer)
-		return NULL; // too much sources opened
+		return NULL; // Too many sources opened.
 
 	qtv = Sys_malloc(sizeof(sv_t));
 
@@ -531,15 +531,34 @@ sv_t *QTV_NewServerConnection(cluster_t *cluster, const char *server, char *pass
 
 	qtv->streamid = ++cluster->nextstreamid; // New source, bad idea, after some time this may grow to huge values.
 
-	qtv->next = cluster->servers; // Partially link in.
-
-	if (!QTV_Connect(qtv, server) && !force)
+	// Connect to and link QTV to the cluster.
 	{
-		Sys_free(qtv);
-		return NULL;
-	}
+		sv_t *last;
 
-	cluster->servers = qtv; // Finish link in.
+		// Try connecting to the new QTV.
+		if (!QTV_Connect(qtv, server) && !force)
+		{
+			Sys_free(qtv);
+			return NULL;
+		}
+
+		// Link to the end of the list so that the QTVs are shown in chronological
+		// order as they were added on the webpage :)
+		for (last = cluster->servers; last && last->next; last = last->next)
+		{
+			// Find the last QTV.
+		}
+
+		// Link the new server.
+		if (last)
+		{
+			last->next = qtv;
+		}
+		else
+		{
+			cluster->servers = qtv; // First server to be linked.
+		}
+	}
 
 	cluster->NumServers++; // One more server connections.
 
