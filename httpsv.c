@@ -95,6 +95,39 @@ void HTMLprintf(char *outb, int outl, qbool qfont, const char *fmt, ...)
 	*outb++ = 0;
 }
 
+int HTTPSV_UnescapeURL(const char *url, char *out, size_t outsize)
+{
+	char *s = url;
+	int i = 0;
+	int c;
+
+	while (*s && (*s != ' ') && (*s != '\n') && (*s != '\r') && (i < (outsize - 1)))
+	{
+		if (s[0] == '%')
+		{
+			s++;
+			if (!s[0] || !s[1] || (sscanf(s, "%2x", &c) == EOF))
+			{
+				*out = 0;
+				return -1;
+			}
+
+			*out++ = (char)c;
+			s += 2;
+		}
+		else
+		{
+			*out++ = *s++;
+		}
+
+		i++;
+	}
+	
+	*out = 0;
+
+	return 0;
+}
+
 void HTTPSV_SendHTTPHeader(cluster_t *cluster, oproxy_t *dest, char *error_code, char *content_type, qbool nocache)
 {
 	char *s;
@@ -346,17 +379,27 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	char *s;
 	char *getpath = pend->inbuffer + sizeof("GET ") - 1;
 
+	// RFC 2616 requires us to be able to parse an absolute URI also.
+	if (!strncmp(getpath, "http://", 7))
+	{
+		getpath += 7;
+		while (*getpath && (*getpath != '\r') && (*getpath != '\n') && (*getpath != ' ') && (*getpath != '/'))
+		{
+			getpath++;
+		}
+	}
+
 	if (!strncmp(getpath, "/nowplaying", 11))
 	{
 		HTTPSV_GenerateNowPlaying(cluster, pend);
 	}
 	else if (!strncmp(getpath, "/watch.qtv?sid=", 15))
 	{
-		HTTPSV_GenerateQTVStub(cluster, pend, "", pend->inbuffer + 19);
+		HTTPSV_GenerateQTVStub(cluster, pend, "", getpath + 15);
 	}
 	else if (!strncmp(getpath, "/watch.qtv?demo=", 16))
 	{
-		HTTPSV_GenerateQTVStub(cluster, pend, "file:", pend->inbuffer + 20);
+		HTTPSV_GenerateQTVStub(cluster, pend, "file:", getpath + 16);
 	}
 	else if (!strncmp(getpath, "/about", 6))
 	{	

@@ -359,59 +359,11 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 
 void HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamtype, char *streamid)
 {
-	char *s;
 	char hostname[64];
 	char buffer[1024];
+	char unescaped_streamid[512];
 
-	char fname[256];
-	s = fname;
-	while (*streamid > ' ')
-	{
-		if (s > fname + sizeof(fname)-4)	//4 cos I'm too lazy to work out what the actual number should be
-			break;
-		if (*streamid == '%')
-		{
-			*s = 0;
-			streamid++;
-			if (*streamid <= ' ')
-				break;
-			else if (*streamid >= 'a' && *streamid <= 'f')
-				*s += 10 + *streamid-'a';
-			else if (*streamid >= 'A' && *streamid <= 'F')
-				*s += 10 + *streamid-'A';
-			else if (*streamid >= '0' && *streamid <= '9')
-				*s += *streamid-'0';
-
-			*s <<= 4;
-
-			streamid++;
-			if (*streamid <= ' ')
-				break;
-			else if (*streamid >= 'a' && *streamid <= 'f')
-				*s += 10 + *streamid-'a';
-			else if (*streamid >= 'A' && *streamid <= 'F')
-				*s += 10 + *streamid-'A';
-			else if (*streamid >= '0' && *streamid <= '9')
-				*s += *streamid-'0';
-
-			// Don't let hackers try adding extra commands to it.
-   			if (*s == '$' || *s == ';' || *s == '\r' || *s == '\n')
-   				continue;
-
-			s++;
-		}
-		else if (*streamid == '$' || *streamid == ';' || *streamid == '\r' || *streamid == '\n')
-   		{
-   			// Don't let hackers try adding extra commands to it.
-   			streamid++;
-   		}
-		else
-		{
-			*s++ = *streamid++;
-		}
-	}
-	*s = 0;
-	streamid = fname;
+	HTTPSV_UnescapeURL(streamid, unescaped_streamid, sizeof(unescaped_streamid));
 
 	// Get the hostname from the header.
 	if (!HTTPSV_GetHostname(cluster, dest, hostname, sizeof(hostname)))
@@ -424,7 +376,7 @@ void HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamtype
 	snprintf(buffer, sizeof(buffer), "[QTV]\r\n"
 									 "Stream: %s%s@%s\r\n"
 									 "", 
-									 streamtype, streamid, hostname);
+									 streamtype, unescaped_streamid, hostname);
 
 	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 }
