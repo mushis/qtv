@@ -624,7 +624,7 @@ void HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name)
 	if (dest->buffer_file)
 		Sys_Error("HTTPSV_GenerateDemoDownload: dest->buffer_file");
 
-	if (   !MediaPathName(pathname, sizeof(pathname), name, demo_dir.string)
+	if (!MediaPathName(pathname, sizeof(pathname), name, demo_dir.string)
 		|| stricmp(".mvd", Sys_FileExtension(pathname))  // .mvd demos only
 	   )
 	{
@@ -673,28 +673,28 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "application/rss+xml", false);
 
 	header_fmt = 
-		"<?xml version=\"1.0\"?>"
-		"<rss version=\"2.0\">"
-			"<channel>"
-				"<title>QTV RSS</title>"
-				"<link></link>" // TODO: Set channel link for RSS.
-				"<description>QTV Current active feeds</description>"
-				"<language>en-us</language>"
-				"<pubDate></pubDate>"; // TODO: Set date when stream started?
+		"<?xml version=\"1.0\"?>" CRLF
+		"<rss version=\"2.0\">" CRLF
+			"<channel>" CRLF
+				"<title>QTV RSS</title>" CRLF
+				"<link></link>" CRLF // TODO: Set channel link for RSS.
+				"<description>QTV Current active feeds</description>" CRLF
+				"<language>en-us</language>" CRLF
+				"<pubDate></pubDate>" CRLF; // TODO: Set date when stream started?
 				
 	item_fmt = 
-				"<item>"
-					"<type>text/plain</type>"
-					"<title>%s</title>"
-					"<link>%s</link>"
-					"<description>%s</description>"
-					"<pubDate>%s</pubDate>"
-					"<guid>%s</guid>"
-				"</item>";
+				"<item>\n" CRLF
+					"<type>text/plain</type>\n" CRLF
+					"<title>%s</title>\n" CRLF 
+					"<link>%s</link>\n" CRLF
+					"<description>%s</description>\n" CRLF
+					"<pubDate>%s</pubDate>\n" CRLF
+					"<guid>%s</guid>\n" CRLF
+				"</item>\n" CRLF;
 
 	footer_fmt =
-			"</channel>"
-		"</rss>";
+			"</channel>" CRLF
+		"</rss>" CRLF;
 
 	link_fmt = "http://%s/watch.qtv?sid=%i";
 

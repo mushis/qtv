@@ -36,28 +36,32 @@ int Q_vsnprintf(char *buffer, size_t count, const char *format, va_list argptr)
 #endif // _WIN32
 
 //
-// Find the occurance of a substring in a string from the end of the string.
-//
-char *strstrrev(const char *s1, const char *s2)
+// Finds the first occurance of a char in a string starting from the end.
+// 
+char *strchrrev(char *str, char chr)
 {
-	const char *s1s = s1;
-	const char *s2s = s2;
+	char *firstchar = str;
+	for (str = str + strlen(str)-1; str >= firstchar; str--)
+	{
+		if (*str == chr)
+			return str;
+	}
+
+	return NULL;
+}
+
+//
+// Check if a string ends with a specified substring.
+//
+int strendswith(const char *s1, const char *s2)
+{
 	int len1 = strlen(s1);
 	int len2 = strlen(s2);
 
 	if (len2 > len1)
-		return NULL;
+		return -1;
 
-	s1 += len1 - 1;
-	s2 += len2 - 1;
-
-	for (; (s1 >= s1s) && (s2 >= s2s); s1--, s2--)
-	{
-		if (*s1 != *s2)
-			return NULL;
-	}
-
-	return s1;
+	return strcmp(s1 + (len1 - len2), s2);
 }
 
 #if defined(__linux__) || defined(_WIN32) || defined(__CYGWIN__)

@@ -97,7 +97,7 @@ void HTMLprintf(char *outb, int outl, qbool qfont, const char *fmt, ...)
 
 int HTTPSV_UnescapeURL(const char *url, char *out, size_t outsize)
 {
-	char *s = url;
+	const char *s = url;
 	int i = 0;
 	int c;
 

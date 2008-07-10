@@ -95,17 +95,6 @@ void close_source(sv_t *qtv, const char *where)
 	init_source(qtv); // set source to state SRC_BAD, its safe call it since we free all resorces like SOCKET and FILE
 }
 
-
-char *strchrrev(char *str, char chr)
-{
-	char *firstchar = str;
-	for (str = str + strlen(str)-1; str >= firstchar; str--)
-		if (*str == chr)
-			return str;
-
-	return NULL;
-}
-
 void Net_SendQTVConnectionRequest(sv_t *qtv, char *authmethod, char *challenge)
 {
 	qtv->qstate = qs_parsingQTVheader;

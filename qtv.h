@@ -621,7 +621,8 @@ qbool			Sys_SafePath(const char *in);						// Absolute paths are prohibited.
 int				Sys_FileLength (FILE *f);							// Return file size, use it on file which open in BINARY mode.
 int				Sys_FileOpenRead (const char *path, FILE **hndl);	// Open file in BINARY mode and return file size, if open failed then -1 returned.
 
-char			*strstrrev(const char *s1, const char *s2);
+int				strendswith(const char *s1, const char *s2);
+char			*strchrrev(char *str, char chr);
 
 // qqshka - hmm, seems in C these are macros, i don't like macros,
 // however this functions work incorrectly on unsigned types!!!
@@ -875,6 +876,7 @@ char			*HTTPSV_ParsePOST(char *post, char *buffer, int buffersize);
 void			HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend); //, char *postdata);
 void			HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend);
 qbool			HTTPSV_GetHostname(cluster_t *cluster, oproxy_t *dest, char *hostname, int buffersize);
+int				HTTPSV_UnescapeURL(const char *url, char *out, size_t outsize);
 
 //
 // httpsv_generate.c
