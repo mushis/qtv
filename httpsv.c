@@ -303,7 +303,7 @@ char *HTTPSV_ParsePOST(char *post, char *buffer, int buffersize)
 	return post;
 }
 
-void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend) //, char *postdata)
+void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend)
 {
 	char tempbuf[512];
 	char *s;
@@ -374,34 +374,112 @@ void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend) //, char *postdata)
 	return;
 }
 
+int HTTPSV_GetURLFromRequest(char *dst, const char *src, size_t size)
+{
+	size_t i = 0;
+
+	if (!strncmp(src, "GET", 3))
+	{
+		src += 3;
+	}
+	else if (!strncmp(src, "POST", 4))
+	{
+		src += 4;
+	}
+	else
+	{
+		return -1;
+	}
+
+	while (src[0] && (src[0] == ' '))
+	{
+		src++;
+	}
+
+	while (src[0] && (src[0] != '\t') && (src[0] != '\n') && (src[0] != '\r') && (src[0] != ' '))
+	{
+		if (i >= (size - 1))
+		{
+			*dst = 0;
+			return -1;
+		}
+
+		*dst++ = *src++;
+		i++;
+	}
+
+	*dst = 0;
+
+	return 0;
+}
+
 void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 {
+	#define URLCOMPARE(url, str, skip) (!strncmp(url, str, (skip = sizeof(str) - 1)))
 	char *s;
-	char *getpath = pend->inbuffer + sizeof("GET ") - 1;
+	char *getpath;
+	char geturl[1024];
+	int skiplen = 0;
+
+	HTTPSV_GetURLFromRequest(geturl, pend->inbuffer, sizeof(geturl));
+	getpath = geturl;
 
 	// RFC 2616 requires us to be able to parse an absolute URI also.
 	if (!strncmp(getpath, "http://", 7))
 	{
 		getpath += 7;
-		while (*getpath && (*getpath != '\r') && (*getpath != '\n') && (*getpath != ' ') && (*getpath != '/'))
+		while (*getpath && (*getpath != '\t') && (*getpath != '\r') && (*getpath != '\n') && (*getpath != ' ') && (*getpath != '/'))
 		{
 			getpath++;
 		}
 	}
 
-	if (!strncmp(getpath, "/nowplaying", 11))
+	if (URLCOMPARE(getpath, "/nowplaying", skiplen))
 	{
 		HTTPSV_GenerateNowPlaying(cluster, pend);
 	}
-	else if (!strncmp(getpath, "/watch.qtv?sid=", 15))
+	else if (URLCOMPARE(getpath, "/watch.qtv?sid=", skiplen))
 	{
-		HTTPSV_GenerateQTVStub(cluster, pend, "", getpath + 15);
+		HTTPSV_GenerateQTVStub(cluster, pend, "", getpath + skiplen);
 	}
-	else if (!strncmp(getpath, "/watch.qtv?demo=", 16))
+	else if (URLCOMPARE(getpath, "/watch.qtv?demo=", skiplen))
 	{
-		HTTPSV_GenerateQTVStub(cluster, pend, "file:", getpath + 16);
+		HTTPSV_GenerateQTVStub(cluster, pend, "file:", getpath + skiplen);
 	}
-	else if (!strncmp(getpath, "/about", 6))
+	else if (URLCOMPARE(getpath, "/admin", skiplen))
+	{
+		HTTPSV_GenerateAdmin(cluster, pend, 0, NULL);
+	}
+	else if (URLCOMPARE(getpath, "/demos", skiplen))
+	{
+		HTTPSV_GenerateDemoListing(cluster, pend);
+	}
+	else if (!strcmp(getpath, "/style.css"))
+	{
+		HTTPSV_GenerateCSSFile(cluster, pend);
+	}
+	else if (URLCOMPARE(getpath, "/levelshots/", skiplen))
+	{
+		HTTPSV_GenerateLevelshot(cluster, pend, getpath + skiplen);
+	}
+	else if (URLCOMPARE(getpath, "/dl/demos/", skiplen))
+	{
+		HTTPSV_GenerateDemoDownload(cluster, pend, getpath + skiplen);
+	}
+	else if (URLCOMPARE(getpath, "/rss", skiplen))
+	{
+		HTTPSV_GenerateRSS(cluster, pend, "");
+	}
+	else if (URLCOMPARE(getpath, "/status", skiplen))
+	{
+		HTTPSV_GenerateQTVStatus(cluster, pend);
+	}
+	else if (strstrrev(getpath, ".png"))
+	{
+		s = strchrrev(getpath, '/') + 1;
+		HTTPSV_GenerateImage(cluster, pend, s);
+	}
+	else if (!strcmp(getpath, "/about"))
 	{	
 		// Redirect them to our funky website.
 		s = "HTTP/1.0 302 Found" CRLF
@@ -409,52 +487,12 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 			CRLF;
 		Net_ProxySend(cluster, pend, s, strlen(s));
 	}
-	else if (!strncmp(getpath, "/admin", 6))
-	{
-		HTTPSV_GenerateAdmin(cluster, pend, 0, NULL);
-	}
-	else if (!strncmp(getpath, "/ ", 2))
+	else if (!strcmp(getpath, "/"))
 	{
 		s = "HTTP/1.0 302 Found" CRLF
 			"Location: /nowplaying/" CRLF
 			CRLF;
 		Net_ProxySend(cluster, pend, s, strlen(s));
-	}
-	else if (!strncmp(getpath, "/demos", 6))
-	{
-		HTTPSV_GenerateDemoListing(cluster, pend);
-	}
-	else if (!strncmp(getpath, "/style.css", 10))
-	{
-		HTTPSV_GenerateCSSFile(cluster, pend);
-	}
-	else if (!strncmp(getpath, "/qtvbg01.png", sizeof("/qtvbg01.png")-1))
-	{
-		HTTPSV_GenerateImage(cluster, pend, "qtvbg01.png");
-	}
-	else if (!strncmp(getpath, "/stream.png", sizeof("/stream.png")-1))
-	{
-		HTTPSV_GenerateImage(cluster, pend, "stream.png");
-	}
-	else if (!strncmp(getpath, "/save.png", sizeof("/save.png")-1))
-	{
-		HTTPSV_GenerateImage(cluster, pend, "save.png");
-	}
-	else if (!strncmp(getpath, "/levelshots/", sizeof("/levelshots/")-1))
-	{
-		HTTPSV_GenerateLevelshot(cluster, pend, getpath + sizeof("/levelshots/")-1);
-	}
-	else if (!strncmp(getpath, "/dl/demos/", sizeof("/dl/demos/")-1))
-	{
-		HTTPSV_GenerateDemoDownload(cluster, pend, getpath + sizeof("/dl/demos/")-1);
-	}
-	else if (!strncmp(getpath, "/rss", sizeof("/rss")-1))
-	{
-		HTTPSV_GenerateRSS(cluster, pend, "");
-	}
-	else if (!strncmp(getpath, "/status", sizeof("/status")-1))
-	{
-		HTTPSV_GenerateQTVStatus(cluster, pend);
 	}
 	else
 	{
