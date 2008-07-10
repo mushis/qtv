@@ -593,15 +593,18 @@ void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name)
 	if (dest->buffer_file)
 		Sys_Error("HTTPSV_GenerateLevelshot: dest->buffer_file");
 
-	if (!MediaPathName(pathname, sizeof(pathname), name, "levelshots")) {
+	if (!MediaPathName(pathname, sizeof(pathname), name, "levelshots"))
+	{
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
 	}
 	
 	dest->buffer_file = FS_OpenFile(HTMLFILESPATH, pathname, &s);
-	if (!dest->buffer_file) {
+	if (!dest->buffer_file) 
+	{
 		dest->buffer_file = FS_OpenFile(HTMLFILESPATH, NOTFOUNDLEVELSHOT, &s);
-		if (!dest->buffer_file) {
+		if (!dest->buffer_file)
+		{
 			HTTPSV_GenerateNotFoundError(cluster, dest);
 			return;
 		}
