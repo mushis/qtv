@@ -621,6 +621,8 @@ qbool			Sys_SafePath(const char *in);						// Absolute paths are prohibited.
 int				Sys_FileLength (FILE *f);							// Return file size, use it on file which open in BINARY mode.
 int				Sys_FileOpenRead (const char *path, FILE **hndl);	// Open file in BINARY mode and return file size, if open failed then -1 returned.
 
+char			*strstrrev(const char *s1, const char *s2);
+
 // qqshka - hmm, seems in C these are macros, i don't like macros,
 // however this functions work incorrectly on unsigned types!!!
 #undef max
@@ -905,12 +907,10 @@ unsigned int	Clcmd_UsersCount(const sv_t *qtv);
 
 typedef enum 
 {
-
 	QUL_NONE = 0,	//
 	QUL_ADD,		// User joined.
 	QUL_CHANGE,		// User changed something like name or something.
 	QUL_DEL			// User dropped.
-
 } qtvuserlist_t;
 
 // Send userlist message about "prox" to all proxies.

@@ -33,7 +33,32 @@ int Q_vsnprintf(char *buffer, size_t count, const char *format, va_list argptr)
 	return ret;
 }
 
-#endif
+#endif // _WIN32
+
+//
+// Find the occurance of a substring in a string from the end of the string.
+//
+char *strstrrev(const char *s1, const char *s2)
+{
+	const char *s1s = s1;
+	const char *s2s = s2;
+	int len1 = strlen(s1);
+	int len2 = strlen(s2);
+
+	if (len2 > len1)
+		return NULL;
+
+	s1 += len1 - 1;
+	s2 += len2 - 1;
+
+	for (; (s1 >= s1s) && (s2 >= s2s); s1--, s2--)
+	{
+		if (*s1 != *s2)
+			return NULL;
+	}
+
+	return s1;
+}
 
 #if defined(__linux__) || defined(_WIN32) || defined(__CYGWIN__)
 
@@ -101,7 +126,7 @@ size_t strlcat(char *dst, char *src, size_t siz)
 	return(dlen + (s - src));       /* count does not include NUL */
 }
 
-#endif
+#endif // defined(__linux__) || defined(_WIN32) || defined(__CYGWIN__)
 
 static unsigned long sys_timeBase = 0;
 
@@ -116,7 +141,7 @@ unsigned int Sys_Milliseconds(void)
 		sys_timeBase = timeGetTime();
 
 	return timeGetTime() - sys_timeBase;
-#else
+#else // _WIN32
 	//assume every other system follows standards.
 	struct timeval tv;
 
@@ -129,7 +154,7 @@ unsigned int Sys_Milliseconds(void)
 	}
 
 	return ((unsigned)tv.tv_sec - sys_timeBase) * 1000 + (((unsigned)tv.tv_usec) / 1000);
-#endif
+#endif // _WIN32 else
 }
 
 char	*redirect_buf		= NULL;
