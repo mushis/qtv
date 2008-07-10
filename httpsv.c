@@ -425,9 +425,9 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	getpath = geturl;
 
 	// RFC 2616 requires us to be able to parse an absolute URI also.
-	if (!strncmp(getpath, "http://", 7))
+	if (URLCOMPARE(getpath, "http://", skiplen))
 	{
-		getpath += 7;
+		getpath += skiplen;
 		while (*getpath && (*getpath != '\t') && (*getpath != '\r') && (*getpath != '\n') && (*getpath != ' ') && (*getpath != '/'))
 		{
 			getpath++;
@@ -474,7 +474,7 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	{
 		HTTPSV_GenerateQTVStatus(cluster, pend);
 	}
-	else if (strstrrev(getpath, ".png"))
+	else if (!strcmp(Sys_FileExtension(getpath), ".png"))
 	{
 		s = strchrrev(getpath, '/') + 1;
 		HTTPSV_GenerateImage(cluster, pend, s);
