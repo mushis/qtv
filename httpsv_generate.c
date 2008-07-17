@@ -284,7 +284,7 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 		oddrow = !oddrow;
 
 		// 1st cell: watch now button
-		snprintf(buffer, sizeof(buffer), "<td class='wn'><span class=\"qtvfile\"><a href=\"/watch.qtv?sid=%i\">Watch Now!</a></span></td>", streams->streamid);
+		snprintf(buffer, sizeof(buffer), "<td class='wn'><span class=\"qtvfile\"><a href=\"/watch.qtv?sid=%i\">Watch&nbsp;Now!</a></span></td>", streams->streamid);
 		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
 		// 2nd cell: server adress
