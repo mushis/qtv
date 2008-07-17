@@ -192,6 +192,16 @@
 		}
 	}
 	
+	function defaultdata($parser, $data)
+	{
+		global $ignoreline;
+	  
+		if (!$ignoreline) {
+			output($data);
+		}
+		return TRUE;
+	}
+	
 	function InsertUrl($url)
 	{
 		global $xml_parser;
@@ -220,6 +230,7 @@
 		xml_parser_set_option($xml_parser, XML_OPTION_CASE_FOLDING, false);
 		xml_set_element_handler($xml_parser, "startElement", "endElement");
 		xml_set_character_data_handler($xml_parser, "cdata");
+		xml_set_default_handler($xml_parser, "defaultdata");
 		
 		while ($data = fread($fp, 4096)) {
     		if (!xml_parse($xml_parser, $data, feof($fp))) {
