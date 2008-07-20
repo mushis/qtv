@@ -202,6 +202,46 @@
 		return TRUE;
 	}
 	
+	/**
+  * Translate literal entities to their numeric equivalents and vice
+versa.
+  *
+  * PHP's XML parser (in V 4.1.0) has problems with entities! The only
+one's that are recognized
+  * are &amp;, &lt; &gt; and &quot;. *ALL* others (like &nbsp; &copy;
+a.s.o.) cause an 
+  * XML_ERROR_UNDEFINED_ENTITY error. I reported this as bug at
+http://bugs.php.net/bug.php?id=15092
+  * The work around is to translate the entities found in the XML source
+to their numeric equivalent
+  * E.g. &nbsp; to &#160; / &copy; to &#169; a.s.o.
+  * 
+  * NOTE: Entities &amp;, &lt; &gt; and &quot; are left 'as is'
+  * 
+  * @author Sam Blum bs_php@users.sourceforge.net
+  * @param string $xmlSource The XML string
+  * @param bool   $reverse (default=FALSE) Translate numeric entities to
+literal entities.
+  * @return The XML string with translatet entities.
+  */
+	function _translateLiteral2NumericEntities($xmlSource, $reverse =
+FALSE) {
+    static $literal2NumericEntity;
+    
+    if (empty($literal2NumericEntity)) {
+      $transTbl = get_html_translation_table(HTML_ENTITIES);
+      foreach ($transTbl as $char => $entity) {
+        if (strpos('&"<>', $char) !== FALSE) continue;
+        $literal2NumericEntity[$entity] = '&#'.ord($char).';';
+      }
+    }
+    if ($reverse) {
+      return strtr($xmlSource, array_flip($literal2NumericEntity));
+    } else {
+      return strtr($xmlSource, $literal2NumericEntity);
+    }
+  }
+	
 	function InsertUrl($url)
 	{
 		global $xml_parser;
@@ -232,11 +272,24 @@
 		xml_set_character_data_handler($xml_parser, "cdata");
 		xml_set_default_handler($xml_parser, "defaultdata");
 		
-		while ($data = fread($fp, 4096)) {
-    		if (!xml_parse($xml_parser, $data, feof($fp))) {
-				break;
-			}
+		$data = "";
+		while (!feof($fp)) {
+		    $chunk = fread($fp, 4096);
+		    if ($chunk === false) {
+		      $errors .= "<p>fread on stream ended with error</p>";
+					break;
+				}
+				else {
+					$data .= $chunk;
+				}
 		}
+		$data = _translateLiteral2NumericEntities($data);
+		if (!xml_parse($xml_parser, $data, true)) {
+		  $err = xml_get_error_code($xml_parser);
+			$errors .= "<p>XML Parser returned error ".$err."</p>";
+		  $errors .= "<p>".xml_error_string($err)."</p>";
+		}
+		
 		
 		xml_parser_free($xml_parser);
 		fclose($fp);
