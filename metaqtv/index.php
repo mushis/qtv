@@ -252,7 +252,7 @@
 	}
 	else {
 		foreach ($qtvlist as $url => $name) {
-			echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</td></tr>";
+			echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</a></td></tr>";
 			InsertURL($url);
 			output_dump();
 		}
