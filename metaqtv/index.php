@@ -40,8 +40,11 @@
 	function output($s)
 	{
 		global $output_buf;
+		global $ignoreline;
 		
-		$output_buf .= $s;
+		if (!$ignoreline) {
+			$output_buf .= $s;
+		}
 	}
 	
 	function output_setval($v)
@@ -183,7 +186,7 @@
 		global $ignoreline;
 		global $inobservers;
 		
-		if ($intable && !$ignoreline) {
+		if ($intable) {
 			output($d);
 		}
 		
@@ -194,11 +197,7 @@
 	
 	function defaultdata($parser, $data)
 	{
-		global $ignoreline;
-	  
-		if (!$ignoreline) {
-			output($data);
-		}
+		output($data);
 		return TRUE;
 	}
 	
@@ -315,6 +314,9 @@ FALSE) {
 		echo "</table>";
 		echo "<div id='errors'>".$errors."</div><table>\n";
 	}
-	include "foot.html";
+	
+	echo "</table>\n";
+	echo "<p id='version'><strong><a href='http://qtv.qw-dev.net'><em>Meta</em>-QTV</a> 1.01</strong></p>\n";
+	echo "</body>\n</html>\n";
 
 ?>
