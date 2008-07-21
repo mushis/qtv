@@ -5,6 +5,8 @@
   <title>QuakeTV: Now Playing</title>
   <link rel="StyleSheet" href="style.css" type="text/css" />
 </head>
-<body><h1>QuakeTV</h1>
+<body>
+<?php @require_once('qwnetwork.php'); ?>
+<h1>QuakeTV</h1>
 <p id="subtitle">Live broadcasts from all around the world<br /><a href=".">Active only</a> | <a href="?full">Full List</a></p>
 <table id='nowplaying' cellspacing='0'>
