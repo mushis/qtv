@@ -532,6 +532,7 @@ struct sv_s
 
 	char			mapname[256];
 	char			hostname[MAX_QPATH];
+	char			hosttitle[MAX_QPATH];
 	char			gamedir[MAX_QPATH];
 	char			serverinfo[MAX_SERVERINFO_STRING];
 	movevars_t		movevars;
@@ -591,7 +592,7 @@ typedef struct cluster_s
 // main.c
 //
 
-extern			cvar_t developer, shownet, hostname, admin_password;
+extern			cvar_t developer, shownet, hostname, hosttitle, admin_password;
 extern			cluster_t g_cluster;
 extern			qbool cluster_initialized;
 void			Cluster_BuildAvailableDemoList(cluster_t *cluster);

@@ -15,6 +15,7 @@ cvar_t developer		= {"developer", ""};
 cvar_t shownet			= {"shownet", ""};
 
 cvar_t hostname			= {"hostname", DEFAULT_HOSTNAME};
+cvar_t hosttitle		= {"hosttitle", ""};
 cvar_t admin_password	= {"admin_password", ""};
 
 int SortFilesByDate(const void *a, const void *b) 
@@ -259,6 +260,7 @@ int main(int argc, char **argv)
 	Cvar_Register(&shownet);
 
 	Cvar_Register(&hostname);
+	Cvar_Register(&hosttitle);
 	Cvar_Register(&admin_password);
 
 	cluster_initialized = true;

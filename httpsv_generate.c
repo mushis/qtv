@@ -241,6 +241,8 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 	else
 		snprintf(buffer, sizeof(buffer), "<h1>QuakeTV: Now Playing on %s</h1>", hostname.string);
 	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+	snprintf(buffer, sizeof(buffer), "<h2>%s</h2>", hosttitle.string);
+	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
 	HTMLPRINT("<table id='nowplaying' cellspacing='0'>");
 	for (streams = cluster->servers; streams; streams = streams->next)
