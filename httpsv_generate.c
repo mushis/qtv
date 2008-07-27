@@ -329,6 +329,7 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 		// details if server not empty
 		if (!sv_empty) 
 		{
+			char buf[32];
 			HTMLPRINT("<tr class='notempty nebottom'>");
 			
 			// map preview
@@ -342,6 +343,13 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 			// number of observers
 			snprintf(buffer,sizeof(buffer), "<p class='observers'>Observers: <span>%u</span></p>", Clcmd_UsersCount(streams));
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+			
+			// (match) status
+			Info_ValueForKey(streams->serverinfo, "status", buf, sizeof(buf));
+			if (buf[0]) {
+				snprintf(buffer,sizeof(buffer), "<p class='status'>%s</p>", buf);
+				Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+			}
 
 			HTMLPRINT("</td></tr>");
 		}
