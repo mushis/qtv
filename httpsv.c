@@ -132,10 +132,19 @@ void HTTPSV_SendHTTPHeader(cluster_t *cluster, oproxy_t *dest, char *error_code,
 {
 	char *s;
 	char buffer[2048];
+	int ierr = atoi(error_code);
+	const char *httpreply = "OK";
+
+	switch (ierr) {
+	case 200: httpreply = "OK"; break;
+	case 400: httpreply = "Bad Request"; break;
+	case 403: httpreply = "Forbidden"; break;
+	case 404: httpreply = "Not Found"; break;
+	}
 
 	if (nocache)
 	{
-		s =	"HTTP/1.1 %s OK" CRLF
+		s =	"HTTP/1.1 %s %s" CRLF
 			"Content-Type: %s" CRLF
 			"Cache-Control: no-cache, must-revalidate" CRLF
 			"Expires: Mon, 26 Jul 1997 05:00:00 GMT" CRLF
@@ -144,13 +153,13 @@ void HTTPSV_SendHTTPHeader(cluster_t *cluster, oproxy_t *dest, char *error_code,
 	}
 	else
 	{
-		s =	"HTTP/1.1 %s OK" CRLF
+		s =	"HTTP/1.1 %s %s" CRLF
 			"Content-Type: %s" CRLF
 			"Connection: close" CRLF
 			CRLF;
 	}
 
-	snprintf(buffer, sizeof(buffer), s, error_code, content_type);
+	snprintf(buffer, sizeof(buffer), s, error_code, httpreply, content_type);
 
 	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 }
