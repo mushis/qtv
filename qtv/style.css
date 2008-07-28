@@ -85,7 +85,12 @@ padding:0;
 #nowplaying tr td table.scores tr.scodd td {
   background-color: #798691;
 }
-#nowplaying td.mappic img { border: 1px solid #798691; }
+#nowplaying td.mappic {
+  vertical-align: top;
+}
+#nowplaying td.mappic img {
+  border: 1px solid #798691;
+}
 #nowplaying tr td table.overallscores tr.teaminfo td span { 
   font-weight: bold;
   color: #8fb2d0;
