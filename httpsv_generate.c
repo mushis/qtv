@@ -538,14 +538,22 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 	for (i = 0; i < cluster->availdemoscount; i++)
 	{
 		HTMLprintf(name, sizeof(name), false, "%s", cluster->availdemos[i].name);
-		snprintf(link, sizeof(link), 
-			"<tr class='%s'>"
-			"<td class='stream'><a href='/watch.qtv?demo=%s'><img src='/stream.png' width='14' height='15' /></a></td>"
+
+		snprintf(link, sizeof(link), "<tr class='%s'><td class='stream'>", ((i % 2) ? "even" : "odd"));
+		Net_ProxySend(cluster, dest, link, strlen(link));
+		
+		if (stricmp(name + strlen(name) - 4, ".mvd") == 0) {
+			snprintf(link, sizeof(link),
+				"<a href='/watch.qtv?demo=%s'><img src='/stream.png' width='14' height='15' /></a>",
+				name);
+			Net_ProxySend(cluster, dest, link, strlen(link));
+		}
+		
+		snprintf(link, sizeof(link), "</td>"
 			"<td class='save'><a href='/dl/demos/%s'><img src='/save.png' width='16' height='16' /></a></td>"
 			"<td class='name'>%s</td><td class='size'>%i kB</td>"
 			"</tr>\n",
-			((i % 2) ? "even" : "odd"), name, name, name, cluster->availdemos[i].size/1024);
-
+			name, name, cluster->availdemos[i].size/1024);
 		Net_ProxySend(cluster, dest, link, strlen(link));
 	}
 	s = "</tbody></table>\n";
@@ -630,18 +638,33 @@ void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name)
 void HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name)
 {
 	char pathname[256];
+	qbool valid;
+	int ext;
 
 	if (dest->buffer_file)
 		Sys_Error("HTTPSV_GenerateDemoDownload: dest->buffer_file");
 
-	if (!MediaPathName(pathname, sizeof(pathname), name, demo_dir.string)
-		|| stricmp(".mvd", Sys_FileExtension(pathname))  // .mvd demos only
-	   )
+	if (!MediaPathName(pathname, sizeof(pathname), name, demo_dir.string))
 	{
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
 	}
-	
+
+	valid = false;
+	for (ext = 0; ext < demos_allowed_ext_count; ext++)
+	{
+		if (stricmp(demos_allowed_ext[ext], Sys_FileExtension(pathname)) == 0)
+		{
+			valid = true;
+		}
+	}
+
+	if (!valid)
+	{
+		HTTPSV_GenerateNotFoundError(cluster, dest);
+		return;
+	}
+
 	dest->buffer_file = fopen(pathname, "rb");
 	if (!dest->buffer_file) {
 		HTTPSV_GenerateNotFoundError(cluster, dest);

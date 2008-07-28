@@ -11,6 +11,9 @@ Contains the control routines
 #endif // _WIN32
 
 
+const char* demos_allowed_ext[] = { ".mvd", ".gz", ".zip", ".bz2" };
+const int demos_allowed_ext_count = sizeof(demos_allowed_ext)/sizeof(*demos_allowed_ext);
+
 cvar_t developer		= {"developer", ""};
 cvar_t shownet			= {"shownet", ""};
 
@@ -50,26 +53,30 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 		WIN32_FIND_DATA ffd;
 		HANDLE h;
 		char path[256];
+		int ext;
 
-		snprintf(path, sizeof(path), "%s/*.mvd", demo_dir.string);
-
-		h = FindFirstFile(path, &ffd);
-		if (h != INVALID_HANDLE_VALUE)
+		for (ext = 0; ext < demos_allowed_ext_count; ext++)
 		{
-			do
+			snprintf(path, sizeof(path), "%s/*%s", demo_dir.string, demos_allowed_ext[ext]);
+
+			h = FindFirstFile(path, &ffd);
+			if (h != INVALID_HANDLE_VALUE)
 			{
-				if (cluster->availdemoscount == sizeof(cluster->availdemos)/sizeof(cluster->availdemos[0]))
-					break;
+				do
+				{
+					if (cluster->availdemoscount == sizeof(cluster->availdemos)/sizeof(cluster->availdemos[0]))
+						break;
 
-				strlcpy(cluster->availdemos[cluster->availdemoscount].name, ffd.cFileName, sizeof(cluster->availdemos[0].name));
-				cluster->availdemos[cluster->availdemoscount].size = ffd.nFileSizeLow;
-				cluster->availdemos[cluster->availdemoscount].time = ffd.ftLastWriteTime.dwHighDateTime;
-				cluster->availdemos[cluster->availdemoscount].smalltime = ffd.ftLastWriteTime.dwLowDateTime;
-				cluster->availdemoscount++;
-			} while(FindNextFile(h, &ffd));
+					strlcpy(cluster->availdemos[cluster->availdemoscount].name, ffd.cFileName, sizeof(cluster->availdemos[0].name));
+					cluster->availdemos[cluster->availdemoscount].size = ffd.nFileSizeLow;
+					cluster->availdemos[cluster->availdemoscount].time = ffd.ftLastWriteTime.dwHighDateTime;
+					cluster->availdemos[cluster->availdemoscount].smalltime = ffd.ftLastWriteTime.dwLowDateTime;
+					cluster->availdemoscount++;
+				} while(FindNextFile(h, &ffd));
 
-			FindClose(h);
-		}
+				FindClose(h);
+			}
+		} // for
 	}
 	#else // _WIN32
 	{
@@ -77,6 +84,8 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 		struct dirent *ent;
 		struct stat sb;
 		char fullname[512];
+		bool valid;
+		int ext;
 
 		dir = opendir(demo_dir.string);	// Yeek!
 		if (dir)	
@@ -94,8 +103,15 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 				if (*ent->d_name == '.')
 					continue; // Ignore 'hidden' files.
 
-				if(stricmp(".mvd", Sys_FileExtension(ent->d_name)))
-					continue; // Ignore non *.mvd
+				valid = false;
+				for (ext = 0; ext < demos_allowed_ext_count && !valid; ext++)
+				{
+					if(stricmp(demos_allowed_ext[ext], Sys_FileExtension(ent->d_name)) == 0) {
+						valid = true;
+					}
+				}
+				if (!valid)
+					continue; // Ignore non *.mvd *.zip *.gz etc...
 
 				snprintf(fullname, sizeof(fullname), "%s/%s", demo_dir.string, ent->d_name);
 				

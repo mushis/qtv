@@ -596,6 +596,8 @@ extern			cvar_t developer, shownet, hostname, hosttitle, admin_password;
 extern			cluster_t g_cluster;
 extern			qbool cluster_initialized;
 void			Cluster_BuildAvailableDemoList(cluster_t *cluster);
+extern			const char *demos_allowed_ext[];
+extern			const int demos_allowed_ext_count;
 
 //
 // sys.c
