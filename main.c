@@ -84,7 +84,7 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 		struct dirent *ent;
 		struct stat sb;
 		char fullname[512];
-		bool valid;
+		qbool valid;
 		int ext;
 
 		dir = opendir(demo_dir.string);	// Yeek!
