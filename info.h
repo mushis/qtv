@@ -27,7 +27,7 @@ typedef struct ctxinfo_s {
 
 
 // get key in buffer
-char			*Info_ValueForKey (const char *s, const char *key, char *buffer, int buffersize);
+char			*Info_ValueForKey (const char *s, const char *const key, char *const buffer, size_t buffersize);
 // remove key from buffer
 void			Info_RemoveKey (char *s, const char *key);
 // put key in buffer

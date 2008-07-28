@@ -4,62 +4,54 @@ Manipulation with various info strings
 
 #include "qtv.h"
 
-char *Info_ValueForKey (const char *s, const char *key, char *buffer, int buffersize)
+char *Info_ValueForKey (const char *s, const char *const key, char *const buffer, size_t buffersize)
 {
-	char	pkey[1024];
-	char	*o;
+	size_t keylen = strlen(key);
+	
+	// check arguments
+	if (s[0] != '\\' || keylen == 0 || buffersize < 2) 
+		goto notfound;
+	
+	buffersize--; // make space for the null-terminator
 
-	if (*s == '\\')
-		s++;
-	while (1)
-	{
-		o = pkey;
-		while (*s != '\\')
-		{
-			if (!*s)
-			{
-				*buffer='\0';
-				return buffer;
-			}
-			*o++ = *s++;
-			if (o+2 >= pkey+sizeof(pkey))	//hrm. hackers at work..
-			{
-				*buffer='\0';
-				return buffer;
-			}
+	do {
+		size_t matched = 0;
+		const char* keyp = key;
+
+		s++; // skip backslash
+
+		while (*s && *keyp && *s == *keyp && *s != '\\') {
+			matched++;
+			++keyp;
+			++s;
 		}
-		*o = 0;
-		s++;
+		if (matched == keylen && *s == '\\') {
+			// match value
+			size_t copied = 0;
 
-		o = buffer;
-
-		while (*s != '\\' && *s)
-		{
-			if (!*s)
-			{
-				*buffer='\0';
-				return buffer;
+			s++;
+			while (*s && *s != '\\' && copied < buffersize) {	
+				buffer[copied++] = *s++;
 			}
-			*o++ = *s++;
-
-			if (o+2 >= buffer+buffersize)	//hrm. hackers at work..
-			{
-				*buffer='\0';
-				return buffer;
-			}
-		}
-		*o = 0;
-
-		if (!strcmp (key, pkey) )
-			return buffer;
-
-		if (!*s)
-		{
-			*buffer='\0';
+			buffer[copied] = '\0'; // space for this is always available, see above
 			return buffer;
 		}
-		s++;
-	}
+		else {
+			while (*s && *s != '\\') {
+				s++; // skip the key
+			}
+			if (*s) {
+				s++; // skip backslash
+			}
+			while (*s && *s != '\\') {
+				s++; // skip value
+			}
+		}
+	} while (*s);
+
+notfound:
+	buffer[0] = '\0';
+	return buffer;
 }
 
 void Info_RemoveKey (char *s, const char *key)
