@@ -1252,8 +1252,14 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 				ParseCenterprint(tv, &buf, to, mask);
 				break;
 			}
-			//	svc_killedmonster	27
-			//	svc_foundsecret		28
+			case svc_killedmonster:
+			{
+				break;
+			}
+			case svc_foundsecret:
+			{
+				break;
+			}			
 			case svc_spawnstaticsound:
 			{
 				ParseStaticSound(tv, &buf, to, mask);
@@ -1264,7 +1270,12 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 				ParseIntermission(tv, &buf, to, mask);
 				break;
 			}
-			// svc_finale			31		// [string] text
+			case svc_finale:
+			{
+				while(ReadByte(&buf))
+					;
+				break;
+			}
 			case svc_cdtrack:
 			{
 				ParseCDTrack(tv, &buf, to, mask);

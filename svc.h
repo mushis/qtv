@@ -40,8 +40,8 @@ SVC(svc_nqsignonnum)			// [qbyte]  used for the signon sequence
 
 SVC(svc_centerprint)			// [string] to put in center of the screen
 
-SVC(svc_killedmonster_UNUSED)	// WTF: why unused?
-SVC(svc_foundsecret_UNUSED)		// WTF: why unused?
+SVC(svc_killedmonster)
+SVC(svc_foundsecret)
 
 SVC(svc_spawnstaticsound)		// [coord3] [qbyte] samp [qbyte] vol [qbyte] aten
 
@@ -49,7 +49,7 @@ SVC(svc_intermission)			// [vec3_t] origin [vec3_t] angle
 
 // 31-40
 
-SVC(svc_finale_UNUSED)			// [string] text
+SVC(svc_finale)					// [string] text
 
 SVC(svc_cdtrack)				// [qbyte] track
 SVC(svc_sellscreen_UNUSED)
