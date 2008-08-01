@@ -227,6 +227,7 @@ static qbool SV_ReceivePendingProxyRequest(cluster_t *cluster, oproxy_t *pend)
 {
 	int len;
 	char *s = NULL;
+	char *inbuf = (char *)pend->inbuffer;
 
 	len = sizeof(pend->inbuffer) - pend->inbuffersize - 1;
 	len = recv(pend->sock, pend->inbuffer + pend->inbuffersize, len, 0);
@@ -257,11 +258,11 @@ static qbool SV_ReceivePendingProxyRequest(cluster_t *cluster, oproxy_t *pend)
 		return false; 	// Don't have enough yet.
 
 	// Make sure we have a request we understand.
-	if (     strncmp(pend->inbuffer, "QTV\r", 4)
-		&&   strncmp(pend->inbuffer, "QTV\n", 4)
+	if (     strncmp(inbuf, "QTV\r", 4)
+		&&   strncmp(inbuf, "QTV\n", 4)
 		&& ( !allow_http.integer 
-    			|| (    strncmp(pend->inbuffer, "GET ",  4)
-    				 && strncmp(pend->inbuffer, "POST ", 5)
+    			|| (    strncmp(inbuf, "GET ",  4)
+    				 && strncmp(inbuf, "POST ", 5)
     			   )
 		   )
 	   )
@@ -291,14 +292,15 @@ static qbool SV_ReceivePendingProxyRequest(cluster_t *cluster, oproxy_t *pend)
 static qbool SV_CheckForHTTPRequest(cluster_t *cluster, oproxy_t *pend)
 {
 	char *s = NULL;
+	char *inbuf = (char *)pend->inbuffer;
 
-	if (!strncmp(pend->inbuffer, "POST ", 5))
+	if (!strncmp(inbuf, "POST ", 5))
 	{
 		HTTPSV_PostMethod(cluster, pend);
 
 		return false;	// Not keen on this..
 	}
-	else if (!strncmp(pend->inbuffer, "GET ", 4))
+	else if (!strncmp(inbuf, "GET ", 4))
 	{
 		HTTPSV_GetMethod(cluster, pend);
 
@@ -318,7 +320,7 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 	char userinfo[sizeof(pend->inbuffer)] = {0};
 	float usableversion = 0;
 	int parse_end;
-	char *e = pend->inbuffer;
+	char *e = (char *)pend->inbuffer;
 	char *s = e;
 
 	// Parse a QTV request.

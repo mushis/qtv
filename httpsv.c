@@ -316,7 +316,7 @@ void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend)
 {
 	char tempbuf[512];
 	char *s;
-	char *postpath = pend->inbuffer + sizeof("POST ") - 1;
+	char *postpath = (char *)pend->inbuffer + sizeof("POST ") - 1;
 	char *postdata = NULL;
 	int len;
 
@@ -340,7 +340,7 @@ void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend)
 		postdata = s;
 	}
 
-	if (!HTTPSV_GetHeaderField(pend->inbuffer, "Content-Length", tempbuf, sizeof(tempbuf)))
+	if (!HTTPSV_GetHeaderField((char *)pend->inbuffer, "Content-Length", tempbuf, sizeof(tempbuf)))
 	{
 		s = "HTTP/1.1 411 OK" CRLF
 			"Content-Type: text/html" CRLF
@@ -360,7 +360,7 @@ void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend)
 		return;
 	}
 
-	len = postdata - (char*)pend->inbuffer + len;
+	len = postdata - (char *)pend->inbuffer + len;
 
 	if (len > pend->inbuffersize)
 		return;	// Still need the body.
@@ -430,7 +430,7 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	char geturl[1024];
 	int skiplen = 0;
 
-	HTTPSV_GetURLFromRequest(geturl, pend->inbuffer, sizeof(geturl));
+	HTTPSV_GetURLFromRequest(geturl, (char *)pend->inbuffer, sizeof(geturl));
 	getpath = geturl;
 
 	// RFC 2616 requires us to be able to parse an absolute URI also.
@@ -520,7 +520,7 @@ qbool HTTPSV_GetHostname(cluster_t *cluster, oproxy_t *dest, char *hostname, int
 {
 	char *s = NULL;
 
-	if (!HTTPSV_GetHeaderField(dest->inbuffer, "Host", hostname, buffersize))
+	if (!HTTPSV_GetHeaderField((char *)dest->inbuffer, "Host", hostname, buffersize))
 	{
 		HTTPSV_SendHTTPHeader(cluster, dest, "400", "text/html", true);
 		HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Error");

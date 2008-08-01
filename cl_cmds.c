@@ -988,7 +988,7 @@ void Proxy_ReadInput(sv_t *qtv, oproxy_t *prox)
 	if (prox->inbuffersize < 2)
 		return; // we need at least size
 
-	buf.data		= prox->inbuffer;
+	buf.data		= (char *)prox->inbuffer;
 	buf.cursize		= prox->inbuffersize;
 	buf.maxsize		= prox->inbuffersize;
 	buf.readpos		= 0;

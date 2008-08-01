@@ -91,7 +91,7 @@ void Net_ProxySend(cluster_t *cluster, oproxy_t *prox, char *buffer, int length)
 			{
 				// try bigger buffer, but not bigger than prox->_bufferautoadjustmaxsize_
 				int  new_size;
-				char *new_buf;
+				unsigned char *new_buf;
 
 				// basically we wants two times bigger buffer but not less than prox->_buffersize_ + length
 				new_size = max(prox->_buffersize_ + length, prox->_buffermaxsize_ * 2);
@@ -458,7 +458,7 @@ qbool Net_StopFileProxy(sv_t *qtv)
 //
 // Forward the stream on to connected clients.
 //
-void SV_ForwardStream(sv_t *qtv, char *buffer, int length)
+void SV_ForwardStream(sv_t *qtv, unsigned char *buffer, int length)
 {
 	oproxy_t *prox, *next;
 

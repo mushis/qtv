@@ -690,9 +690,7 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 	sv_t *streams;
 	char playerlist[1024];
 	char playername[32];
-	unsigned int name_len = 0;
 	unsigned int item_len = 0;
-	oproxy_t *qtvspec = NULL;
 	char hostname[1024];
 	char tmp[64];
 	int player;

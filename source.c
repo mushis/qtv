@@ -166,7 +166,7 @@ void Net_SendQTVConnectionRequest(sv_t *qtv, char *authmethod, char *challenge)
 					unsigned short crcvalue;
 
 					snprintf(hash, sizeof(hash), "%s%s", challenge, qtv->ConnectPassword);
-					crcvalue = QCRC_Block(hash, strlen(hash));
+					crcvalue = QCRC_Block((unsigned char *)hash, strlen(hash));
 					snprintf(hash, sizeof(hash), "0x%X", (unsigned int)QCRC_Value(crcvalue));
 
 					Net_UpstreamPrintf(qtv, "AUTH: CCITT\nPASSWORD: \"%s\"\n", hash);
@@ -697,7 +697,7 @@ qbool Net_ReadStream(sv_t *qtv)
 	if (maxreadable <= 0)
 		return true; // Full buffer.
 
-	buffer = qtv->buffer + qtv->buffersize;
+	buffer = (char *)(qtv->buffer + qtv->buffersize);
 
 	switch (qtv->src.type)
 	{
@@ -809,6 +809,7 @@ qbool QTV_ParseHeader(sv_t *qtv)
 {
 	float svversion;
 	int length;
+	char *qtvbuf = (char *)qtv->buffer;
 	char *start;
 	char *nl;
 	char *colon;
@@ -829,7 +830,7 @@ qbool QTV_ParseHeader(sv_t *qtv)
 	if (length < 6)
 		return false; // Not ready yet.
 
-	if (strncmp(qtv->buffer, "QTVSV ", length))
+	if (strncmp(qtvbuf, "QTVSV ", length))
 	{
 		Sys_Printf(NULL, "Server is not a QTV server (or is incompatable)\n");
 		qtv->drop = true;
@@ -838,8 +839,8 @@ qbool QTV_ParseHeader(sv_t *qtv)
 
 	// Check for 2 new lines since that indicates the end of a request.
 	{
-		end = qtv->buffer + qtv->buffersize - 1;
-		for (nl = qtv->buffer; nl < end; nl++)
+		end = qtvbuf + qtv->buffersize - 1;
+		for (nl = qtvbuf; nl < end; nl++)
 		{
 			if (nl[0] == '\n' && nl[1] == '\n')
 				break;
@@ -851,7 +852,7 @@ qbool QTV_ParseHeader(sv_t *qtv)
 
 	// We now have a complete request!
 
-	svversion = atof(qtv->buffer + 6);
+	svversion = atof(qtvbuf + 6);
 
 	// Server sent float version, but we compare only major version number here.
 	if ((int)svversion != (int)QTV_VERSION)
@@ -865,14 +866,14 @@ qbool QTV_ParseHeader(sv_t *qtv)
 	qtv->svversion = svversion; 
 
 	// Save the length of the request.
-	length = (nl - (char *)qtv->buffer) + 2;
+	length = (nl - qtvbuf) + 2;
 
 	// Get rid of the second of the two ending newlines.
 	end = nl;
 	nl[1] = '\0';
 
 	// Skip the first header row "QTV 1.0" so we get the actual request part.
-	start = strchr(qtv->buffer, '\n') + 1;
+	start = strchr(qtvbuf, '\n') + 1;
 
 	// Go through all lines in the request.
 	while ((nl = strchr(start, '\n')))
@@ -1183,7 +1184,7 @@ int QTV_ParseMVD(sv_t *qtv)
 	int packettime;
 	int forwards = 0;
 
-	float	demospeed;
+	float demospeed;
 
 	unsigned int length, nextpackettime;
 	unsigned char *buffer;
@@ -1234,7 +1235,7 @@ int QTV_ParseMVD(sv_t *qtv)
 					Sys_Error ("QTV_ParseMVD: qtv->buffersize < length");
 
 				forwards++;
-				SV_ForwardStream(qtv, qtv->buffer, length);
+				SV_ForwardStream(qtv, (char *)qtv->buffer, length);
 				qtv->buffersize -= length;
 				memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize);
 
@@ -1289,33 +1290,38 @@ int QTV_ParseMVD(sv_t *qtv)
 		if (nextpackettime >= qtv->curtime)
 			break;
 
-		switch (message_type)
+		// Read the actual message.
 		{
-			case dem_multiple:
+			char *messbuf = (char *)(buffer + lengthofs + 4);
+
+			switch (message_type)
 			{
-				// Read the player mask.
-				unsigned int mask = LittleLong(*((unsigned int *)&buffer[lengthofs - 4])); 
-				ParseMessage(qtv, buffer + lengthofs + 4, length, message_type, mask);
-				break;
-			}
-			case dem_single:
-			case dem_stats:
-			{
-				int playernum = (buffer[1] >> 3);	// These are directed to a single player. 
-				unsigned int mask = 1 << playernum; // Set the appropriate bit in the bit mask.
-				ParseMessage(qtv, buffer + lengthofs + 4, length, message_type, mask);
-				break;
-			}
-			case dem_read:
-			case dem_all:
-			{
-				ParseMessage(qtv, buffer + lengthofs + 4, length, message_type, 0xffffffff);
-				break;
-			}
-			default:
-			{
-				Sys_Printf(NULL, "Message type %i\n", message_type);
-				break;
+				case dem_multiple:
+				{
+					// Read the player mask.
+					unsigned int mask = LittleLong(*((unsigned int *)&buffer[lengthofs - 4])); 
+					ParseMessage(qtv, messbuf, length, message_type, mask);
+					break;
+				}
+				case dem_single:
+				case dem_stats:
+				{
+					int playernum = (buffer[1] >> 3);	// These are directed to a single player. 
+					unsigned int mask = 1 << playernum; // Set the appropriate bit in the bit mask.
+					ParseMessage(qtv, messbuf, length, message_type, mask);
+					break;
+				}
+				case dem_read:
+				case dem_all:
+				{
+					ParseMessage(qtv, messbuf, length, message_type, 0xffffffff);
+					break;
+				}
+				default:
+				{
+					Sys_Printf(NULL, "Message type %i\n", message_type);
+					break;
+				}
 			}
 		}
 
@@ -1326,7 +1332,7 @@ int QTV_ParseMVD(sv_t *qtv)
 			Sys_Error ("QTV_ParseMVD: qtv->buffersize < length");
 
 		forwards++;
-		SV_ForwardStream(qtv, qtv->buffer, length);
+		SV_ForwardStream(qtv, (char *)qtv->buffer, length);
 		qtv->buffersize -= length;
 		memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize);
 
