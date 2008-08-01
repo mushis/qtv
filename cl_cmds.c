@@ -184,7 +184,7 @@ void Clcmd_Say_f(sv_t *qtv, oproxy_t *prox)
 	WriteString (&msg, text);
 
 	// FIXME: well, it a good question how to send this to users
-	SV_ForwardStream(qtv, msg.data, msg.cursize);
+	SV_ForwardStream(qtv, (unsigned char *)msg.data, msg.cursize);
 }
 
 //============================================================================

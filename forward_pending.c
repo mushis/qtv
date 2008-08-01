@@ -277,7 +277,7 @@ static qbool SV_ReceivePendingProxyRequest(cluster_t *cluster, oproxy_t *pend)
 	}
 
 	// Make sure there's a double \n somewhere.
-	for (s = pend->inbuffer; *s; s++)
+	for (s = inbuf; *s; s++)
 	{
 		if (s[0] == '\n' && (s[1] == '\n' || (s[1] == '\r' && s[2] == '\n')))
 			break;
@@ -291,7 +291,6 @@ static qbool SV_ReceivePendingProxyRequest(cluster_t *cluster, oproxy_t *pend)
 
 static qbool SV_CheckForHTTPRequest(cluster_t *cluster, oproxy_t *pend)
 {
-	char *s = NULL;
 	char *inbuf = (char *)pend->inbuffer;
 
 	if (!strncmp(inbuf, "POST ", 5))

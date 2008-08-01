@@ -322,7 +322,7 @@ void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend)
 
 	// Get the post data.
 	{
-		for (s = pend->inbuffer; *s; s++)
+		for (s = (char *)pend->inbuffer; *s; s++)
 		{
 			if (s[0] == '\n' && (s[1] == '\n' || (s[1] == '\r' && s[2] == '\n')))
 				break;

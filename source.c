@@ -725,7 +725,7 @@ qbool Net_ReadStream(sv_t *qtv)
 			// Get any socket error.
 			read = sizeof(err);
 			err = 0;
-			getsockopt(qtv->src.s, SOL_SOCKET, SO_ERROR, (char *)&err, &read);
+			getsockopt(qtv->src.s, SOL_SOCKET, SO_ERROR, (char *)&err, (unsigned int *)&read);
 
 			if (err == ECONNREFUSED)
 			{
@@ -1235,7 +1235,7 @@ int QTV_ParseMVD(sv_t *qtv)
 					Sys_Error ("QTV_ParseMVD: qtv->buffersize < length");
 
 				forwards++;
-				SV_ForwardStream(qtv, (char *)qtv->buffer, length);
+				SV_ForwardStream(qtv, qtv->buffer, length);
 				qtv->buffersize -= length;
 				memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize);
 
@@ -1332,7 +1332,7 @@ int QTV_ParseMVD(sv_t *qtv)
 			Sys_Error ("QTV_ParseMVD: qtv->buffersize < length");
 
 		forwards++;
-		SV_ForwardStream(qtv, (char *)qtv->buffer, length);
+		SV_ForwardStream(qtv, qtv->buffer, length);
 		qtv->buffersize -= length;
 		memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize);
 
@@ -1419,7 +1419,7 @@ void QTV_Run(cluster_t *cluster, sv_t *qtv)
 	}
 
 	if (!QTV_ParseMVD(qtv))
-		SV_ForwardStream(qtv, "", 0); // Update IO activity of QTV clients, so we can timeout them.
+		SV_ForwardStream(qtv, (unsigned char *)"", 0); // Update IO activity of QTV clients, so we can timeout them.
 
 	Proxy_ReadProxies(qtv); // Read/parse/execute input from clients.
 }

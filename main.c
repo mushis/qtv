@@ -169,7 +169,7 @@ void Cluster_Sleep(cluster_t *cluster)
 	FD_SET(STDIN, &socketset);
 	if (STDIN >= m)
 		m = STDIN + 1;
-	#endif _WIN32
+	#endif // _WIN32
 
 
 	#ifdef _WIN32

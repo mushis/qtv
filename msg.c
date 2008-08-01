@@ -146,10 +146,10 @@ void WriteData(netmsg_t *b, const char *data, int length)
 	int i;
 	unsigned char *buf;
 
-	if (b->cursize + length > b->maxsize)	//urm, that's just too big. :(
+	if (b->cursize + length > b->maxsize)	// urm, that's just too big. :(
 		return;
-	buf = b->data+b->cursize;
+	buf = (unsigned char *)b->data + b->cursize;
 	for (i = 0; i < length; i++)
 		*buf++ = *data++;
-	b->cursize+=length;
+	b->cursize += length;
 }
