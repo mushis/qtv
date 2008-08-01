@@ -514,7 +514,7 @@ void SV_ForwardStream(sv_t *qtv, unsigned char *buffer, int length)
 		// in most cases flushing mean client does't have proper game state, so add new data is useless or just wrong.
 		// so we wait untill Net_SendConnectionMVD() will set flushing to false.
 		if (!prox->flushing && qtv->qstate >= qs_parsingconnection)
-			Net_ProxySend(&g_cluster, prox, buffer, length);
+			Net_ProxySend(&g_cluster, prox, (char *)buffer, length);
 
 		// Try and flush it.
 		Net_TryFlushProxyBuffer(&g_cluster, prox);

@@ -811,7 +811,7 @@ oproxy_t		*Net_FileProxy(sv_t *qtv, char *filename);
 qbool			Net_StopFileProxy(sv_t *qtv);
 
 // Forward the stream on to connected clients.
-void			SV_ForwardStream(sv_t *qtv, char *buffer, int length);
+void			SV_ForwardStream(sv_t *qtv, unsigned char *buffer, int length);
 
 // Register some vars.
 void			Forward_Init(void);
