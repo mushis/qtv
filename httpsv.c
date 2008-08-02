@@ -431,6 +431,7 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	int skiplen = 0;
 
 	HTTPSV_GetURLFromRequest(geturl, (char *)pend->inbuffer, sizeof(geturl));
+	HTTPSV_UnescapeURL(geturl, geturl, sizeof(geturl));
 	getpath = geturl;
 
 	// RFC 2616 requires us to be able to parse an absolute URI also.

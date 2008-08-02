@@ -373,7 +373,8 @@ void HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamtype
 	char buffer[1024];
 	char unescaped_streamid[512];
 
-	HTTPSV_UnescapeURL(streamid, unescaped_streamid, sizeof(unescaped_streamid));
+	// already called on upper level
+	// HTTPSV_UnescapeURL(streamid, unescaped_streamid, sizeof(unescaped_streamid));
 
 	// Get the hostname from the header.
 	if (!HTTPSV_GetHostname(cluster, dest, hostname, sizeof(hostname)))
