@@ -373,8 +373,7 @@ void HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamtype
 	char buffer[1024];
 	char unescaped_streamid[512];
 
-	// already called on upper level
-	// HTTPSV_UnescapeURL(streamid, unescaped_streamid, sizeof(unescaped_streamid));
+	HTTPSV_UnescapeURL(streamid, unescaped_streamid, sizeof(unescaped_streamid));
 
 	// Get the hostname from the header.
 	if (!HTTPSV_GetHostname(cluster, dest, hostname, sizeof(hostname)))
@@ -639,13 +638,16 @@ void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name)
 void HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name)
 {
 	char pathname[256];
+	char unescaped_name[1024];
 	qbool valid;
 	int ext;
+
+	HTTPSV_UnescapeURL(name, unescaped_name, sizeof(unescaped_name));
 
 	if (dest->buffer_file)
 		Sys_Error("HTTPSV_GenerateDemoDownload: dest->buffer_file");
 
-	if (!MediaPathName(pathname, sizeof(pathname), name, demo_dir.string))
+	if (!MediaPathName(pathname, sizeof(pathname), unescaped_name, demo_dir.string))
 	{
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
@@ -667,7 +669,8 @@ void HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name)
 	}
 
 	dest->buffer_file = fopen(pathname, "rb");
-	if (!dest->buffer_file) {
+	if (!dest->buffer_file) 
+	{
 		HTTPSV_GenerateNotFoundError(cluster, dest);
 		return;
 	}
