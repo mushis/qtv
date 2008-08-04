@@ -8,7 +8,7 @@
 #define CRLF "\r\n"
 #define HTMLFILESPATH "qtv"
 #define NOTFOUNDLEVELSHOT "levelshots/_notfound.jpg"
-#define HTMLPRINT(str) Net_ProxySend(cluster, dest, str "\n", strlen(str "\n"))
+#define HTMLPRINT(str) Net_ProxySend(cluster, dest, str, strlen(str))
 
 qbool IsPlayer(const playerinfo_t *p)
 {
@@ -683,7 +683,8 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 	char playername[32];
 	unsigned int item_len = 0;
 	char hostname[1024];
-	char tmp[64];
+	char tmp[2048];
+	char tmp2[2048];
 	int player;
 
 	// Get the hostname from the header.
@@ -700,20 +701,9 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 			"<channel>" CRLF
 				"<title>QTV RSS</title>" CRLF
 				"<link></link>" CRLF // TODO: Set channel link for RSS.
-				"<description>QTV Current active feeds</description>" CRLF
+				"<description>%s - QTV Current active feeds</description>" CRLF
 				"<language>en-us</language>" CRLF
 				"<pubDate></pubDate>" CRLF; // TODO: Set date when stream started?
-				
-	item_fmt = 
-				"<item>\n" CRLF
-					"<type>text/plain</type>\n" CRLF
-					"<title>%s</title>\n" CRLF 
-					"<link>%s</link>\n" CRLF
-					"<description>%s</description>\n" CRLF
-					"<pubDate>%s</pubDate>\n" CRLF
-					"<guid>%s</guid>\n" CRLF
-				"</item>\n" CRLF;
-
 	footer_fmt =
 			"</channel>" CRLF
 		"</rss>" CRLF;
@@ -721,20 +711,17 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 	link_fmt = "http://%s/watch.qtv?sid=%i";
 
 	// Estimate the size of the item buffer.
-	item_len = strlen(item_fmt) + strlen(link_fmt) + strlen(hostname) + 2048;
+	item_len = strlen(link_fmt) + strlen(hostname) + 2048;
 	s = Sys_malloc(item_len);
 
 	// Send RSS header.
-	Net_ProxySend(cluster, dest, header_fmt, strlen(header_fmt));
+	snprintf(link, sizeof(link), header_fmt, hostname);
+	Net_ProxySend(cluster, dest, link, strlen(link));
 
 	// Send RSS items.
 	for (streams = cluster->servers; streams; streams = streams->next)
 	{
-		// Skip "tcp:" prefix if any.
-		server = (strncmp(streams->server, "tcp:", sizeof("tcp:") - 1) ? streams->server : streams->server + sizeof("tcp:") - 1);
-
-		// Set the url to the stream.
-		snprintf(link, sizeof(link), link_fmt, hostname, streams->streamid);
+		HTMLPRINT("<item>");
 
 		playerlist[0] = 0;
 
@@ -743,16 +730,87 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 		{
 			if (IsPlayer(&streams->players[player]))
 			{
+				HTMLPRINT("<player>");
+
 				Info_ValueForKey(streams->players[player].userinfo, "name", tmp, sizeof(tmp));
 				HTMLprintf(playername, sizeof(playername), true, "%s", tmp);
-
+								
+				// Save a player list for the description also.
 				strlcat(playerlist, playername, sizeof(playerlist));
-				strlcat(playerlist, "\n", sizeof(playerlist));
+				strlcat(playerlist, CRLF, sizeof(playerlist));
+
+				HTMLPRINT("<name>");
+				HTMLPRINT(playername);
+				HTMLPRINT("</name>");
+
+				HTMLPRINT("<team>");
+				Info_ValueForKey(streams->players[player].userinfo, "team", tmp, sizeof(tmp));
+				HTMLprintf(tmp2, sizeof(tmp2), true, "%s", tmp);
+				HTMLPRINT(tmp2);
+				HTMLPRINT("</team>");
+
+				HTMLPRINT("<frags>");
+				HTMLprintf(tmp, sizeof(tmp), true, "%i", streams->players[player].frags);
+				HTMLPRINT(tmp);
+				HTMLPRINT("</frags>");
+
+				HTMLPRINT("<ping>");
+				HTMLprintf(tmp, sizeof(tmp), true, "%i", streams->players[player].ping);
+				HTMLPRINT(tmp);
+				HTMLPRINT("</ping>");
+
+				HTMLPRINT("<pl>");
+				HTMLprintf(tmp, sizeof(tmp), true, "%i", streams->players[player].packetloss);
+				HTMLPRINT(tmp);
+				HTMLPRINT("</pl>");
+
+				HTMLPRINT("<topcolor>");
+				Info_ValueForKey(streams->players[player].userinfo, "topcolor", tmp, sizeof(tmp));
+				HTMLprintf(tmp2, sizeof(tmp2), true, "%s", tmp);
+				HTMLPRINT(tmp2);
+				HTMLPRINT("</topcolor>");
+
+				HTMLPRINT("<bottomcolor>");
+				Info_ValueForKey(streams->players[player].userinfo, "bottomcolor", tmp, sizeof(tmp));
+				HTMLprintf(tmp2, sizeof(tmp2), true, "%s", tmp);
+				HTMLPRINT(tmp2);
+				HTMLPRINT("</bottomcolor>");
+
+				HTMLPRINT("</player>" CRLF);
 			}
 		}
 
-		snprintf(s, item_len, item_fmt, server, link, playerlist, "", "");
-		Net_ProxySend(cluster, dest, s, strlen(s));
+		// Skip "tcp:" prefix if any.
+		server = (strncmp(streams->server, "tcp:", sizeof("tcp:") - 1) ? streams->server : streams->server + sizeof("tcp:") - 1);
+
+		// Set the url to the stream.
+		snprintf(link, sizeof(link), link_fmt, hostname, streams->streamid);
+
+		item_fmt = 
+				"<type>text/plain</type>" CRLF
+				"<title>%s</title>" CRLF 
+				"<link>%s</link>" CRLF
+				"<description>%s</description>" CRLF
+				"<pubDate>%s</pubDate>" CRLF
+				"<guid>%s</guid>" CRLF
+				"<hostname>%s</hostname>" CRLF
+				"<port>%i</port>" CRLF;
+
+		{
+			// Separate the hostname and port.
+			char *t = NULL;
+			int port = 27500;
+			snprintf(tmp, sizeof(tmp), "%s", server);
+			t = tmp;
+			while (*t && (*t != ':')) ++t;
+			*t = 0;
+			port = atoi(++t);
+
+			snprintf(s, item_len, item_fmt, server, link, playerlist, "", "", tmp, port);
+			HTMLPRINT(s);
+		}
+
+		HTMLPRINT("</item>" CRLF);
 	}
 
 	Sys_free(s);
