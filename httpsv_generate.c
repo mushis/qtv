@@ -586,7 +586,7 @@ void HTTPSV_GenerateImage(cluster_t *cluster, oproxy_t *dest, char *imgfilename)
 // LEVELSHOTS
 //========================================================================
 
-static qbool MediaPathName(char *buf, size_t bufsize, char *name, char *mediadir) 
+static void MediaPathName(char *buf, size_t bufsize, char *name, char *mediadir) 
 {
 	char pathname[256];
 
@@ -595,12 +595,7 @@ static qbool MediaPathName(char *buf, size_t bufsize, char *name, char *mediadir
 	// parse requested file, its string before first space
 	COM_ParseToken(name, pathname, sizeof(pathname), " ");
 
-	if (!pathname[0])
-		return false;
-
 	snprintf(buf, bufsize, "%s/%s", mediadir, pathname);
-		
-	return Sys_SafePath(buf);
 }
 
 void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name)
@@ -611,11 +606,7 @@ void HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name)
 	if (dest->buffer_file)
 		Sys_Error("HTTPSV_GenerateLevelshot: dest->buffer_file");
 
-	if (!MediaPathName(pathname, sizeof(pathname), name, "levelshots"))
-	{
-		HTTPSV_GenerateNotFoundError(cluster, dest);
-		return;
-	}
+	MediaPathName(pathname, sizeof(pathname), name, "levelshots");
 	
 	dest->buffer_file = FS_OpenFile(HTMLFILESPATH, pathname, &s);
 	if (!dest->buffer_file) 
@@ -640,23 +631,19 @@ void HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name)
 	char pathname[256];
 	char unescaped_name[1024];
 	qbool valid;
-	int ext;
+	int ext, size;
 
 	HTTPSV_UnescapeURL(name, unescaped_name, sizeof(unescaped_name));
 
 	if (dest->buffer_file)
 		Sys_Error("HTTPSV_GenerateDemoDownload: dest->buffer_file");
 
-	if (!MediaPathName(pathname, sizeof(pathname), unescaped_name, demo_dir.string))
-	{
-		HTTPSV_GenerateNotFoundError(cluster, dest);
-		return;
-	}
+	MediaPathName(pathname, sizeof(pathname), unescaped_name, DEMO_DIR);
 
 	valid = false;
 	for (ext = 0; ext < demos_allowed_ext_count; ext++)
 	{
-		if (stricmp(demos_allowed_ext[ext], Sys_FileExtension(pathname)) == 0)
+		if (stricmp(demos_allowed_ext[ext], FS_FileExtension(pathname)) == 0)
 		{
 			valid = true;
 		}
@@ -668,7 +655,7 @@ void HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name)
 		return;
 	}
 
-	dest->buffer_file = fopen(pathname, "rb");
+	dest->buffer_file = FS_OpenFile(NULL, pathname, &size);
 	if (!dest->buffer_file) 
 	{
 		HTTPSV_GenerateNotFoundError(cluster, dest);

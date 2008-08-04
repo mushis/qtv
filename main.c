@@ -57,7 +57,7 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 
 		for (ext = 0; ext < demos_allowed_ext_count; ext++)
 		{
-			snprintf(path, sizeof(path), "%s/*%s", demo_dir.string, demos_allowed_ext[ext]);
+			snprintf(path, sizeof(path), "%s/*%s", DEMO_DIR, demos_allowed_ext[ext]);
 
 			h = FindFirstFile(path, &ffd);
 			if (h != INVALID_HANDLE_VALUE)
@@ -87,7 +87,7 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 		qbool valid;
 		int ext;
 
-		dir = opendir(demo_dir.string);	// Yeek!
+		dir = opendir(DEMO_DIR);	// Yeek!
 		if (dir)	
 		{
 			for(;;)
@@ -106,14 +106,14 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 				valid = false;
 				for (ext = 0; ext < demos_allowed_ext_count && !valid; ext++)
 				{
-					if(stricmp(demos_allowed_ext[ext], Sys_FileExtension(ent->d_name)) == 0) {
+					if(stricmp(demos_allowed_ext[ext], FS_FileExtension(ent->d_name)) == 0) {
 						valid = true;
 					}
 				}
 				if (!valid)
 					continue; // Ignore non *.mvd *.zip *.gz etc...
 
-				snprintf(fullname, sizeof(fullname), "%s/%s", demo_dir.string, ent->d_name);
+				snprintf(fullname, sizeof(fullname), "%s/%s", DEMO_DIR, ent->d_name);
 				
 				if (stat(fullname, &sb))
 					continue; // Some kind of error.

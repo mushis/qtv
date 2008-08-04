@@ -274,8 +274,9 @@ qbool Net_ConnectToTCPServer(sv_t *qtv, char *ip)
 qbool OpenDemoFile(sv_t *qtv, char *demo)
 {
 	char fullpath[1024];
+	int size;
 
-	snprintf(fullpath, sizeof(fullpath), "%s/%s", demo_dir.string, demo);
+	snprintf(fullpath, sizeof(fullpath), "%s/%s", DEMO_DIR, demo);
 
 	if (qtv->src.type != SRC_DEMO)
 	{
@@ -290,15 +291,12 @@ qbool OpenDemoFile(sv_t *qtv, char *demo)
 		qtv->src.type = SRC_DEMO; // Need SRC_DEMO type.
 	}
 
-	if(stricmp(".mvd", Sys_FileExtension(fullpath))) // .mvd demos only
+	if(stricmp(".mvd", FS_FileExtension(fullpath))) // .mvd demos only
 		return false;
 
-	if (!Sys_SafePath(fullpath)) // Absolute paths are prohibited.
-		return false;
-
-	if ((qtv->src.f = fopen(fullpath, "rb")))
+	if ((qtv->src.f = FS_OpenFile(NULL, fullpath, &size)))
 	{
-		qtv->src.f_size = Sys_FileLength(qtv->src.f);
+		qtv->src.f_size = size;
 
 		if (qtv->src.f_size > 0)
 		{
@@ -342,6 +340,8 @@ qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 	qtv->qstate				= qs_parsingQTVheader;
 
 	strlcpy(qtv->server, serverurl, sizeof(qtv->server));
+
+	strlcpy(qtv->gamedir, "qw", sizeof(qtv->gamedir)); // default gamedir is qw
 
 	init_source(qtv);
 

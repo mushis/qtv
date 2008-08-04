@@ -343,12 +343,12 @@ void Cmd_Exec_f (void)
 	}
 
 	name = Cmd_Argv(1);
-	if (!Sys_SafePath(name)) {
+	if (!FS_SafePath(name)) {
 		Sys_Printf (NULL, "exec: absolute paths are prohibited\n");
 		return;
 	}
 
-	if(stricmp(".cfg", Sys_FileExtension(name))) {
+	if(stricmp(".cfg", FS_FileExtension(name))) {
 		Sys_Printf (NULL, "exec: cfg extension required\n");
 		return;
 	}
@@ -359,7 +359,7 @@ void Cmd_Exec_f (void)
 	{
 		size = sizeof(buf);
 
-		if (!FS_ReadFile(NULL, name, buf, &size))
+		if (!FS_ReadFile("qw", name, buf, &size))
 		{
 			Sys_Printf (NULL, "exec: couldn't exec %s\n", name);
 			return;

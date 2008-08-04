@@ -619,11 +619,6 @@ void			*Sys_malloc (size_t size);
 char			*Sys_strdup (const char *src);
 #define			Sys_free(ptr) if(ptr) { free(ptr); ptr = NULL; }
 
-const char		*Sys_FileExtension (const char *in);				// Return file extension with dot, or empty string if dot not found at all.
-qbool			Sys_SafePath(const char *in);						// Absolute paths are prohibited.
-int				Sys_FileLength (FILE *f);							// Return file size, use it on file which open in BINARY mode.
-int				Sys_FileOpenRead (const char *path, FILE **hndl);	// Open file in BINARY mode and return file size, if open failed then -1 returned.
-
 int				strendswith(const char *s1, const char *s2);
 char			*strchrrev(char *str, char chr);
 
@@ -903,6 +898,7 @@ void			HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest);
 
 extern cvar_t	floodprot;
 extern cvar_t	demo_dir;
+#define DEMO_DIR (demo_dir.string[0] ? demo_dir.string : "demos")
 
 void			FixSayFloodProtect(void);
 
@@ -939,6 +935,11 @@ FILE			*FS_OpenFile(char *gamedir, char *filename, int *size);
 // in both cases after returning from function "size" will reflect actual data length.
 char			*FS_ReadFile(char *gamedir, char *filename, char *buf, int *size);
 void			FS_StripPathAndExtension(char *filepath);
+
+// Return file extension with dot, or empty string if dot not found at all.
+const char		*FS_FileExtension (const char *in);
+// Absolute paths are prohibited.
+qbool			FS_SafePath(const char *in);
 
 #ifdef __cplusplus
 }

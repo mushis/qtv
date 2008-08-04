@@ -9,25 +9,34 @@ FILE *FS_OpenFile(char *gamedir, char *filename, int *size)
 
 	size[0] = -1;
 
-	if (!gamedir || !gamedir[0])
-		gamedir = "qw"; // use qw if ommited
-
-	snprintf(name, sizeof(name), "%s/%s", gamedir, filename);
-
-	if (!(f = fopen(name, "rb")))
+	if (gamedir && gamedir[0])
 	{
-		if (strcmp(gamedir, "id1")) // we fail, try id1 gamedir, sure if it not alredy so
+		if (!f)
+		{
+			snprintf(name, sizeof(name), "%s/%s", gamedir, filename);
+			// absolute paths are prohibited
+			if (FS_SafePath(name))
+				f = fopen(name, "rb");
+		}
+
+		// if we fail, try id1 gamedir, sure if it not alredy so
+		if (!f && strcmp(gamedir, "id1"))
 		{
 			snprintf(name, sizeof(name), "id1/%s", filename);
-			f = fopen(name, "rb");
+			// absolute paths are prohibited
+			if (FS_SafePath(name))
+				f = fopen(name, "rb");
 		}
 	}
 
 	// last resort, open file as is
 	// well, need think about how it good from security point of view...
+
 	if (!f)
 	{
-		f = fopen(filename, "rb");
+		// absolute paths are prohibited
+		if (FS_SafePath(filename))
+			f = fopen(filename, "rb");
 	}
 
 	if (f)
@@ -124,3 +133,18 @@ void FS_StripPathAndExtension(char *filepath)
 
 	strlcpy(filepath, filepath + lastslash + 1, lastdot - lastslash);
 }
+
+// return file extension with dot, or empty string if dot not found at all
+const char *FS_FileExtension (const char *in)
+{
+	const char *out = strrchr(in, '.');
+
+	return ( out ? out : "" );
+}
+
+// absolute paths are prohibited
+qbool FS_SafePath(const char *in)
+{
+	return ( (in[0] == '\\' || in[0] == '/' || strstr(in, "..") || (in[0] && in[1] == ':')) ? false : true );
+}
+

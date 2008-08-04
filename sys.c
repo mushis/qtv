@@ -302,57 +302,6 @@ char *Sys_strdup (const char *src)
 	return p;
 }
 
-// return file extension with dot, or empty string if dot not found at all
-const char *Sys_FileExtension (const char *in)
-{
-	const char *out = strrchr(in, '.');
-
-	return ( out ? out : "" );
-}
-
-// absolute paths are prohibited
-qbool Sys_SafePath(const char *in)
-{
-	return ( (in[0] == '\\' || in[0] == '/' || strstr(in, "..") || (in[0] && in[1] == ':')) ? false : true );
-}
-
-// use it on file which open in BINARY mode
-int Sys_FileLength (FILE *f)
-{
-	int		pos;
-	int		end;
-
-	pos = ftell (f);
-	fseek (f, 0, SEEK_END);
-	end = ftell (f);
-	fseek (f, pos, SEEK_SET);
-
-	return end;
-}
-
-// open file in BINARY mode and return file size, if open failed then -1 returned
-int Sys_FileOpenRead (const char *path, FILE **hndl)
-{
-	FILE *f;
-	int size;
-
-	*hndl = NULL;
-
-	if (!(f = fopen(path, "rb")))
-		return -1;
-
-	if ((size = Sys_FileLength(f)) < 0) {
-		Sys_Printf(NULL, "Sys_FileOpenRead: bug\n");
-		fclose(f); // well, we open file, but size negative, close file and return -1
-		return -1;
-	}
-
-	*hndl = f;
-
-	return size;
-}
-
-
 // qqshka - hmm, seems in C this is macroses, i don't like macroses,
 // however this functions work wrong on unsigned types!!!
 

@@ -33,6 +33,8 @@ static void ParseServerData(sv_t *tv, netmsg_t *m, int to, unsigned int playerma
 	tv->clservercount = ReadLong(m);	// We don't care about server's servercount, it's all reliable data anyway.
 
 	ReadString(m, tv->gamedir, sizeof(tv->gamedir));
+	if (!tv->gamedir[0]) // default gamedir is qw
+		strlcpy(tv->gamedir, "qw", sizeof(tv->gamedir));
 
 //	tv->thisplayer = MAX_CLIENTS-1;
 	/*tv->servertime =*/ ReadFloat(m);

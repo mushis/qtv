@@ -484,7 +484,7 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	{
 		HTTPSV_GenerateQTVStatus(cluster, pend);
 	}
-	else if (!strcmp(Sys_FileExtension(getpath), ".png"))
+	else if (!strcmp(FS_FileExtension(getpath), ".png"))
 	{
 		s = strchrrev(getpath, '/') + 1;
 		HTTPSV_GenerateImage(cluster, pend, s);

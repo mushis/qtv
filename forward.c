@@ -421,7 +421,7 @@ oproxy_t *Net_FileProxy(sv_t *qtv, char *filename)
 	oproxy_t *prox;
 	FILE *f;
 
-	f = fopen(filename, "wb");
+	f = fopen(filename, "wb"); // FIXME: MAKE SURE IT SAFE PATH
 	if (!f)
 		return NULL;
 

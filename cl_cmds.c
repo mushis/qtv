@@ -434,18 +434,20 @@ static void Clcmd_Download_f(sv_t *qtv, oproxy_t *prox)
 
 	name = Cmd_Argv(1);
 
-	if (!strncmp(name, "demos/", sizeof("demos/")-1) && demo_dir.string[0])
+	if (!strncmp(name, "demos/", sizeof("demos/")-1))
 	{
 		demo_requested = true; // well, we change demos/ prefix to something different,
 							   // so this is a hint for check below, this was a demo request
-		snprintf(n, sizeof(n), "%s/%s", demo_dir.string, name + sizeof("demos/")-1);
+
+		snprintf(n, sizeof(n), "%s/%s", DEMO_DIR, name + sizeof("demos/")-1);
+
 		name = n;
 	}
 
 	Sys_ReplaceChar(name, '\\', '/');
 
 	// MUST be in a subdirectory and not abosolute path
-	if (!allow_download.integer || !Sys_SafePath(name) || !strstr(name, "/"))
+	if (!allow_download.integer || !FS_SafePath(name) || !strstr(name, "/"))
 		goto deny_download;
 
 	if      (!strncmp(name, "skins/", sizeof("skins/")-1))
@@ -456,7 +458,7 @@ static void Clcmd_Download_f(sv_t *qtv, oproxy_t *prox)
 		allow_dl = allow_download_sounds.integer;
 	else if (!strncmp(name, "maps/",  sizeof("maps/") -1))
 		allow_dl = allow_download_maps.integer;
-	else if (demo_requested || !strncmp(name, "demos/", sizeof("demos/")-1))
+	else if (demo_requested)
 		allow_dl = allow_download_demos.integer;
 	else
 		allow_dl = allow_download_other.integer;
@@ -471,7 +473,10 @@ static void Clcmd_Download_f(sv_t *qtv, oproxy_t *prox)
 	for (p = name; *p; p++)
 		*p = (char)tolower(*p);
 
-	prox->download = FS_OpenFile(qtv->gamedir, name, &prox->downloadsize);
+	if (demo_requested)
+		prox->download = FS_OpenFile(NULL, name, &prox->downloadsize);
+	else
+		prox->download = FS_OpenFile(qtv->gamedir[0] ? qtv->gamedir : "qw", name, &prox->downloadsize);
 	prox->downloadcount = 0;
 
 	if (!prox->download)
