@@ -132,6 +132,9 @@ void Source_Init(void)
 	Cvar_Register (&maxservers);
 	Cvar_Register (&upstream_timeout);
 	Cvar_Register (&parse_delay);
+	Cvar_Register (&qtv_reconnect_delay);
+	Cvar_Register (&qtv_max_reconnect_delay);
+	Cvar_Register (&qtv_backoff);
 
 	Cmd_AddCommand ("qtv", qtv_f);
 	Cmd_AddCommand ("playdemo", playdemo_f);

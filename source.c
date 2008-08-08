@@ -56,9 +56,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <signal.h>
 #endif
 
-cvar_t maxservers		= {"maxservers", "100"};
-cvar_t upstream_timeout	= {"upstream_timeout", "60"};
-cvar_t parse_delay	    = {"parse_delay", "7"};
+cvar_t maxservers				= {"maxservers", "100"};
+cvar_t upstream_timeout			= {"upstream_timeout", "60"};
+cvar_t parse_delay				= {"parse_delay", "7"};
+cvar_t qtv_reconnect_delay		= {"qtv_reconnect_delay", "30"};
+cvar_t qtv_max_reconnect_delay	= {"qtv_max_reconnect_delay", "86400"}; // 24 hours.
+cvar_t qtv_backoff				= {"qtv_backoff", "1"};
 
 #define BUFFERTIME 10	// secords for artificial delay, so we can buffer things properly.
 
@@ -324,20 +327,32 @@ qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 {
 	char *at;
 	char *ip = NULL;
+	unsigned int now;
 	int offset = ((int)&(((sv_t *)0)->mem_set_point));
 
 	close_source(qtv, "QTV_Connect");
 
-    // And here we memset() not whole sv_t struct, but start from some offset, 
-	// since we want to save some stuff between connections.
+	// We want to save some stuff between connections, so only memset
+	// a part of the sv_t struct.
 	memset(((unsigned char*)qtv + offset), 0, sizeof(*qtv) - offset);
 
-	// And set as much as possibile fields
-	qtv->curtime 			= Sys_Milliseconds();
-	qtv->NextConnectAttempt = Sys_Milliseconds() + RECONNECT_TIME;	// Wait half a minuite before trying to reconnect.
-	qtv->io_time			= Sys_Milliseconds();
-
+	// Set some state information that was cleared.
+	now						= Sys_Milliseconds();
+	qtv->curtime			= now;
+	qtv->io_time			= now;
 	qtv->qstate				= qs_parsingQTVheader;
+
+	if (qtv_backoff.integer)
+	{
+		// Back off when trying to reconnect to a QTV source.
+		unsigned int real_delay = min(qtv_max_reconnect_delay.integer, (qtv_reconnect_delay.integer * qtv->connection_attempts));
+		qtv->NextConnectAttempt = now + (real_delay * 1000);
+	}
+	else
+	{
+		// Wait before trying to reconnect, 30 seconds default.
+		qtv->NextConnectAttempt = now + (qtv_reconnect_delay.integer * 1000);
+	}
 
 	strlcpy(qtv->server, serverurl, sizeof(qtv->server));
 
@@ -404,6 +419,7 @@ qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 				Sys_Printf(NULL, "Playing from file %s\n", ip);
 				QTV_SetupFrames(qtv); // This memset to 0 too some data and something also.
 				qtv->parsetime = Sys_Milliseconds();
+				qtv->connection_attempts = 0;
 				return true;
 			}
 
@@ -413,9 +429,11 @@ qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 		}
 		case SRC_TCP:
 		{
-			if (Net_ConnectToTCPServer(qtv, ip)) {  // seems success
-				QTV_SetupFrames(qtv); // this memset to 0 too some data and something also
+			if (Net_ConnectToTCPServer(qtv, ip)) 
+			{
+				QTV_SetupFrames(qtv); // This memset to 0 too some data and something also.
 				qtv->parsetime = Sys_Milliseconds() + BUFFERTIME * 1000; // some delay before parse
+				qtv->connection_attempts = 0;
 				return true;
 			}
 
@@ -1349,7 +1367,7 @@ int QTV_ParseMVD(sv_t *qtv)
 	// Well, may be that not the proper way, but should work OK.
 	
 	if (qtv->src.type != SRC_BAD || forwards)
-		qtv->NextConnectAttempt = qtv->curtime + (qtv->src.type == SRC_DEMO ? DEMO_RECONNECT_TIME : RECONNECT_TIME);
+		qtv->NextConnectAttempt = qtv->curtime + (qtv->src.type == SRC_DEMO ? DEMO_RECONNECT_TIME : (qtv_reconnect_delay.integer * 1000));
 
 	return forwards;
 }
@@ -1393,7 +1411,10 @@ void QTV_Run(cluster_t *cluster, sv_t *qtv)
 		if (qtv->curtime >= qtv->NextConnectAttempt)
 		{
 			if (!QTV_Connect(qtv, qtv->server))
+			{
+				qtv->connection_attempts++;
 				return;
+			}
 		}
 	}
 

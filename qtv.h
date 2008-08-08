@@ -478,6 +478,8 @@ struct sv_s
 	lastscores_t	lastscores[MAX_LASTSCORES];		// Here we store lastscores.
 	int				lastscores_idx;					// Index, well it helps understand where to save new lastscore.
 
+	unsigned int	connection_attempts;			// The number of times we've tried to connect unsuccessfully (used for backing off).
+
 	//
 	// Fields above saved on each QTV_Connect()
 	//
@@ -663,6 +665,9 @@ char			*COM_ParseToken (char *data, char *out, int outsize, const char *punctuat
 extern cvar_t	maxservers;
 extern cvar_t	upstream_timeout;
 extern cvar_t	parse_delay;
+extern cvar_t	qtv_reconnect_delay;
+extern cvar_t	qtv_max_reconnect_delay;
+extern cvar_t	qtv_backoff;
 
 
 #define dem_cmd			0
@@ -865,7 +870,7 @@ void			ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask);
 // httpsv.c
 //
 
-void			HTMLprintf(char *outb, int outl, qbool qfont, const char *fmt, ...);
+char			*HTMLprintf(char *outb, int outl, qbool qfont, const char *fmt, ...);
 void			HTTPSV_SendHTTPHeader(cluster_t *cluster, oproxy_t *dest, char *error_code, char *content_type, qbool nocache);
 void			HTTPSV_SendHTMLHeader(cluster_t *cluster, oproxy_t *dest, char *title);
 void			HTTPSV_SendHTMLFooter(cluster_t *cluster, oproxy_t *dest);

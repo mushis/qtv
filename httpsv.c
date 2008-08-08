@@ -43,7 +43,7 @@ static const char qfont_table[256] = {
 	'x', 'y', 'z', '{', '|', '}', '~', '<'
 };
 
-void HTMLprintf(char *outb, int outl, qbool qfont, const char *fmt, ...)
+char *HTMLprintf(char *outb, int outl, qbool qfont, const char *fmt, ...)
 {
 	va_list val;
 	char qfmt[8192*4];
@@ -93,6 +93,8 @@ void HTMLprintf(char *outb, int outl, qbool qfont, const char *fmt, ...)
 		inb++;
 	}
 	*outb++ = 0;
+
+	return outb;
 }
 
 int HTTPSV_UnescapeURL(const char *url, char *out, size_t outsize)

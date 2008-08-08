@@ -704,6 +704,7 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 				"<description>%s - QTV Current active feeds</description>" CRLF
 				"<language>en-us</language>" CRLF
 				"<pubDate></pubDate>" CRLF; // TODO: Set date when stream started?
+	
 	footer_fmt =
 			"</channel>" CRLF
 		"</rss>" CRLF;
@@ -734,47 +735,47 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 
 				Info_ValueForKey(streams->players[player].userinfo, "name", tmp, sizeof(tmp));
 				HTMLprintf(playername, sizeof(playername), true, "%s", tmp);
-								
+
 				// Save a player list for the description also.
 				strlcat(playerlist, playername, sizeof(playerlist));
 				strlcat(playerlist, CRLF, sizeof(playerlist));
 
 				HTMLPRINT("<name>");
 				HTMLPRINT(playername);
-				HTMLPRINT("</name>");
+				HTMLPRINT("</name>" CRLF);
 
 				HTMLPRINT("<team>");
 				Info_ValueForKey(streams->players[player].userinfo, "team", tmp, sizeof(tmp));
 				HTMLprintf(tmp2, sizeof(tmp2), true, "%s", tmp);
 				HTMLPRINT(tmp2);
-				HTMLPRINT("</team>");
+				HTMLPRINT("</team>" CRLF);
 
 				HTMLPRINT("<frags>");
 				HTMLprintf(tmp, sizeof(tmp), true, "%i", streams->players[player].frags);
 				HTMLPRINT(tmp);
-				HTMLPRINT("</frags>");
+				HTMLPRINT("</frags>" CRLF);
 
 				HTMLPRINT("<ping>");
 				HTMLprintf(tmp, sizeof(tmp), true, "%i", streams->players[player].ping);
 				HTMLPRINT(tmp);
-				HTMLPRINT("</ping>");
+				HTMLPRINT("</ping>" CRLF);
 
 				HTMLPRINT("<pl>");
 				HTMLprintf(tmp, sizeof(tmp), true, "%i", streams->players[player].packetloss);
 				HTMLPRINT(tmp);
-				HTMLPRINT("</pl>");
+				HTMLPRINT("</pl>" CRLF);
 
 				HTMLPRINT("<topcolor>");
 				Info_ValueForKey(streams->players[player].userinfo, "topcolor", tmp, sizeof(tmp));
 				HTMLprintf(tmp2, sizeof(tmp2), true, "%s", tmp);
 				HTMLPRINT(tmp2);
-				HTMLPRINT("</topcolor>");
+				HTMLPRINT("</topcolor>" CRLF);
 
 				HTMLPRINT("<bottomcolor>");
 				Info_ValueForKey(streams->players[player].userinfo, "bottomcolor", tmp, sizeof(tmp));
 				HTMLprintf(tmp2, sizeof(tmp2), true, "%s", tmp);
 				HTMLPRINT(tmp2);
-				HTMLPRINT("</bottomcolor>");
+				HTMLPRINT("</bottomcolor>" CRLF);
 
 				HTMLPRINT("</player>" CRLF);
 			}
@@ -786,7 +787,7 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 		// Set the url to the stream.
 		snprintf(link, sizeof(link), link_fmt, hostname, streams->streamid);
 
-		item_fmt = 
+		item_fmt = CRLF
 				"<type>text/plain</type>" CRLF
 				"<title>%s</title>" CRLF 
 				"<link>%s</link>" CRLF
