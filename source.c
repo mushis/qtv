@@ -323,6 +323,49 @@ void QTV_SetupFrames(sv_t *qtv)
 		qtv->frame[i].maxents = MAX_DEMO_PACKET_ENTITIES;
 }
 
+#define RECONNECT_DELAY ((unsigned int)min(qtv_max_reconnect_delay.integer, (qtv_reconnect_delay.integer * (qtv->connection_attempts))))
+
+void QTV_ResetReconnectDelay(sv_t *qtv)
+{
+	qtv->connection_attempts = 1;
+
+	// Because we backoff by x2 each time, make sure we 
+	// start backing off by the value the user specified by dividing it by 2 :p
+	qtv->connection_delay = max(2, qtv_reconnect_delay.integer / 2);
+}
+
+unsigned int QTV_GetReconnectDelay(sv_t *qtv)
+{
+	unsigned int delay = qtv_reconnect_delay.integer;
+
+	switch (qtv_backoff.integer)
+	{
+		default:
+		case 1:
+			delay = (unsigned int)(qtv->connection_delay * 2);
+			break;
+		case 2:
+			delay = (unsigned int)(qtv_reconnect_delay.integer * qtv->connection_attempts);
+			break;
+	}
+
+	return (unsigned int)min(qtv_max_reconnect_delay.integer, delay);
+}
+
+void QTV_SetNextConnectionAttempt(sv_t *qtv)
+{
+	if (qtv_backoff.integer)
+	{
+		// Back off when trying to reconnect to a QTV source.
+		qtv->NextConnectAttempt = Sys_Milliseconds() + (QTV_GetReconnectDelay(qtv) * 1000);
+	}
+	else
+	{
+		// Wait before trying to reconnect, 30 seconds default.
+		qtv->NextConnectAttempt = Sys_Milliseconds() + (qtv_reconnect_delay.integer * 1000);
+	}
+}
+
 qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 {
 	char *at;
@@ -342,19 +385,9 @@ qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 	qtv->io_time			= now;
 	qtv->qstate				= qs_parsingQTVheader;
 
-	if (qtv_backoff.integer)
-	{
-		// Back off when trying to reconnect to a QTV source.
-		unsigned int real_delay = min(qtv_max_reconnect_delay.integer, (qtv_reconnect_delay.integer * (qtv->connection_attempts + 1)));
-		qtv->NextConnectAttempt = now + (real_delay * 1000);
-	}
-	else
-	{
-		// Wait before trying to reconnect, 30 seconds default.
-		qtv->NextConnectAttempt = now + (qtv_reconnect_delay.integer * 1000);
-	}
-
 	strlcpy(qtv->server, serverurl, sizeof(qtv->server));
+
+	QTV_SetNextConnectionAttempt(qtv);
 
 	strlcpy(qtv->gamedir, "qw", sizeof(qtv->gamedir)); // default gamedir is qw
 
@@ -419,7 +452,6 @@ qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 				Sys_Printf(NULL, "Playing from file %s\n", ip);
 				QTV_SetupFrames(qtv); // This memset to 0 too some data and something also.
 				qtv->parsetime = Sys_Milliseconds();
-				qtv->connection_attempts = 0;
 				return true;
 			}
 
@@ -433,7 +465,6 @@ qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 			{
 				QTV_SetupFrames(qtv); // This memset to 0 too some data and something also.
 				qtv->parsetime = Sys_Milliseconds() + BUFFERTIME * 1000; // some delay before parse
-				qtv->connection_attempts = 0;
 				return true;
 			}
 
@@ -541,6 +572,8 @@ sv_t *QTV_NewServerConnection(cluster_t *cluster, const char *server, char *pass
 	// Connect to and link QTV to the cluster.
 	{
 		sv_t *last;
+
+		QTV_ResetReconnectDelay(qtv);
 
 		// Try connecting to the new QTV.
 		if (!QTV_Connect(qtv, server) && !force)
@@ -747,11 +780,11 @@ qbool Net_ReadStream(sv_t *qtv)
 
 			if (err == ECONNREFUSED)
 			{
-				Sys_Printf(NULL, "Error: server %s refused connection\n", qtv->server);
-
+				Sys_Printf(NULL, "%s: Socket error: Server refused connection. %u attempts. Next reconnect in %u seconds...\n", qtv->server, qtv->connection_attempts, QTV_GetReconnectDelay(qtv));
 				close_source(qtv, "Net_ReadStream");
 				qtv->buffersize = qtv->UpstreamBufferSize = 0; // Probably contains initial connection request info.
-
+				qtv->connection_attempts++;
+				qtv->connection_delay = QTV_GetReconnectDelay(qtv);
 				return false;
 			}
 
@@ -797,15 +830,15 @@ qbool Net_ReadStream(sv_t *qtv)
 		    {
 				case SRC_DEMO:
 				{
-					Sys_Printf(NULL, "Error: End of file %s\n", qtv->server);
+					Sys_Printf(NULL, "%s: Error: End of file\n", qtv->server);
 					break;
 				}
 				case SRC_TCP:
 				{
 					if (read)
-						Sys_Printf(NULL, "Error: source socket error %i %s\n", qerrno, qtv->server);
+						Sys_Printf(NULL, "%s: Error: source socket error %i.\n", qtv->server, qerrno);
 					else
-						Sys_Printf(NULL, "Error: server disconnected %s\n", qtv->server);
+						Sys_Printf(NULL, "%s: Error: server disconnected.\n", qtv->server);
 					break;
 				}
 				default:
@@ -854,6 +887,8 @@ qbool QTV_ParseHeader(sv_t *qtv)
 		qtv->drop = true;
 		return false;
 	}
+
+	QTV_ResetReconnectDelay(qtv);
 
 	// Check for 2 new lines since that indicates the end of a request.
 	{
@@ -955,7 +990,7 @@ qbool QTV_ParseHeader(sv_t *qtv)
 
 			if (qtv->DisconnectWhenNooneIsWatching)
 			{
-				qtv->drop = true;	// If its a user regi	stered stream, drop it immediatly.
+				qtv->drop = true;	// If its a user registered stream, drop it immediatly.
 			}
 			else 
 			{
@@ -1367,7 +1402,9 @@ int QTV_ParseMVD(sv_t *qtv)
 	// Well, may be that not the proper way, but should work OK.
 	
 	if (qtv->src.type != SRC_BAD || forwards)
-		qtv->NextConnectAttempt = qtv->curtime + (qtv->src.type == SRC_DEMO ? DEMO_RECONNECT_TIME : (qtv_reconnect_delay.integer * 1000));
+	{
+		QTV_SetNextConnectionAttempt(qtv);
+	}
 
 	return forwards;
 }
@@ -1412,7 +1449,6 @@ void QTV_Run(cluster_t *cluster, sv_t *qtv)
 		{
 			if (!QTV_Connect(qtv, qtv->server))
 			{
-				qtv->connection_attempts++;
 				return;
 			}
 		}

@@ -478,7 +478,8 @@ struct sv_s
 	lastscores_t	lastscores[MAX_LASTSCORES];		// Here we store lastscores.
 	int				lastscores_idx;					// Index, well it helps understand where to save new lastscore.
 
-	unsigned int	connection_attempts;			// The number of times we've tried to connect unsuccessfully (used for backing off).
+	unsigned int	connection_attempts;			// The number of times we've tried to connect unsuccessfully (used for backing off), used when qtv_backoff == 2.
+	unsigned int	connection_delay;				// Time to reconnect try, used when qtv_backoff == 1.
 
 	//
 	// Fields above saved on each QTV_Connect()
