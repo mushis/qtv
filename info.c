@@ -397,7 +397,7 @@ void Info_PrintList(ctxinfo_t *ctx)
 		cnt++;
 	}
 
-	Sys_Printf(NULL, "%d infos\n", cnt);
+	Sys_Printf(NULL, " %d infos\n", cnt);
 }
 
 #ifdef INFODEBUG

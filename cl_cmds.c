@@ -77,7 +77,7 @@ qbool isSayFlood(sv_t *qtv, oproxy_t *p)
 	if ( g_cluster.curtime < p->fp_s.locked )
 	{
 		Prox_Printf(&g_cluster, p, dem_all, (unsigned)-1, PRINT_CHAT, 
-				"You can't talk for %d more seconds\n",	(p->fp_s.locked - g_cluster.curtime) / 1000);
+			"You can't talk for %d more seconds\n", (p->fp_s.locked - g_cluster.curtime) / 1000);
 
 		return true; // flooder
 	}
@@ -136,16 +136,17 @@ void Clcmd_Say_f(sv_t *qtv, oproxy_t *prox)
 	if (isSayFlood(qtv, prox))
 		return; // flooder
 
-// { get rid of quotes
-	args = Cmd_Args();
-
-	if (args[0] == '"' && (j = strlen(args)) > 2)
+	// Get rid of quotes
 	{
-		strlcpy(text2, args + 1, sizeof(text2));
-		text2[(int)bound(0, j - 2, sizeof(text2)-1)] = 0;
-		args = text2;
+		args = Cmd_Args();
+
+		if (args[0] == '"' && (j = strlen(args)) > 2)
+		{
+			strlcpy(text2, args + 1, sizeof(text2));
+			text2[(int)bound(0, j - 2, sizeof(text2)-1)] = 0;
+			args = text2;
+		}
 	}
-// }
 
 	prefix = "";
 
@@ -197,19 +198,19 @@ void Clcmd_Users_f(sv_t *qtv, oproxy_t *prox)
 	oproxy_t *tmp;
 	char name[MAX_INFO_KEY];
 
-	Sys_Printf (NULL, "userid name\n"
-					  "------ ----\n");
+	Sys_Printf (NULL, "%s: userid name\n"
+					  "%s: ------ ----\n", qtv->server, qtv->server);
 
 	for (c = 0, tmp = qtv->proxies; tmp; tmp = tmp->next)
 	{
 		if (tmp->drop)
 			continue;
 
-		Sys_Printf(NULL, "%6d %s\n", tmp->id, Info_Get(&tmp->ctx, "name", name, sizeof(name)));
+		Sys_Printf(NULL, "%s: %6d %s\n", qtv->server, tmp->id, Info_Get(&tmp->ctx, "name", name, sizeof(name)));
 		c++;
 	}	
 
-	Sys_Printf(NULL, "%i total users\n", c);
+	Sys_Printf(NULL, "%s: %i total users\n", qtv->server, c);
 }
 
 // { extension which allow have user list on client side
@@ -590,7 +591,7 @@ static void Clcmd_Ptrack_f(sv_t *qtv, oproxy_t *prox)
 
 	if (prox->pov < 0 || prox->pov >= MAX_CLIENTS)
 	{
-		Sys_Printf(NULL, "Invalid client to track: %d\n", prox->pov);
+		Sys_Printf(NULL, "%s: Invalid client to track: %d\n", qtv->server, prox->pov);
 		prox->pov = 0;
 		apply_pov(qtv, prox);
 		return;
@@ -608,7 +609,7 @@ static void Clcmd_Follow_f(sv_t *qtv, oproxy_t *prox)
 	if (Cmd_Argc() != 2)
 	{
 		prox->follow_id = 0;
-		Sys_Printf(NULL, "follow: turned off\n");
+		Sys_Printf(NULL, "%s: follow: turned off\n", qtv->server);
 		return;
 	}
 
@@ -616,19 +617,19 @@ static void Clcmd_Follow_f(sv_t *qtv, oproxy_t *prox)
 
 	if (prox->follow_id == prox->id)
 	{
-		Sys_Printf(NULL, "follow: Is it really wise for Silicon Valley to sic the government on Microsoft?\n");
+		Sys_Printf(NULL, "%s: follow: Is it really wise for Silicon Valley to sic the government on Microsoft?\n", qtv->server);
 		prox->follow_id = 0;
 		return;
 	}
 
 	if (!(tmp = proxy_by_id(qtv, prox->follow_id)))
 	{
-		Sys_Printf(NULL, "follow: no user with id %d\n", prox->follow_id);
+		Sys_Printf(NULL, "%s: follow: no user with id %d\n", qtv->server, prox->follow_id);
 		prox->follow_id = 0;
 		return;
 	}
 
-	Sys_Printf(NULL, "follow: %d\n", tmp->id);
+	Sys_Printf(NULL, "%s: follow: %d\n", qtv->server, tmp->id);
 }
 
 //============================================================================
@@ -655,13 +656,13 @@ static void Clcmd_send_list(sv_t *qtv, oproxy_t *prox, int svc)
 
 	if (!prox->flushing)
 	{
-		Sys_Printf(NULL, "wrong usage of %s\n", Cmd_Argv(0));
+		Sys_Printf(NULL, "%s: wrong usage of %s\n", qtv->server, Cmd_Argv(0));
 		return; // kidding us?
 	}
 
 	if (qtv->qstate != qs_active || !*qtv->mapname)
 	{
-		Sys_Printf(NULL, "proxy not ready for %s\n", Cmd_Argv(0));
+		Sys_Printf(NULL, "%s: proxy #%i not ready for %s\n", qtv->server, prox->id, Cmd_Argv(0));
 		prox->flushing = true; // so they get Net_SendConnectionMVD() ASAP later
 		return;
 	}
@@ -679,7 +680,7 @@ static void Clcmd_send_list(sv_t *qtv, oproxy_t *prox, int svc)
 
 	if (prox->flushing)
 	{
-		Sys_Printf(NULL, "Connection data is too big, dropping proxy client\n");
+		Sys_Printf(NULL, "%s: Connection data is too big, dropping proxy client #i.\n", qtv->server, prox->id);
 		prox->drop = true;	//this is unfortunate...
 	}
 	else
@@ -690,7 +691,7 @@ static void Clcmd_Soundlist_f(sv_t *qtv, oproxy_t *prox)
 {
 	if (prox->flushing != PS_WAIT_SOUNDLIST)
 	{
-		Sys_Printf(NULL, "wrong usage of %s\n", Cmd_Argv(0));
+		Sys_Printf(NULL, "%s: wrong usage of %s by proxy #%i.\n", qtv->server, Cmd_Argv(0), prox->id);
 		return;
 	}
 
@@ -701,7 +702,7 @@ static void Clcmd_Modellist_f(sv_t *qtv, oproxy_t *prox)
 {
 	if (prox->flushing != PS_WAIT_MODELLIST)
 	{
-		Sys_Printf(NULL, "wrong usage of %s\n", Cmd_Argv(0));
+		Sys_Printf(NULL, "%s: wrong usage of %s by proxy #%i.\n", qtv->server, Cmd_Argv(0), prox->id);
 		return;
 	}
 
@@ -718,14 +719,14 @@ static void Clcmd_Spawn_f(sv_t *qtv, oproxy_t *prox)
 	{
 		// ignore warning if different spawn count, since its probably ok
 		if (atoi(Cmd_Argv(1)) == qtv->clservercount)
-			Sys_Printf(NULL, "wrong usage of %s\n", Cmd_Argv(0));
+			Sys_Printf(NULL, "%s: wrong usage of %s by proxy #%i.\n", qtv->server, Cmd_Argv(0), prox->id);
 
 		return;
 	}
 
 	if (qtv->qstate != qs_active || !*qtv->mapname)
 	{
-		Sys_Printf(NULL, "proxy not ready for %s\n", Cmd_Argv(0));
+		Sys_Printf(NULL, "%s: proxy not ready for %s\n", qtv->server, Cmd_Argv(0), prox->id);
 		prox->flushing = true; // so they get Net_SendConnectionMVD() ASAP later
 		return;
 	}
@@ -742,7 +743,7 @@ static void Clcmd_Spawn_f(sv_t *qtv, oproxy_t *prox)
 		msg.cursize = 0;
 	}
 
-	//playerstates arn't actually delta-compressed, so the first send (simply forwarded from server) entirly replaces the old.
+	// playerstates arn't actually delta-compressed, so the first send (simply forwarded from server) entirly replaces the old.
 	// not really, we need send something from what client/other proxy/whatever will deltaing
 	// at least model index is really required, otherwise we got invisible models!
 	Prox_SendInitialPlayers(qtv, prox, &msg);
@@ -766,7 +767,7 @@ static void Clcmd_Spawn_f(sv_t *qtv, oproxy_t *prox)
 
 	if (prox->flushing)
 	{
-		Sys_Printf(NULL, "Connection data is too big, dropping proxy client\n");
+		Sys_Printf(NULL, "%s: Connection data is too big, dropping proxy client #%i.\n", qtv->server, prox->id);
 		prox->drop = true;	//this is unfortunate...
 	}
 	else
@@ -783,13 +784,13 @@ static void Clcmd_SetInfo_f (sv_t *qtv, oproxy_t *prox)
 	char oldval[MAX_INFO_KEY], newval[MAX_INFO_KEY];
 
 	if (Cmd_Argc() == 1) {
-		Sys_Printf(NULL, "User info settings:\n");
+		Sys_Printf(NULL, "%s: User info settings (proxy #%i):\n", qtv->server, prox->id);
 		Info_PrintList(&prox->ctx);
 		return;
 	}
 
 	if (Cmd_Argc() != 3) {
-		Sys_Printf(NULL, "Usage: setinfo [ <key> <value> ]\n");
+		Sys_Printf(NULL, "%s: Usage: setinfo [ <key> <value> ] (proxy #%i)\n", qtv->server, prox->id);
 		return;
 	}
 
@@ -839,10 +840,10 @@ static void Clcmd_LastScores_f (sv_t *qtv, oproxy_t *prox)
 			 || (strcmp(le1, e1) || strcmp(le2, e2)) // changed teams, duelers
 		   )
 		{
-			Sys_Printf(NULL, "\x90%s \366\363 %s\x91 %s\n", e1, e2, cur); // [dag vs qqshka] duel
+			Sys_Printf(NULL, "%s (proxy #%3i): \x90%s \366\363 %s\x91 %s\n", qtv->server, prox->id, e1, e2, cur); // [dag vs qqshka] duel
 		}
 
-		Sys_Printf(NULL, "   %3s:%-3s \x8D %-8.8s %s\n", s1, s2, map, date); // -5:100 > dm6
+		Sys_Printf(NULL, "%s (proxy #%3i):   %3s:%-3s \x8D %-8.8s %s\n", qtv->server, prox->id, s1, s2, map, date); // -5:100 > dm6
 
 		last = cur;
 		le1 = e1;
@@ -852,9 +853,9 @@ static void Clcmd_LastScores_f (sv_t *qtv, oproxy_t *prox)
 
 	if ( cnt )
 		Sys_Printf(NULL,  "\n"
-						  "Lastscores: %d entr%s found\n", cnt, cnt ? "y" : "ies");
+		"%s (proxy #%3i): Lastscores: %d entr%s found\n", qtv->server, prox->id, cnt, (cnt ? "y" : "ies"));
 	else
-		Sys_Printf(NULL,  "Lastscores data empty\n");
+		Sys_Printf(NULL,  "%s (proxy #%3i): Lastscores data empty\n", qtv->server, prox->id);
 }
 
 
@@ -949,7 +950,7 @@ void Proxy_ExecuteClCmd(sv_t *qtv, oproxy_t *prox, char *cmd)
 	}
 
 	if (!found)
-		Sys_Printf(NULL, "Bad user command: %s\n", arg0);
+		Sys_Printf(NULL, "%s (proxy #%3i): Bad user command: %s\n", qtv->server, prox->id, arg0);
 
 	Sys_RedirectStop();
 
@@ -976,7 +977,7 @@ void Proxy_ReadInput(sv_t *qtv, oproxy_t *prox)
 
 		if (len == 0)
 		{
-			Sys_Printf(NULL, "read error from QTV client, dropping\n");
+			Sys_Printf(NULL, "%s (proxy #%3i): Read error from QTV client, dropping.\n", qtv->server, prox->id);
 			prox->drop = true;
 			return;
 		}
@@ -1008,7 +1009,7 @@ void Proxy_ReadInput(sv_t *qtv, oproxy_t *prox)
 		if (buf.readpos > buf.cursize)
 		{
 			prox->drop = true;
-			Sys_Printf(NULL, "Proxy_ReadInput: Read past end of parse buffer\n");
+			Sys_Printf(NULL, "%s (proxy #%3i): Proxy_ReadInput: Read past end of parse buffer.\n", qtv->server, prox->id);
 			return;
 		}
 
@@ -1022,7 +1023,7 @@ void Proxy_ReadInput(sv_t *qtv, oproxy_t *prox)
 		if (len > (int)sizeof(prox->inbuffer) - 1 || len < 3)
 		{
 			prox->drop = true;
-			Sys_Printf(NULL, "Proxy_ReadInput: can't handle such long/short message: %i\n", len);
+			Sys_Printf(NULL, "%s (proxy #%3i): Proxy_ReadInput: can't handle such long/short message: %i\n", qtv->server, prox->id, len);
 			return;
 		}
 
@@ -1033,16 +1034,16 @@ void Proxy_ReadInput(sv_t *qtv, oproxy_t *prox)
 
 		switch (clc = ReadByte(&buf))
 		{
-		case qtv_clc_stringcmd:
-			cl_cmd[0] = 0;
-			ReadString(&buf, cl_cmd, sizeof(cl_cmd));
-			Proxy_ExecuteClCmd(qtv, prox, cl_cmd);
-			break;
+			case qtv_clc_stringcmd:
+				cl_cmd[0] = 0;
+				ReadString(&buf, cl_cmd, sizeof(cl_cmd));
+				Proxy_ExecuteClCmd(qtv, prox, cl_cmd);
+				break;
 
-		default:
-			prox->drop = true;
-			Sys_Printf(NULL, "Proxy_ReadInput: can't handle clc %i\n", clc);
-			return;
+			default:
+				prox->drop = true;
+				Sys_Printf(NULL, "%s (proxy #%3i): Proxy_ReadInput: can't handle clc %i\n", qtv->server, prox->id, clc);
+				return;
 		}
 	}
 

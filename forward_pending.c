@@ -363,7 +363,7 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 					}
 					else
 					{
-						Sys_Printf(NULL, "Unrecognised token in QTV connection request (%s)\n", s);
+						Sys_Printf(NULL, "(pending proxy #%3i): Unrecognised token in QTV connection request (%s)\n", pend->id, s);
 					}
 				}
 				else
@@ -403,7 +403,7 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 					}
 					else
 					{
-						Sys_Printf(NULL, "Unrecognised token in QTV connection request (%s)\n", s);
+						Sys_Printf(NULL, "(pending proxy #%3i): Unrecognised token in QTV connection request (%s)\n", pend->id, s);
 					}
 				}
 			}
@@ -825,7 +825,7 @@ void Prox_FixName(sv_t *qtv, oproxy_t *prox)
 		{
 			if(!Info_Set(&prox->ctx, "name", newname))
 			{
-				Sys_Printf(NULL, "can't set dup name for client, dropping\n");
+				Sys_Printf(NULL, "(proxy #%3i): can't set duplicate name for client, dropping\n", prox->id);
 				prox->drop = true;
 			}
 
