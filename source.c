@@ -345,7 +345,7 @@ qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 	if (qtv_backoff.integer)
 	{
 		// Back off when trying to reconnect to a QTV source.
-		unsigned int real_delay = min(qtv_max_reconnect_delay.integer, (qtv_reconnect_delay.integer * qtv->connection_attempts));
+		unsigned int real_delay = min(qtv_max_reconnect_delay.integer, (qtv_reconnect_delay.integer * (qtv->connection_attempts + 1)));
 		qtv->NextConnectAttempt = now + (real_delay * 1000);
 	}
 	else
