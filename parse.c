@@ -246,10 +246,9 @@ static void ParseServerinfo(sv_t *tv, netmsg_t *m)
 		Info_SetValueForStarKey(tv->serverinfo, key, value, sizeof(tv->serverinfo));
 }
 
-static void ParsePrint(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
+static void ParsePrint(sv_t *tv, netmsg_t *m, int to, unsigned int mask, qbool printsource)
 {
 	char text[1024];
-//	char buffer[1024];
 	int level;
 
 	level = ReadByte(m);
@@ -272,7 +271,10 @@ static void ParsePrint(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 	{
 		if (level > 1)
 		{
-			Sys_Printf(NULL, "%s: %s", tv->server, text);
+			if (printsource)
+				Sys_Printf(NULL, "%s:\n", tv->server);
+			
+			Sys_Printf(NULL, "%s", text);
 		}
 	}
 }
@@ -1126,6 +1128,11 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 		if (shownet.integer)
 			Sys_Printf(NULL, "%s: svc: %3d: %s\n", tv->server, svc, ( svc >=0 && svc < svc_strings_size && svc_strings[svc] ) ? svc_strings[svc] : "UNKNOWN");
 
+		// Only print the server name once if we get several consecutive svc_print messages
+		// since one message can be split up in several pieces.
+		tv->svc_print_servername = !(tv->prev_was_svc_print && (svc == svc_print));
+		tv->prev_was_svc_print = false;
+
 		switch (svc)
 		{
 			case svc_bad:
@@ -1169,7 +1176,8 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 			// svc_time			7	// [float] server time
 			case svc_print:
 			{
-				ParsePrint(tv, &buf, to, mask);
+				ParsePrint(tv, &buf, to, mask, tv->svc_print_servername);
+				tv->prev_was_svc_print = true;
 				break;
 			}
 			case svc_stufftext:

@@ -557,6 +557,12 @@ struct sv_s
 
 	int				cdtrack;
 
+	qbool			prev_was_svc_print;
+	qbool			svc_print_servername;			// Small hack to figure out if we should write 
+													// the servername when parsing svc_print messages
+													// since these can be split up. We don't want the
+													// servername to be printed in the middle of a chat message.
+
 };
 
 typedef struct cluster_s 
