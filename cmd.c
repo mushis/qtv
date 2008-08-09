@@ -433,15 +433,6 @@ Creates a new command that executes a command string (possibly ; seperated)
 ===============
 */
 
-char *CopyString (char *in)
-{
-	char *out;
-
-	out = (char *) Sys_malloc (strlen(in)+1);
-	strlcpy (out, in, strlen(in) + 1);
-	return out;
-}
-
 void Cmd_Alias_f (void)
 {
 	cmd_alias_t	*a;
@@ -511,7 +502,7 @@ void Cmd_Alias_f (void)
 		strlcat (cmd, Cmd_Argv(i), sizeof(cmd));
 	}
 
-	a->value = CopyString (cmd);
+	a->value = Sys_strdup(cmd);
 }
 
 
@@ -588,7 +579,6 @@ void Cmd_UnAlias_f (void)
 void Cmd_UnAliasAll_f (void)
 {
 	cmd_alias_t	*a, *next;
-	int i;
 
 	for (a=cmd_alias ; a ; a=next)
 	{
@@ -599,10 +589,7 @@ void Cmd_UnAliasAll_f (void)
 	cmd_alias = NULL;
 
 	// clear hash
-	for (i=0 ; i<32 ; i++)
-	{
-		cmd_alias_hash[i] = NULL;
-	}
+	memset(cmd_alias_hash, 0, sizeof(cmd_alias_hash));
 }
 
 
@@ -1048,6 +1035,35 @@ char *Cmd_RconCommand(char *cmd, char *buf, int buf_size)
 	return buf;
 }
 
+// this is do _not_ unlink it from list so you better know what you are doing...
+static void Cmd_Free(cmd_function_t	*cmd)
+{
+//	Sys_free(cmd->name); // name is not allocated dynamically...
+	Sys_free(cmd);	
+}
+
+void Cmd_DeInit(void)
+{
+	cmd_function_t	*cmd, *next;
+
+	// clean cmd vars
+	for (cmd = cmd_functions; cmd; cmd = next)
+	{
+		next = cmd->next;
+		Cmd_Free(cmd);
+	}
+
+	cmd_functions = NULL;
+	memset(cmd_hash_array, 0, sizeof(cmd_hash_array));
+
+	// clean alias vars
+	Cmd_UnAliasAll_f();
+
+	cmd_alias = NULL;
+	memset(cmd_alias_hash, 0, sizeof(cmd_alias_hash));
+}
+
+
 /*
 ============
 Cmd_Init
@@ -1055,6 +1071,13 @@ Cmd_Init
 */
 void Cmd_Init (void)
 {
+	// clean cmd vars
+	cmd_functions = NULL;
+	memset(cmd_hash_array, 0, sizeof(cmd_hash_array));
+	// clean alias vars
+	cmd_alias = NULL;
+	memset(cmd_alias_hash, 0, sizeof(cmd_alias_hash));
+
 	//
 	// register our commands
 	//

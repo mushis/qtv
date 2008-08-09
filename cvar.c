@@ -388,6 +388,17 @@ Cvar_Delete
 ===========
 returns true if the cvar was found (and deleted)
 */
+
+static void Cvar_Free(cvar_t *var)
+{
+	Sys_free (var->string);
+	if (var->flags & CVAR_USER_CREATED)
+	{
+		Sys_free (var->name);
+		Sys_free (var);
+	}
+}
+
 qbool Cvar_Delete (char *name)
 {
 	cvar_t	*var, *prev;
@@ -425,9 +436,7 @@ qbool Cvar_Delete (char *name)
 				cvar_vars = var->next;
 
 			// free
-			Sys_free (var->string);
-			Sys_free (var->name);
-			Sys_free (var);
+			Cvar_Free(var);
 			return true;
 		}
 		prev = var;
@@ -518,6 +527,25 @@ static void Cvar_Hash_Print_f (void)
 
 }
 #endif
+
+/*
+===============
+Cvar_DeInit
+===============
+Remove all cvars
+*/
+void Cvar_DeInit (void)
+{
+	cvar_t	*var, *next;
+
+	for (var = cvar_vars; var; var = next)
+	{
+		next = var->next;
+		Cvar_Free(var);
+	}
+
+	cvar_vars = NULL;
+}
 
 void Cvar_Init (void)
 {

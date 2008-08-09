@@ -30,6 +30,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #ifdef _WIN32
+	#if defined(_DEBUG) && defined(_MSC_VER)
+// uncomment/comment it if you wish/unwish see leaked memory(if any) in output window under MSVC
+//		#define _CRTDBG_MAP_ALLOC
+		#ifdef _CRTDBG_MAP_ALLOC
+			#include <stdlib.h>
+			#include <crtdbg.h>
+		#endif
+	#endif
+
 	#include <conio.h>
 	#include <winsock.h>	// This includes windows.h and is the reason for much compiling slowness with windows builds.
 	#include <mmsystem.h>
@@ -624,7 +633,17 @@ void			Sys_DPrintf(cluster_t *cluster, char *fmt, ...);	// This is just wrapper 
 void			Sys_Exit(int code);
 void			Sys_Error (char *error, ...);
 int				Sys_Build_Number (void);
+
+#ifdef _CRTDBG_MAP_ALLOC
+// workaround: this define allow us see in which file/line leaked allocation was done,
+// otherwise we see always sys.c and this is not really helpful...
+// Sad thinkg about this is that we do not check return value in this case,
+// but it should not be issue since we just debug it.
+	#define		Sys_malloc(_xxx)	calloc(1, (_xxx))
+#else
 void			*Sys_malloc (size_t size);
+#endif
+
 char			*Sys_strdup (const char *src);
 #define			Sys_free(ptr) if(ptr) { free(ptr); ptr = NULL; }
 

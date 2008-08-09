@@ -112,6 +112,7 @@ qbool Cvar_Delete (char *name);
 
 cvar_t *Cvar_Create (char *name, char *string, int cvarflags);
 
+void Cvar_DeInit (void);
 void Cvar_Init (void);
 
 #endif /* !__CVAR_H__ */

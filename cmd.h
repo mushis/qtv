@@ -90,6 +90,7 @@ typedef struct cmd_function_s
 	xcommand_t		function;
 } cmd_function_t;
 
+void Cmd_DeInit (void);
 void Cmd_Init (void);
 
 void Cmd_AddCommand (char *cmd_name, xcommand_t function);

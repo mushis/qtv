@@ -199,7 +199,7 @@ void Cluster_Sleep(cluster_t *cluster)
 	Sys_ReadSTDIN(cluster, socketset);
 }
 
-void Cluster_Run(cluster_t *cluster, qbool dowait)
+void Cluster_Run(cluster_t *cluster, qbool dowait, qbool down)
 {
 	sv_t *sv, *old;
 
@@ -227,6 +227,8 @@ void Cluster_Run(cluster_t *cluster, qbool dowait)
 	{
 		old = sv; // Save sv_t in old, because QTV_Run(old) may free(old).
 		sv = sv->next;
+		if (down)
+			old->drop = true; // we going down, free it
 		QTV_Run(cluster, old);
 	}
 
@@ -246,6 +248,13 @@ cluster_t g_cluster; // Seems fte qtv tryed do not make it global, see no reason
 
 int main(int argc, char **argv)
 {
+	#ifdef _CRTDBG_MAP_ALLOC
+	{
+		// report memory leaks on program exit in output window under MSVC
+		_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+	}
+	#endif
+
 	#ifdef SIGPIPE
 	signal(SIGPIPE, SIG_IGN);
 	#endif
@@ -287,10 +296,18 @@ int main(int argc, char **argv)
 	Cmd_StuffCmds(argc, argv);
 	Cbuf_Execute();
 
-	while (!g_cluster.wanttoexit) 
+	for ( ;; ) 
 	{
-		Cluster_Run(&g_cluster, true);
+		Cluster_Run(&g_cluster, true, false);
+		// if we want to exit, re run it with down = true, so we have chance free some resources
+		if (g_cluster.wanttoexit)
+		{
+			Cluster_Run(&g_cluster, false, true);
+			break;
+		}
 	}
 
+	Cmd_DeInit();		// this is optional, but helps me check memory leaks
+	Cvar_DeInit();		// this is optional, but helps me check memory leaks
 	return 0;
 }

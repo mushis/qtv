@@ -124,7 +124,11 @@ void status_f(void)
 
 void quit_f(void)
 {
-	Sys_Exit(0);
+	// if at least some parameter provided, then use non clean exit
+	if (Cmd_Argc() > 1)
+		Sys_Exit(0); // immidiate, non clean
+	else
+		g_cluster.wanttoexit = true; // delayed exit, clean
 }
 
 void Source_Init(void)

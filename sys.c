@@ -281,6 +281,9 @@ instead of crashing after trying to use a NULL pointer.
 It also sets memory to zero.
 ===================
 */
+
+#ifndef _CRTDBG_MAP_ALLOC
+
 void *Sys_malloc (size_t size)
 {
 	void *p = malloc(size);
@@ -291,6 +294,8 @@ void *Sys_malloc (size_t size)
 
 	return p;
 }
+
+#endif // _CRTDBG_MAP_ALLOC
 
 char *Sys_strdup (const char *src)
 {
