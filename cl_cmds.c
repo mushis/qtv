@@ -206,11 +206,11 @@ void Clcmd_Users_f(sv_t *qtv, oproxy_t *prox)
 		if (tmp->drop)
 			continue;
 
-		Sys_Printf(NULL, "%s: %6d %s\n", qtv->server, tmp->id, Info_Get(&tmp->ctx, "name", name, sizeof(name)));
+		Sys_Printf(NULL, "%6d %s\n", tmp->id, Info_Get(&tmp->ctx, "name", name, sizeof(name)));
 		c++;
 	}	
 
-	Sys_Printf(NULL, "%s: %i total users\n", qtv->server, c);
+	Sys_Printf(NULL, "%i total users\n", c);
 }
 
 // { extension which allow have user list on client side
@@ -591,7 +591,7 @@ static void Clcmd_Ptrack_f(sv_t *qtv, oproxy_t *prox)
 
 	if (prox->pov < 0 || prox->pov >= MAX_CLIENTS)
 	{
-		Sys_Printf(NULL, "%s: Invalid client to track: %d\n", qtv->server, prox->pov);
+		Sys_Printf(NULL, "Invalid client to track: %d\n", prox->pov);
 		prox->pov = 0;
 		apply_pov(qtv, prox);
 		return;
@@ -609,7 +609,7 @@ static void Clcmd_Follow_f(sv_t *qtv, oproxy_t *prox)
 	if (Cmd_Argc() != 2)
 	{
 		prox->follow_id = 0;
-		Sys_Printf(NULL, "%s: follow: turned off\n", qtv->server);
+		Sys_Printf(NULL, "follow: turned off\n");
 		return;
 	}
 
@@ -617,19 +617,19 @@ static void Clcmd_Follow_f(sv_t *qtv, oproxy_t *prox)
 
 	if (prox->follow_id == prox->id)
 	{
-		Sys_Printf(NULL, "%s: follow: Is it really wise for Silicon Valley to sic the government on Microsoft?\n", qtv->server);
+		Sys_Printf(NULL, "follow: Is it really wise for Silicon Valley to sic the government on Microsoft?\n");
 		prox->follow_id = 0;
 		return;
 	}
 
 	if (!(tmp = proxy_by_id(qtv, prox->follow_id)))
 	{
-		Sys_Printf(NULL, "%s: follow: no user with id %d\n", qtv->server, prox->follow_id);
+		Sys_Printf(NULL, "follow: no user with id %d\n", prox->follow_id);
 		prox->follow_id = 0;
 		return;
 	}
 
-	Sys_Printf(NULL, "%s: follow: %d\n", qtv->server, tmp->id);
+	Sys_Printf(NULL, "follow: %d\n", tmp->id);
 }
 
 //============================================================================
@@ -656,7 +656,7 @@ static void Clcmd_send_list(sv_t *qtv, oproxy_t *prox, int svc)
 
 	if (!prox->flushing)
 	{
-		Sys_Printf(NULL, "%s: wrong usage of %s\n", qtv->server, Cmd_Argv(0));
+		Sys_Printf(NULL, "wrong usage of %s\n", Cmd_Argv(0));
 		return; // kidding us?
 	}
 
@@ -680,7 +680,7 @@ static void Clcmd_send_list(sv_t *qtv, oproxy_t *prox, int svc)
 
 	if (prox->flushing)
 	{
-		Sys_Printf(NULL, "%s: Connection data is too big, dropping proxy client #i.\n", qtv->server, prox->id);
+		Sys_Printf(NULL, "Connection data is too big, dropping proxy client #i.\n", prox->id);
 		prox->drop = true;	//this is unfortunate...
 	}
 	else
@@ -840,10 +840,10 @@ static void Clcmd_LastScores_f (sv_t *qtv, oproxy_t *prox)
 			 || (strcmp(le1, e1) || strcmp(le2, e2)) // changed teams, duelers
 		   )
 		{
-			Sys_Printf(NULL, "%s (proxy #%3i): \x90%s \366\363 %s\x91 %s\n", qtv->server, prox->id, e1, e2, cur); // [dag vs qqshka] duel
+			Sys_Printf(NULL, "\x90%s \366\363 %s\x91 %s\n", e1, e2, cur); // [dag vs qqshka] duel
 		}
 
-		Sys_Printf(NULL, "%s (proxy #%3i):   %3s:%-3s \x8D %-8.8s %s\n", qtv->server, prox->id, s1, s2, map, date); // -5:100 > dm6
+		Sys_Printf(NULL, "   %3s:%-3s \x8D %-8.8s %s\n", s1, s2, map, date); // -5:100 > dm6
 
 		last = cur;
 		le1 = e1;
@@ -853,9 +853,9 @@ static void Clcmd_LastScores_f (sv_t *qtv, oproxy_t *prox)
 
 	if ( cnt )
 		Sys_Printf(NULL,  "\n"
-		"%s (proxy #%3i): Lastscores: %d entr%s found\n", qtv->server, prox->id, cnt, (cnt ? "y" : "ies"));
+		"Lastscores: %d entr%s found\n", cnt, (cnt ? "y" : "ies"));
 	else
-		Sys_Printf(NULL,  "%s (proxy #%3i): Lastscores data empty\n", qtv->server, prox->id);
+		Sys_Printf(NULL,  "Lastscores data empty\n");
 }
 
 
