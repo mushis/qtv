@@ -951,6 +951,8 @@ void			Prox_UpdateProxiesUserList(sv_t *qtv, oproxy_t *prox, qtvuserlist_t actio
 // Send userlist to this "prox", do it once, so we do not send it on each level change.
 void			Prox_SendInitialUserList(sv_t *qtv, oproxy_t *prox);
 
+// Send commands to "prox" like: lastscores, follow etc.
+void			Prox_StuffCommands(sv_t *qtv, oproxy_t *prox);
 
 //
 // fs.c

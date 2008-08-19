@@ -302,6 +302,55 @@ void Prox_SendInitialUserList(sv_t *qtv, oproxy_t *prox)
 
 // }
 
+//============================================================================
+// stuff commands
+//
+
+char *stuffed_cmds[] =
+{
+	"lastscores",
+	"follow"
+};
+
+const int stuffed_cmds_cnt = sizeof(stuffed_cmds) / sizeof(stuffed_cmds[0]);
+
+void msg_StuffCommand(netmsg_t *msg, const char *cmd)
+{
+	WriteByte(msg, svc_stufftext);
+	WriteString(msg, cmd);
+}
+
+// send commands to this "prox", do it once, so we do not send it on each level change
+void Prox_StuffCommands(sv_t *qtv, oproxy_t *prox)
+{
+	char buffer[1024], cmd[1024];
+	netmsg_t msg;
+	int i;
+
+	// we must alredy have it
+	if (prox->connected_at_least_once)
+		return;
+
+	// we do not support this extension
+	if (!(prox->qtv_ezquake_ext & QTV_EZQUAKE_EXT_DOWNLOAD))
+		return;
+
+	InitNetMsg(&msg, buffer, sizeof(buffer));
+
+	for (i = 0; i < stuffed_cmds_cnt; i++)
+	{
+		msg.cursize = 0;
+
+		snprintf(cmd, sizeof(cmd), "alias %s cmd %s %%0\n", stuffed_cmds[i], stuffed_cmds[i]);
+		msg_StuffCommand(&msg, cmd);
+
+		if (!msg.cursize)
+			continue;
+
+		Prox_SendMessage(&g_cluster, prox, msg.data, msg.cursize, dem_read, (unsigned)-1);
+	}	
+}
+
 
 //============================================================================
 // download

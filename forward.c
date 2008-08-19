@@ -392,6 +392,9 @@ void Net_SendConnectionMVD_NEW(sv_t *qtv, oproxy_t *prox)
 	Prox_SendMessage(&g_cluster, prox, msg.data, msg.cursize, dem_read, (unsigned)-1);
 	msg.cursize = 0;
 
+	// send commands
+	Prox_StuffCommands(qtv, prox);
+
 	if (prox->flushing)
 	{
 		Sys_Printf(NULL, "%s (proxy #%3i): Connection data is too big, dropping proxy client\n", qtv->server, prox->id);
