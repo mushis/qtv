@@ -172,7 +172,7 @@ void Clcmd_Say_f(sv_t *qtv, oproxy_t *prox)
 		return;
 	}
 
-	snprintf(text, sizeof(text), "#0:qtv_%s:#%d:%s: %s\n", Cmd_Argv(0), prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)), args);
+	snprintf(text, sizeof(text), "#0:qtv_%s:#%d:%s: %s", Cmd_Argv(0), prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)), args);
 
 	InitNetMsg(&msg, buffer, sizeof(buffer));
 
