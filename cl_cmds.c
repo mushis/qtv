@@ -215,40 +215,81 @@ void Clcmd_Users_f(sv_t *qtv, oproxy_t *prox)
 
 // { extension which allow have user list on client side
 
-// generate userlist message about "prox" and put in "msg"
-static void msg_qtvuserlist(netmsg_t *msg, oproxy_t *prox, qtvuserlist_t action)
+// generate userlist message about "prox" and put in "str"
+static void str_qtvuserlist(char *str, size_t str_size, oproxy_t *prox, qtvuserlist_t action, qbool prefix)
 {
-	char  str[512], name[MAX_INFO_KEY];
+	char  name[MAX_INFO_KEY];
 
 	switch ( action )
 	{
 		case QUL_ADD:
 		case QUL_CHANGE:
-			snprintf(str, sizeof(str), "//qul %d %d \"%s\"\n", action, prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)));
+			snprintf(str, str_size, "%squl %d %d \"%s\"\n", prefix ? "//" : "", action, prox->id, Info_Get(&prox->ctx, "name", name, sizeof(name)));
 
 		break;
 
 		case QUL_DEL:
-			snprintf(str, sizeof(str), "//qul %d %d\n", action, prox->id);
+			snprintf(str, str_size, "%squl %d %d\n", prefix ? "//" : "", action, prox->id);
 
 		break;
 
 		default:
-			Sys_Printf(NULL, "msg_qtvuserlist: proxy #%d unknown action %d\n", prox->id, action);
+			Sys_Printf(NULL, "str_qtvuserlist: proxy #%d unknown action %d\n", prox->id, action);
 
 		return;		
 	}
+}
+
+// generate userlist message about "prox" and put in "msg"
+static void msg_qtvuserlist(netmsg_t *msg, oproxy_t *prox, qtvuserlist_t action)
+{
+	char  str[512] = {0};
+
+	str_qtvuserlist(str, sizeof(str), prox, action, true);
+
+	if (!str[0])
+		return; // fail of some kind
 
 	WriteByte(msg, svc_stufftext);
 	WriteString(msg, str);
 }
 
-// send userlist message about "prox" to all proxies
+// send update to upstream about userlist
+static void Prox_UpstreamUserListUpdate(sv_t *qtv, oproxy_t *prox, qtvuserlist_t action)
+{
+	char str[512] = {0};
+
+	str_qtvuserlist(str, sizeof(str), prox, action, false);
+
+	if (!str[0])
+		return; // fail of some kind
+
+	CmdToUpstream(qtv, str); // we do not check failure there
+}
+
+// send user list to upsteram at connect time
+void Prox_UpstreamSendInitialUserList(sv_t *qtv)
+{
+	oproxy_t *tmp;
+
+	for (tmp = qtv->proxies; tmp; tmp = tmp->next)
+	{
+		if (tmp->drop)
+			continue;
+
+		Prox_UpstreamUserListUpdate(qtv, tmp, QUL_ADD);
+	}	
+}
+
+// send userlist message about "prox" to all proxies and to upstream too
 void Prox_UpdateProxiesUserList(sv_t *qtv, oproxy_t *prox, qtvuserlist_t action)
 {
 	oproxy_t *tmp;
 	char buffer[1024];
 	netmsg_t msg;
+
+	// inform upstream too
+	Prox_UpstreamUserListUpdate(qtv, prox, action);
 
 	InitNetMsg(&msg, buffer, sizeof(buffer));
 
@@ -257,6 +298,7 @@ void Prox_UpdateProxiesUserList(sv_t *qtv, oproxy_t *prox, qtvuserlist_t action)
 	if (!msg.cursize)
 		return;
 
+	// inform clients/downstreams
 	for (tmp = qtv->proxies; tmp; tmp = tmp->next)
 	{
 		if (tmp->drop)

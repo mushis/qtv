@@ -1072,6 +1072,8 @@ qbool QTV_ParseHeader(sv_t *qtv)
 	qtv->parsetime = Sys_Milliseconds() + BUFFERTIME * 1000;
 	Sys_Printf(NULL, "%s: Connection established, buffering for %i seconds\n", qtv->server, BUFFERTIME);
 
+	Prox_UpstreamSendInitialUserList(qtv); // its time to send our userlist(if any) to upstream
+
 	return true;
 }
 
