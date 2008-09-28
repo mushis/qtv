@@ -185,7 +185,7 @@ void clientlist_f(void)
 	}
 
 	if (c)
-		Sys_Printf(NULL, "%d sources found%s\n", c, showempty ? "" : ", empty sources was not shown");
+		Sys_Printf(NULL, "%d sources found%s\n", c, showempty ? "" : ", empty sources are not shown");
 	else
 		Sys_Printf(NULL, "source list empty or no particular stream was found\n", id);
 }
