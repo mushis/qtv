@@ -8,6 +8,11 @@ cvar_t mvdport    		= {"mvdport", PROX_DEFAULT_LISTEN_PORT};
 cvar_t maxclients		= {"maxclients", "1000"};
 cvar_t allow_http		= {"allow_http", "1"};
 
+int get_maxclients(void)
+{
+	return bound(0, maxclients.integer, MAX_QTV_CLIENTS);
+}
+
 // this just can't be done as macro, so I wrote this function
 char *QTV_SV_HEADER(oproxy_t *prox, float qtv_ver)
 {
@@ -453,7 +458,7 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 		return false;
 	}
 
-	if (cluster->numproxies >= maxclients.integer)
+	if (cluster->numproxies >= get_maxclients())
 	{
 		Net_ProxyPrintf(pend, "%s"
 							  "TERROR: This QTV has reached it's connection limit\n\n",
@@ -571,6 +576,48 @@ void SV_ReadPendingProxies(cluster_t *cluster)
 	}
 }
 
+static qbool client_ids[MAX_QTV_CLIENTS];
+
+static int SV_ProxyGenerateID(void)
+{
+	int id, i;
+
+	for (i = 0; i < MAX_QTV_CLIENTS; i++)
+	{
+		id = (i + g_cluster.nextUserId) % MAX_QTV_CLIENTS;
+		if (!id)
+			continue; // do not allow zero id
+
+		if (!client_ids[id])
+		{
+			g_cluster.nextUserId = (id + 1) % MAX_QTV_CLIENTS;
+			g_cluster.nextUserId = max(1, g_cluster.nextUserId); // do not allow zero id
+			return id;
+		}
+	}
+
+	Sys_Error("SV_ProxyGenerateID: no free id");
+
+	return 0;
+}
+
+static void SV_ProxyIdFreed(int id)
+{
+	if (id < 0 || id >= MAX_QTV_CLIENTS)
+		Sys_Error("SV_ProxyIdFreed: wrong id %d", id);
+
+	client_ids[id] = false;
+}
+
+static void SV_ProxyIdUsed(int id)
+{
+	if (id < 0 || id >= MAX_QTV_CLIENTS)
+		Sys_Error("SV_ProxyIdUsed: wrong id %d", id);
+
+	client_ids[id] = true;
+}
+
+
 // Just allocate memory and set some fields, do not perform any linkage to any list.
 // s = Either a socket or file (demo).
 // socket = Decides if "s" is a socket or a file.
@@ -596,7 +643,8 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv, netadr_t *addr)
 	prox->init_time		= Sys_Milliseconds();
 	prox->io_time		= Sys_Milliseconds();
 
-	prox->id			= g_cluster.nextUserId++;
+	prox->id			= SV_ProxyGenerateID();
+	SV_ProxyIdUsed(prox->id);
 
 	// Since infostrings count is limited, we reserve at least the name.
 	if(!Info_Set(&prox->ctx, "name", "")) 
@@ -614,6 +662,8 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv, netadr_t *addr)
 // Just free memory and handles, do not perfrom removing from any list.
 void SV_FreeProxy(oproxy_t *prox)
 {
+	SV_ProxyIdFreed(prox->id);
+
 	if (prox->defaultstream)
 		Prox_UpdateProxiesUserList(prox->defaultstream, prox, QUL_DEL);
 
@@ -690,7 +740,7 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv)
 		return;
 	}
 
-	if (cluster->numproxies >= maxclients.integer)
+	if (cluster->numproxies >= get_maxclients())
 	{
 		// FIXME: WTF is going on here?
 		// I think recepient will die after recive this "Proxy is full." because of broken parse process

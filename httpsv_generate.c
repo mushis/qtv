@@ -836,7 +836,7 @@ void HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest)
 	Net_ProxyPrintf(dest, "%s", "<PRE>");
 
 	Net_ProxyPrintf(dest, "servers: %i/%i\n", g_cluster.NumServers, maxservers.integer);
-	Net_ProxyPrintf(dest, "clients: %i/%i\n", g_cluster.numproxies, maxclients.integer);
+	Net_ProxyPrintf(dest, "clients: %i/%i\n", g_cluster.numproxies, get_maxclients());
 
 	Get_Uptime(g_cluster.curtime / 1000, &d, &h, &m);
 

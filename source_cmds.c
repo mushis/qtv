@@ -114,7 +114,7 @@ void status_f(void)
 {
 	Sys_Printf(NULL, "Status:\n");
 	Sys_Printf(NULL, " servers: %4i/%i\n", g_cluster.NumServers, maxservers.integer);
-	Sys_Printf(NULL, " clients: %4i/%i\n", g_cluster.numproxies, maxclients.integer);
+	Sys_Printf(NULL, " clients: %4i/%i\n", g_cluster.numproxies, get_maxclients());
 
 	Sys_Printf(NULL, "Options:\n");
 	Sys_Printf(NULL, "   hostname: %s\n", hostname.string);

@@ -168,6 +168,9 @@ typedef int qbool;
 extern "C" {
 #endif
 
+
+#define MAX_QTV_CLIENTS 2048
+
 //======================================
 
 #define PROXY_VERSION "1.00b"			// Release version of QTV (not protocol).
@@ -607,7 +610,6 @@ typedef struct cluster_s
 	unsigned int last_demos_update;		// Miliseconds, last time when Cluster_BuildAvailableDemoList() was issued, saving CPU time
 
 	int nextUserId;						// Out clients need name/userid.
-
 } cluster_t;
 
 //
@@ -854,6 +856,9 @@ void			Forward_Init(void);
 extern cvar_t	mvdport;
 extern cvar_t	maxclients;
 extern cvar_t	allow_http;
+
+// return maxclients.integer bounded to some sane values
+int				get_maxclients(void);
 
 // This just can't be done as macro, so I wrote this function
 // just generates qtv server header.
