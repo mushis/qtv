@@ -574,7 +574,7 @@ void SV_ReadPendingProxies(cluster_t *cluster)
 // Just allocate memory and set some fields, do not perform any linkage to any list.
 // s = Either a socket or file (demo).
 // socket = Decides if "s" is a socket or a file.
-oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv)
+oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv, netadr_t *addr)
 {
 	oproxy_t *prox = Sys_malloc(sizeof(*prox));
 
@@ -585,6 +585,8 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv)
 	// Set socket/file based on source.
 	prox->sock = (socket ? *(SOCKET*)s : INVALID_SOCKET);
 	prox->file = (socket ?        NULL : (FILE*)s);
+	if (addr)
+		memcpy(&prox->addr, addr, sizeof(prox->addr));
 
 	g_cluster.numproxies++;
 
@@ -605,7 +607,7 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv)
 
 	if (developer.integer > 1)
 		Sys_DPrintf(NULL, "SV_NewProxy: New proxy id #%d\n", prox->id);
-
+	
 	return prox;
 }
 
@@ -637,6 +639,8 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv)
 {
 	oproxy_t *prox;
 	SOCKET sock;
+	netadr_t addr;
+	socklen_t addrlen;
 	#ifdef SOCKET_CLOSE_TIME
 	struct linger	lingeropt;
 	#endif
@@ -646,8 +650,17 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv)
 	if (qtv_sock == INVALID_SOCKET)
 		return;
 
-	if ((sock = accept(qtv_sock, NULL, NULL)) == INVALID_SOCKET)
+	addrlen = sizeof(addr);
+	if ((sock = accept(qtv_sock, (struct sockaddr *) &addr, &addrlen)) == INVALID_SOCKET)
 		return;
+
+	if (SV_IsBanned(&addr))
+	{
+		char ip[] = "xxx.xxx.xxx.xxx";
+		Sys_DPrintf(NULL, "rejected connect from banned ip: %s\n", NET_BaseAdrToString(&addr, ip, sizeof(ip)));
+		closesocket(sock);
+		return;
+	}
 
 	#ifdef SOCKET_CLOSE_TIME
 	// hard close: in case of closesocket(), socket will be closed after SOCKET_CLOSE_TIME or earlier
@@ -687,7 +700,7 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv)
 		return;
 	}
 
-	prox = SV_NewProxy((void*) &sock, true, defaultqtv);
+	prox = SV_NewProxy((void*) &sock, true, defaultqtv, &addr);
 
 	prox->next = cluster->pendingproxies;
 	cluster->pendingproxies = prox;

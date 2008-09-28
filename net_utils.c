@@ -57,6 +57,17 @@ qbool Net_CompareAddress(netadr_t *s1, netadr_t *s2, int qp1, int qp2)
 	return false;
 }
 
+char *NET_BaseAdrToString (const netadr_t *a, char *buf, size_t bufsize)
+{
+	unsigned char ip[4];
+
+	*(unsigned int*)ip = (((struct sockaddr_in *)a)->sin_addr.s_addr); // FIXME: wonder is this work...
+
+	snprintf(buf, bufsize, "%i.%i.%i.%i", ip[0], ip[1], ip[2], ip[3]);
+
+	return buf;
+}
+
 qbool TCP_Set_KEEPALIVE(int sock)
 {
 	int		iOptVal = 1;

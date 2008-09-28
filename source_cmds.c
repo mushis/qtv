@@ -131,6 +131,89 @@ void quit_f(void)
 		g_cluster.wanttoexit = true; // delayed exit, clean
 }
 
+void clientlist(sv_t *qtv, qbool showempty)
+{
+	int c;
+	oproxy_t *tmp;
+	char name[MAX_INFO_KEY];
+	char ip[] = "xxx.xxx.xxx.xxx";
+
+	for (c = 0, tmp = qtv->proxies; tmp; tmp = tmp->next)
+	{
+		if (tmp->drop)
+			continue;
+
+		if (!c)
+		{
+			Sys_Printf (NULL, "source: %d, %s\n"
+							  "userid ip              name\n"
+							  "------ --------------- ----\n", qtv->streamid, qtv->server);
+		}
+
+		Sys_Printf(NULL, "%6d %15s %s\n", tmp->id, NET_BaseAdrToString(&tmp->addr, ip, sizeof(ip)), Info_Get(&tmp->ctx, "name", name, sizeof(name)));
+		c++;
+	}	
+
+	if (c)
+	{
+		Sys_Printf(NULL, "%d total users\n", c);
+	}
+	else
+	{
+		if (showempty)
+			Sys_Printf (NULL, "source: %d, %s, no clients\n", qtv->streamid, qtv->server);
+	}
+}
+
+void clientlist_f(void)
+{
+	int c;
+	sv_t *qtv = NULL;
+	int id = atoi(Cmd_Argv(1));
+	qbool showempty = !!id;
+
+	for (c = 0, qtv = g_cluster.servers; qtv; qtv = qtv->next)
+	{
+		if (id && qtv->streamid != id)
+			continue;
+
+		if (!c)
+			Sys_Printf(NULL, "Client list:\n");
+
+		clientlist(qtv, showempty);
+		c++;
+	}
+
+	if (c)
+		Sys_Printf(NULL, "%d sources found%s\n", c, showempty ? "" : ", empty sources was not shown");
+	else
+		Sys_Printf(NULL, "source list empty or no particular stream was found\n", id);
+}
+
+void kick_f(void)
+{
+	sv_t *qtv = NULL;
+	int id = atoi(Cmd_Argv(1));
+	oproxy_t *tmp;
+	char name[MAX_INFO_KEY];
+	char ip[] = "xxx.xxx.xxx.xxx";
+
+	for (qtv = g_cluster.servers; qtv; qtv = qtv->next)
+	{
+		for (tmp = qtv->proxies; tmp; tmp = tmp->next)
+		{
+			if (tmp->id != id)
+				continue;
+
+			tmp->drop = true;
+			Sys_Printf(NULL, "kicked: %d %s %s\n", tmp->id, NET_BaseAdrToString(&tmp->addr, ip, sizeof(ip)), Info_Get(&tmp->ctx, "name", name, sizeof(name)));
+			return;
+		}	
+	}
+
+	Sys_Printf(NULL, "client with id %d not found\n", id);
+}
+
 void Source_Init(void)
 {
 	Cvar_Register (&maxservers);
@@ -146,4 +229,7 @@ void Source_Init(void)
 	Cmd_AddCommand ("sourceclose", sourceclose_f);
 	Cmd_AddCommand ("status", status_f);
 	Cmd_AddCommand ("quit", quit_f);
+
+	Cmd_AddCommand ("clientlist", clientlist_f);
+	Cmd_AddCommand ("kick", kick_f);
 }

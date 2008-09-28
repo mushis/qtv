@@ -240,6 +240,9 @@ void Cluster_Run(cluster_t *cluster, qbool dowait, qbool down)
 
 	// Serve pending proxies.
 	SV_ReadPendingProxies(cluster); 
+
+	// Periodically check is it time to remove some bans.
+	SV_CleanBansIPList();
 }
 
 qbool cluster_initialized;
@@ -280,6 +283,7 @@ int main(int argc, char **argv)
 	Source_Init();	// Add source related commands.
 	Forward_Init(); // Register some vars.
 	Pending_Init();	// Register some vars.
+	Ban_Init();		// Init banning system.
 
 	Cvar_Register(&developer);
 	Cvar_Register(&shownet);

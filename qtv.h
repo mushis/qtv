@@ -359,6 +359,9 @@ typedef struct fp_cmd_s
 } fp_cmd_t;
 
 typedef unsigned char netadr_t[64];
+#ifdef _WIN32
+typedef int socklen_t;
+#endif
 
 typedef struct sv_s sv_t;
 
@@ -376,6 +379,7 @@ typedef struct oproxy_s
 
 	FILE			*file;							// Recording a demo.
 	SOCKET			sock;							// Playing to a proxy.
+	netadr_t		addr;							// Client address
 
 	unsigned char	inbuffer[MAX_PROXY_INBUFFER];
 	unsigned int	inbuffersize;					// Amount of data available.
@@ -783,6 +787,7 @@ void			Com_BlockFullChecksum(void *buffer, int len, unsigned char *outbuf);
 
 qbool			Net_StringToAddr(char *s, netadr_t *sadr, int defaultport);
 qbool			Net_CompareAddress(netadr_t *s1, netadr_t *s2, int qp1, int qp2);
+char			*NET_BaseAdrToString (const netadr_t *a, char *buf, size_t bufsize);
 SOCKET			Net_TCPListenPort(int port);
 
 qbool			TCP_Set_KEEPALIVE(int sock);
@@ -867,7 +872,7 @@ void			SV_CheckMVDPort(cluster_t *cluster);
 void			Pending_Init(void);
 
 // Just allocate memory and set some fields, do not perform any linkage to any list.
-oproxy_t		*SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv);
+oproxy_t		*SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv, netadr_t *addr);
 
 // Just free memory and handles, do not perfrom removing from any list.
 void			SV_FreeProxy(oproxy_t *prox);
@@ -976,6 +981,17 @@ void			FS_StripPathAndExtension(char *filepath);
 const char		*FS_FileExtension (const char *in);
 // Absolute paths are prohibited.
 qbool			FS_SafePath(const char *in);
+
+//
+// bann.c
+//
+
+// Init banning system.
+void Ban_Init(void);
+// Periodically check is it time to remove some bans.
+void SV_CleanBansIPList(void);
+// Return true if add is banned.
+qbool SV_IsBanned (netadr_t *addr);
 
 #ifdef __cplusplus
 }
