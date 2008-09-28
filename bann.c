@@ -511,3 +511,4 @@ void Ban_Init(void)
 	Cmd_AddCommand("banip", SV_Cmd_Banip_f);
 	Cmd_AddCommand("banremove", SV_Cmd_Banremove_f);
 }
+
