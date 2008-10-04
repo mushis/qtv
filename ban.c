@@ -1,4 +1,4 @@
-// bann.c - banning related code, boldly stolen from mvdsv
+// ban.c - banning related code, boldly stolen from mvdsv
 
 #include "qtv.h"
 #include "time.h"
