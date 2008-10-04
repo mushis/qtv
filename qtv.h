@@ -361,7 +361,11 @@ typedef struct fp_cmd_s
 	int   warnings;
 } fp_cmd_t;
 
-typedef unsigned char netadr_t[64];
+typedef struct netadr_s 
+{
+	char adr[64];
+} netadr_t;
+
 #ifdef _WIN32
 typedef int socklen_t;
 #endif

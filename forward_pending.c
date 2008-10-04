@@ -633,7 +633,9 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv, netadr_t *addr)
 	prox->sock = (socket ? *(SOCKET*)s : INVALID_SOCKET);
 	prox->file = (socket ?        NULL : (FILE*)s);
 	if (addr)
-		memcpy(&prox->addr, addr, sizeof(prox->addr));
+	{
+		prox->addr = *addr;
+	}
 
 	g_cluster.numproxies++;
 
