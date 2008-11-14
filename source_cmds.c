@@ -8,6 +8,7 @@ source related commadns
 void qtv_f(void)
 {
 	char addr[MAX_QPATH] = {0};
+	sv_t *qtv;
 
 	if (Cmd_Argc() < 2 || !*Cmd_Argv(1)) // not less than one param, first param non empty
 	{
@@ -16,13 +17,15 @@ void qtv_f(void)
 	}
 
 	snprintf(addr, sizeof(addr), "tcp:%s", Cmd_Argv(1));
+	qtv = QTV_NewServerConnection(&g_cluster, addr, Cmd_Argv(2), false, false, false, false);
 
-	if (!QTV_NewServerConnection(&g_cluster, addr, Cmd_Argv(2), false, false, false, false)) {
+	if (!qtv)
+	{
 		Sys_Printf (NULL, "Failed to connect to server %s, connection aborted\n", addr);
 		return;
 	}
 
-	Sys_Printf (NULL, "Source registered %s\n", addr);
+	Sys_Printf (NULL, "Source registered %s (#%d)\n", addr, qtv->streamid);
 }
 
 // opened .mvd demo as source
