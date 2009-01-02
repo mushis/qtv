@@ -69,7 +69,7 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 	}
 }
 
-void Net_ProxySend(cluster_t *cluster, oproxy_t *prox, char *buffer, int length)
+void Net_ProxySend(cluster_t *cluster, oproxy_t *prox, char *buffer, size_t length)
 {
 	if (prox->_buffersize_ < 0 || prox->_buffersize_ > prox->_buffermaxsize_)
 	{

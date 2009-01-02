@@ -836,7 +836,7 @@ void			WriteData	(netmsg_t *b, const char *data, int length);
 extern cvar_t	downstream_timeout;
 
 void			Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox);
-void			Net_ProxySend(cluster_t *cluster, oproxy_t *prox, char *buffer, int length);
+void			Net_ProxySend(cluster_t *cluster, oproxy_t *prox, char *buffer, size_t length);
 
 // printf() to downstream to particular "proxy", handy in some cases, instead of Net_ProxySend()-
 void			Net_ProxyPrintf(oproxy_t *prox, char *fmt, ...);
