@@ -467,35 +467,36 @@ void HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/html", true);
 	HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Admin");
 
-	s = "<H1>QuakeTV Admin: ";
+	s = "<h1>QuakeTV Admin: ";
 	Net_ProxySend(cluster, dest, s, strlen(s));
 	s = hostname.string;
 	Net_ProxySend(cluster, dest, s, strlen(s));
-	s = "</H1>";
+	s = "</h1>";
 	Net_ProxySend(cluster, dest, s, strlen(s));
 
 
-	s =	"<FORM action=\"admin.html\" method=\"post\" name=f>"
-		"<CENTER>"
-		"Password <input name=pwd value=\"";
+	s =	"<form action=\"admin.html\" method=\"post\" name='f'>"
+		"<center>"
+		"Password <input name='pwd' type='password' value=\"";
 
 	Net_ProxySend(cluster, dest, s, strlen(s));
+	/*
 	if (passwordokay)
 		Net_ProxySend(cluster, dest, pwd, strlen(pwd));
-
+	*/
 			
-	s =	"\">"
-		"<BR />"
-		"Command <input name=cmd maxsize=255 size=40 value=\"\">"
-		"<input type=submit value=\"Submit\" name=btn>"
-		"</CENTER>"
-		"</FORM>";
+	s =	"\" />"
+		"<br />"
+		"Command <input name='cmd' maxlength='255' size='40' value=\"\" />"
+		"<input type='submit' value=\"Submit\" name='btn' />"
+		"</center>"
+		"</form>";
 	Net_ProxySend(cluster, dest, s, strlen(s));
 
 	if (passwordokay)
-		HTMLPRINT("<script>document.forms[0].elements[1].focus();</script>");
+		HTMLPRINT("<script type='text/javascript'>document.forms[0].elements[1].focus();</script>");
 	else
-		HTMLPRINT("<script>document.forms[0].elements[0].focus();</script>");
+		HTMLPRINT("<script type='text/javascript'>document.forms[0].elements[0].focus();</script>");
 
 	while(*o)
 	{
@@ -504,7 +505,7 @@ void HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char
 			*s = 0;
 		HTMLprintf(cmd, sizeof(cmd), true, "%s", o);
 		Net_ProxySend(cluster, dest, cmd, strlen(cmd));
-		Net_ProxySend(cluster, dest, "<BR />", 6);
+		Net_ProxySend(cluster, dest, "<br />", 6);
 		if (!s)
 			break;
 		o = s+1;
