@@ -371,7 +371,7 @@ qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 	char *at;
 	char *ip = NULL;
 	unsigned int now;
-	int offset = ((int)&(((sv_t *)0)->mem_set_point));
+	size_t offset = ((size_t)&(((sv_t *)0)->mem_set_point));
 
 	close_source(qtv, "QTV_Connect");
 
@@ -650,7 +650,7 @@ qbool Net_WriteUpStream(sv_t *qtv)
 			return false;
 	    }
 
-		len = send(qtv->src.s, qtv->UpstreamBuffer, qtv->UpstreamBufferSize, 0);
+		len = send(qtv->src.s, (char *) qtv->UpstreamBuffer, qtv->UpstreamBufferSize, 0);
 
 		if (len == 0)
 			return false; // Hm, nothing was sent.

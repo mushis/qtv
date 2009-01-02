@@ -53,7 +53,7 @@ void playdemo_f(void)
 void sourceclose_f(void)
 {
 	sv_t *qtv;
-	int id, cnt;
+	unsigned int id, cnt;
 	qbool all;
 
 	if (Cmd_Argc() < 2 || !*Cmd_Argv(1))  // not less than one param, first param non empty
@@ -67,7 +67,7 @@ void sourceclose_f(void)
 		return;
 	}
 
-	id  = atoi(Cmd_Argv(1));
+	id  = (unsigned int) atoi(Cmd_Argv(1));
 	all = !stricmp(Cmd_Argv(1), "all");
 	cnt = 0;
 
@@ -172,7 +172,7 @@ void clientlist_f(void)
 {
 	int c;
 	sv_t *qtv = NULL;
-	int id = atoi(Cmd_Argv(1));
+	unsigned int id = (unsigned int) atoi(Cmd_Argv(1));
 	qbool showempty = !!id;
 
 	for (c = 0, qtv = g_cluster.servers; qtv; qtv = qtv->next)

@@ -143,7 +143,7 @@ static sv_t *SV_ReadSourceRequest(cluster_t *cluster, const char *sourcename)
 		// Numerical source, use a stream id.
 		for (qtv = cluster->servers; qtv; qtv = qtv->next)
 		{
-			if (qtv->streamid == atoi(sourcename))
+			if (qtv->streamid == (unsigned int) atoi(sourcename))
 				break;
 		}
 	}
@@ -235,7 +235,7 @@ static qbool SV_ReceivePendingProxyRequest(cluster_t *cluster, oproxy_t *pend)
 	char *inbuf = (char *)pend->inbuffer;
 
 	len = sizeof(pend->inbuffer) - pend->inbuffersize - 1;
-	len = recv(pend->sock, pend->inbuffer + pend->inbuffersize, len, 0);
+	len = recv(pend->sock, (char *) pend->inbuffer + pend->inbuffersize, len, 0);
 	
 	// Remote side closed connection.
 	if (len == 0)

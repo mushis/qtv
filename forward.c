@@ -36,11 +36,11 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 	if (prox->file)
 	{
 		length = fwrite(prox->_buffer_, 1, prox->_buffersize_, prox->file);
-		length = ( length == prox->_buffersize_ ) ? length : -1;
+		length = ( (unsigned int) length == prox->_buffersize_ ) ? length : -1;
 	}
 	else
 	{
-		length = send(prox->sock, prox->_buffer_, prox->_buffersize_, 0);
+		length = send(prox->sock, (char *) prox->_buffer_, prox->_buffersize_, 0);
 	}
 
 	switch (length)

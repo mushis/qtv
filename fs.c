@@ -116,8 +116,8 @@ char *FS_ReadFile(char *gamedir, char *filename, char *buf, int *size)
 
 void FS_StripPathAndExtension(char *filepath)
 {
-	size_t lastslash = -1;
-	size_t lastdot   = -1;
+	size_t lastslash = (size_t) -1;
+	size_t lastdot   = (size_t) -1;
 	size_t i		 = 0;
 
 	for ( ; filepath[i]; i++)
@@ -128,7 +128,7 @@ void FS_StripPathAndExtension(char *filepath)
 			lastdot = i;
 	}
 	
-	if (lastdot == -1 || lastdot < lastslash)
+	if (lastdot == (size_t) -1 || lastdot < lastslash)
 		lastdot = i;
 
 	strlcpy(filepath, filepath + lastslash + 1, lastdot - lastslash);

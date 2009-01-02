@@ -600,7 +600,7 @@ static void Clcmd_Download_f(sv_t *qtv, oproxy_t *prox)
 deny_download:
 
 	WriteByte (&msg, svc_download);
-	WriteShort(&msg, -1);
+	WriteShort(&msg, (unsigned short) -1);
 	WriteByte (&msg, 0);
 
 	Prox_SendMessage(&g_cluster, prox, msg.data, msg.cursize, dem_all, (unsigned)-1);
@@ -1064,7 +1064,7 @@ void Proxy_ReadInput(sv_t *qtv, oproxy_t *prox)
 
 	if (len)
 	{
-		len = recv(prox->sock, prox->inbuffer + prox->inbuffersize, len, 0);
+		len = recv(prox->sock, ((char *) prox->inbuffer) + prox->inbuffersize, len, 0);
 
 		if (len == 0)
 		{

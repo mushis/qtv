@@ -60,7 +60,7 @@
 				XMLDocumentationFileName=""
 				BrowseInformation="1"
 				BrowseInformationFile="$(IntDir)\"
-				WarningLevel="3"
+				WarningLevel="4"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
@@ -243,6 +243,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\build.c"
+				>
+			</File>
+			<File
 				RelativePath="..\cl_cmds.c"
 				>
 			</File>
@@ -316,10 +320,6 @@
 			</File>
 			<File
 				RelativePath="..\sys.c"
-				>
-			</File>
-			<File
-				RelativePath="..\build.c"
 				>
 			</File>
 			<File
