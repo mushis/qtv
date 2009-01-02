@@ -77,7 +77,7 @@ qbool isSayFlood(sv_t *qtv, oproxy_t *p)
 	if ( g_cluster.curtime < p->fp_s.locked )
 	{
 		Prox_Printf(&g_cluster, p, dem_all, (unsigned)-1, PRINT_CHAT, 
-			"You can't talk for %d more seconds\n", (p->fp_s.locked - g_cluster.curtime) / 1000);
+			"You can't talk for %u more seconds\n", (unsigned int) ((p->fp_s.locked - g_cluster.curtime) / 1000));
 
 		return true; // flooder
 	}

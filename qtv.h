@@ -690,7 +690,7 @@ void			Sys_ReadSTDIN(cluster_t *cluster, fd_set socketset);
 
 void			Sys_ReplaceChar(char *s, char from, char to);		// Replace char in string
 unsigned long	Sys_HashKey(const char *str);						// Hash function.
-void			Get_Uptime(ullong uptime_seconds, int *days, int *h, int *m); // Converts uptime seconds to days hours and minutes.
+void			Get_Uptime(ullong uptime_seconds, unsigned int *days, unsigned int *h, unsigned int *m); // Converts uptime seconds to days hours and minutes.
 
 
 //

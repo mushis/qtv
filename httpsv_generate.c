@@ -827,7 +827,7 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 
 void HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest)
 {
-	int d, h, m;
+	unsigned int d, h, m;
 
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/html", true);
 	HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Status");
@@ -841,7 +841,7 @@ void HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest)
 
 	Get_Uptime(g_cluster.curtime / 1000, &d, &h, &m);
 
-	Net_ProxyPrintf(dest, "uptime: %i days %02d:%02d\n", d, h, m);
+	Net_ProxyPrintf(dest, "uptime: %u days %02u:%02u\n", d, h, m);
 
 	Net_ProxyPrintf(dest, "%s", "</PRE>");
 
