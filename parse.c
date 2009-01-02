@@ -272,7 +272,7 @@ static void ParsePrint(sv_t *tv, netmsg_t *m, int to, unsigned int mask, qbool p
 		if (level > 1)
 		{
 			if (printsource)
-				Sys_Printf(NULL, "%s:\n", tv->server);
+				Sys_Printf(NULL, "%s: ", tv->server);
 			
 			Sys_Printf(NULL, "%s", text);
 		}

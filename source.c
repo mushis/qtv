@@ -370,7 +370,7 @@ qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 {
 	char *at;
 	char *ip = NULL;
-	unsigned int now;
+	ullong now;
 	size_t offset = ((size_t)&(((sv_t *)0)->mem_set_point));
 
 	close_source(qtv, "QTV_Connect");

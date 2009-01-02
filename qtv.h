@@ -139,6 +139,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdio.h>
 #include <string.h>
 
+typedef unsigned long long int ullong;
+
 #ifdef _WIN32
 
 int		snprintf(char *str, size_t n, char const *fmt, ...);
@@ -362,8 +364,8 @@ typedef struct
 
 typedef struct fp_cmd_s 
 {
-	unsigned int locked;
-	unsigned int cmd_time[MAX_FP_CMDS];
+	ullong locked;
+	ullong cmd_time[MAX_FP_CMDS];
 	int   last_cmd;
 	int   warnings;
 } fp_cmd_t;
@@ -410,8 +412,8 @@ typedef struct oproxy_s
 													// so buffer will be expanded maximum to this size when needed.
 
 
-	unsigned int	init_time;						// When this client was created, so we can timeout it.
-	unsigned int	io_time;						// When was IO activity, so we can timeout it.
+	ullong			init_time;						// When this client was created, so we can timeout it.
+	ullong			io_time;						// When was IO activity, so we can timeout it.
 
 	int				id;								// User id for this client.
 	int				pov;							// Which player id this client tracks, zero if freefly.
@@ -545,12 +547,12 @@ struct sv_s
 	qtv_state_t		qstate;						// In which state our qtv.
 
 	// Different times in milleseconds.
-	unsigned int	parsetime;
-	unsigned int	curtime;
+	ullong			parsetime;
+	ullong			curtime;
 
-	unsigned int	io_time;					// When was IO activity, so we can timeout it.
+	ullong			io_time;					// When was IO activity, so we can timeout it.
 
-	unsigned int	NextConnectAttempt;			// Time of next reconnect attempt.
+	ullong			NextConnectAttempt;			// Time of next reconnect attempt.
 
 	char			status[64];					// Set this to status, which this sv_t is in.
 
@@ -601,7 +603,7 @@ typedef struct cluster_s
 
 	char info[MAX_SERVERINFO_STRING];	// Used by cvars which mirrored in serverinfo, this is useless unless UDP will be added to our project.
 
-	unsigned long long int curtime;				// Milliseconds.
+	ullong curtime;						// Milliseconds.
 
 	qbool wanttoexit;					// If this is set to true our program will decide to die.
 
@@ -618,7 +620,7 @@ typedef struct cluster_s
 
 	availdemo_t availdemos[2048];		// lala, insane... but we support it, I checked.
 	int availdemoscount;
-	unsigned int last_demos_update;		// Miliseconds, last time when Cluster_BuildAvailableDemoList() was issued, saving CPU time
+	ullong last_demos_update;			// Miliseconds, last time when Cluster_BuildAvailableDemoList() was issued, saving CPU time
 
 	int nextUserId;						// Out clients need name/userid.
 } cluster_t;
@@ -644,7 +646,7 @@ extern int		redirect_buf_size;
 void			Sys_RedirectStart(char *buf, int size);				// So Sys_Printf() messages goes to redirect_buf[] too.
 void			Sys_RedirectStop(void);
 
-unsigned int	Sys_Milliseconds (void);
+ullong			Sys_Milliseconds (void);
 void			Sys_Printf (cluster_t *cluster, char *fmt, ...);
 void			Sys_DPrintf(cluster_t *cluster, char *fmt, ...);	// This is just wrapper for Sys_Printf(), but print nothing if developer 0
 void			Sys_Exit(int code);
@@ -688,7 +690,7 @@ void			Sys_ReadSTDIN(cluster_t *cluster, fd_set socketset);
 
 void			Sys_ReplaceChar(char *s, char from, char to);		// Replace char in string
 unsigned long	Sys_HashKey(const char *str);						// Hash function.
-void			Get_Uptime(int uptime_seconds, int *days, int *h, int *m); // Converts uptime seconds to days hours and minutes.
+void			Get_Uptime(ullong uptime_seconds, int *days, int *h, int *m); // Converts uptime seconds to days hours and minutes.
 
 
 //

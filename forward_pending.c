@@ -760,7 +760,7 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv)
 
 void SV_CheckMVDPort(cluster_t *cluster)
 {
-    static unsigned int last_time_check = 0;
+    ullong last_time_check = 0;
 
 	int newp = bound(0, mvdport.integer, 65535);
 

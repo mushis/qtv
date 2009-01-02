@@ -69,7 +69,7 @@ void FixSayFloodProtect(void)
 qbool isSayFlood(sv_t *qtv, oproxy_t *p)
 {
 	int idx;
-	unsigned int say_time;
+	ullong say_time;
 
 	idx = bound(0, p->fp_s.last_cmd, MAX_FP_CMDS-1);
 	say_time = p->fp_s.cmd_time[idx];

@@ -132,9 +132,9 @@ size_t strlcat(char *dst, char *src, size_t siz)
 
 #endif // defined(__linux__) || defined(_WIN32) || defined(__CYGWIN__)
 
-static unsigned long sys_timeBase = 0;
+static ullong sys_timeBase = 0;
 
-unsigned int Sys_Milliseconds(void)
+ullong Sys_Milliseconds(void)
 {
 #ifdef _WIN32
 	#ifdef _MSC_VER
@@ -436,9 +436,9 @@ unsigned long Sys_HashKey (const char *str)
 //=====================
 // just convert uptime seconds in days hours and minutes
 //=====================
-void Get_Uptime(int uptime_seconds, int *days, int *h, int *m)
+void Get_Uptime(ullong uptime_seconds, int *days, int *h, int *m)
 {
-	int diff;
+	ullong diff;
 
 	days[0] = uptime_seconds / 60 / 60 / 24; // whole days
 	diff    = uptime_seconds - days[0] * 24 * 60 * 60; // not whole day in seconds
