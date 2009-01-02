@@ -601,7 +601,7 @@ typedef struct cluster_s
 
 	char info[MAX_SERVERINFO_STRING];	// Used by cvars which mirrored in serverinfo, this is useless unless UDP will be added to our project.
 
-	unsigned int curtime;				// Milliseconds.
+	unsigned long long int curtime;				// Milliseconds.
 
 	qbool wanttoexit;					// If this is set to true our program will decide to die.
 

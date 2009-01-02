@@ -203,13 +203,6 @@ void Cluster_Run(cluster_t *cluster, qbool dowait, qbool down)
 {
 	sv_t *sv, *old;
 
-	// ~23 days uptime, better restart program now before time wrapping.
-	if (g_cluster.curtime > 2000000000)
-	{
-		Sys_Printf(NULL, "WARNING: Long uptime detected, quit.\n");
-		Sys_Exit(1);
-	}
-
 	FixSayFloodProtect();
 
 	if (dowait)
