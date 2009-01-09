@@ -391,7 +391,7 @@ typedef struct oproxy_s
 
 	qbool			connected_at_least_once;		// Connection sequence was completed at least once.
 
-	sv_t			*defaultstream;
+	sv_t			*qtv;							// To which qtv this client belong, may be NULL in case of pending proxy.
 
 	FILE			*file;							// Recording a demo.
 	SOCKET			sock;							// Playing to a proxy.
@@ -881,7 +881,7 @@ char			*QTV_SV_HEADER(oproxy_t *prox, float qtv_ver);
 void			SV_ReadPendingProxies(cluster_t *cluster);
 
 // Serve pending proxies.
-void			SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv);
+void			SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster);
 
 // Check changes of mvdport variable and do appropriate action.
 void			SV_CheckMVDPort(cluster_t *cluster);
@@ -890,7 +890,7 @@ void			SV_CheckMVDPort(cluster_t *cluster);
 void			Pending_Init(void);
 
 // Just allocate memory and set some fields, do not perform any linkage to any list.
-oproxy_t		*SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv, netadr_t *addr);
+oproxy_t		*SV_NewProxy(void *s, qbool socket, netadr_t *addr);
 
 // Just free memory and handles, do not perfrom removing from any list.
 void			SV_FreeProxy(oproxy_t *prox);

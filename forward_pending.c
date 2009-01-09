@@ -319,7 +319,7 @@ static qbool SV_CheckForHTTPRequest(cluster_t *cluster, oproxy_t *pend)
 static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 {
 	qbool raw = false;
-	sv_t *qtv = pend->defaultstream;
+	sv_t *qtv = NULL;
 	char *colon = NULL;
 	char userinfo[sizeof(pend->inbuffer)] = {0};
 	float usableversion = 0;
@@ -467,8 +467,9 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 		return false;
 	}
 
-	pend->defaultstream = qtv;
+	pend->qtv = qtv;
 
+	// link it to the list
 	pend->next = qtv->proxies;
 	qtv->proxies = pend;
 
@@ -621,7 +622,7 @@ static void SV_ProxyIdUsed(int id)
 // Just allocate memory and set some fields, do not perform any linkage to any list.
 // s = Either a socket or file (demo).
 // socket = Decides if "s" is a socket or a file.
-oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv, netadr_t *addr)
+oproxy_t *SV_NewProxy(void *s, qbool socket, netadr_t *addr)
 {
 	oproxy_t *prox = Sys_malloc(sizeof(*prox));
 
@@ -641,7 +642,6 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, sv_t *defaultqtv, netadr_t *addr)
 
 	prox->ctx.max		= MAX_PROXY_INFOS;
 
-	prox->defaultstream = defaultqtv;
 	prox->init_time		= Sys_Milliseconds();
 	prox->io_time		= Sys_Milliseconds();
 
@@ -666,8 +666,8 @@ void SV_FreeProxy(oproxy_t *prox)
 {
 	SV_ProxyIdFreed(prox->id);
 
-	if (prox->defaultstream)
-		Prox_UpdateProxiesUserList(prox->defaultstream, prox, QUL_DEL);
+	if (prox->qtv)
+		Prox_UpdateProxiesUserList(prox->qtv, prox, QUL_DEL);
 
 	if (prox->file)
 		fclose(prox->file);
@@ -687,7 +687,7 @@ void SV_FreeProxy(oproxy_t *prox)
 	Sys_free(prox);
 }
 
-void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv)
+void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster)
 {
 	oproxy_t *prox;
 	SOCKET sock;
@@ -752,7 +752,7 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster, sv_t *defaultqtv)
 		return;
 	}
 
-	prox = SV_NewProxy((void*) &sock, true, defaultqtv, &addr);
+	prox = SV_NewProxy((void*) &sock, true, &addr);
 
 	prox->next = cluster->pendingproxies;
 	cluster->pendingproxies = prox;

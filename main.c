@@ -229,7 +229,7 @@ void Cluster_Run(cluster_t *cluster, qbool dowait, qbool down)
 	SV_CheckMVDPort(cluster); 
 
 	// Look for any other proxies wanting to muscle in on the action.
-	SV_FindProxies(cluster->tcpsocket, cluster, NULL);
+	SV_FindProxies(cluster->tcpsocket, cluster);
 
 	// Serve pending proxies.
 	SV_ReadPendingProxies(cluster); 

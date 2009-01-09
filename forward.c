@@ -433,7 +433,7 @@ oproxy_t *Net_FileProxy(sv_t *qtv, char *filename)
 
 	//no full proxy check, this is going to be used by proxy admins, who won't want to have to raise the limit to start recording.
 
-	prox = SV_NewProxy((void*)f, false, qtv, NULL);
+	prox = SV_NewProxy((void*)f, false, NULL);
 	prox->qtv_clversion = 1.0; // using VERSION: 1 for file proxy
 	prox->qtv_ezquake_ext = 0; // we does't support any qtv ezquake extensions in such case
 
