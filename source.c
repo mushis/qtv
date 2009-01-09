@@ -486,7 +486,7 @@ qbool QTV_Connect(sv_t *qtv, const char *serverurl)
 
 void QTV_Shutdown(cluster_t *cluster, sv_t *qtv)
 {
-	oproxy_t *prox, *old;
+	oproxy_t *next;
 
 	qbool found = false;
 
@@ -521,11 +521,12 @@ void QTV_Shutdown(cluster_t *cluster, sv_t *qtv)
 		Sys_Printf(NULL, "%s: Error: QTV_Shutdown: qtv was't found in list\n", qtv->server);
 
 	// Free proxys/clients linked to this source.
-	for (prox = qtv->proxies; prox; )
+
+	while (qtv->proxies)
 	{
-		old  = prox;
-		prox = prox->next;
-		SV_FreeProxy(old);
+		next = qtv->proxies->next;
+		SV_FreeProxy(qtv->proxies);
+		qtv->proxies = next;
 	}
 
 	cluster->NumServers--; // Less server connections.
