@@ -41,11 +41,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 	#include <conio.h>
 	#include <winsock.h>	// This includes windows.h and is the reason for much compiling slowness with windows builds.
-	#pragma warning(push)
-		#pragma warning(disable:4201) // nonstandard extension used : nameless struct/union
-		#include <mmsystem.h>
-	#pragma	warning(pop)
 	#include <stdlib.h>
+	#include <sys/types.h>
+	#include <sys/timeb.h>
 
 	#ifdef _MSC_VER
 		#pragma comment (lib, "wsock32.lib")

@@ -132,19 +132,21 @@ size_t strlcat(char *dst, char *src, size_t siz)
 
 #endif // defined(__linux__) || defined(_WIN32) || defined(__CYGWIN__)
 
-static ullong sys_timeBase = 0;
-
 ullong Sys_Milliseconds(void)
 {
+	static time_t sys_timeBase = 0;
+
 #ifdef _WIN32
-	#ifdef _MSC_VER
-		#pragma comment(lib, "winmm.lib")
-	#endif
+	struct timeb tb;
+
+	ftime(&tb);
 
 	if (!sys_timeBase)
-		sys_timeBase = timeGetTime();
+	{
+		sys_timeBase = tb.time;
+	}
 
-	return timeGetTime() - sys_timeBase;
+	return (tb.time - sys_timeBase) * 1000 + tb.millitm;
 #else // _WIN32
 	//assume every other system follows standards.
 	struct timeval tv;
@@ -153,11 +155,10 @@ ullong Sys_Milliseconds(void)
 
 	if (!sys_timeBase)
 	{
-		sys_timeBase = (unsigned)tv.tv_sec;
-		return ((unsigned)tv.tv_usec) / 1000;
+		sys_timeBase = tv.tv_sec;
 	}
 
-	return ((unsigned)tv.tv_sec - sys_timeBase) * 1000 + (((unsigned)tv.tv_usec) / 1000);
+	return (tv.tv_sec - sys_timeBase) * 1000 + tv.tv_usec / 1000;
 #endif // _WIN32 else
 }
 
