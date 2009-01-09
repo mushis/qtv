@@ -1401,8 +1401,6 @@ int QTV_ParseMVD(sv_t *qtv)
 
 void QTV_Run(cluster_t *cluster, sv_t *qtv)
 {
-	unsigned int oldcurtime;
-
 	if (qtv->DisconnectWhenNooneIsWatching && !qtv->proxies)
 	{
 		Sys_Printf(NULL, "%s: Stream became inactive\n", qtv->server);
@@ -1422,15 +1420,7 @@ void QTV_Run(cluster_t *cluster, sv_t *qtv)
 		return;
 	}
 
-	oldcurtime   = qtv->curtime;
 	qtv->curtime = Sys_Milliseconds();
-
-	// FIXME: I suggest restarting the proxy instead of wrapping.
-	if (oldcurtime > qtv->curtime)
-	{
-		Sys_Printf(NULL, "%s: Time wrapped\n", qtv->server);
-		qtv->parsetime = qtv->curtime;
-	}
 
 	if (qtv->src.type == SRC_BAD)
 	{
