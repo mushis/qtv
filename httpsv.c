@@ -484,7 +484,7 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	}
 	else if (URLCOMPARE(getpath, "/status", skiplen))
 	{
-		HTTPSV_GenerateQTVStatus(cluster, pend);
+		HTTPSV_GenerateQTVStatus(cluster, pend, getpath + skiplen);
 	}
 	else if (!strcmp(FS_FileExtension(getpath), ".png"))
 	{

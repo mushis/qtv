@@ -1065,6 +1065,7 @@ void Proxy_ReadInput(sv_t *qtv, oproxy_t *prox)
 	if (len)
 	{
 		len = recv(prox->sock, ((char *) prox->inbuffer) + prox->inbuffersize, len, 0);
+		SV_ProxySocketIOStats(prox, len, 0);
 
 		if (len == 0)
 		{

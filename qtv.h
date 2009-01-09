@@ -372,6 +372,12 @@ typedef struct netadr_s
 typedef int socklen_t;
 #endif
 
+typedef struct io_stat_s 
+{
+	ullong r; // read bytes
+	ullong w; // write bytes
+} io_stat_t;
+
 typedef struct sv_s sv_t;
 
 //
@@ -424,6 +430,8 @@ typedef struct oproxy_s
 	int				downloadsize;					// Total bytes.
 	int				downloadcount;					// Bytes sent.
 	int				file_percent;
+
+	io_stat_t		socket_stat;					// read/write stats for socket
 
 	struct			oproxy_s *next;
 } oproxy_t;
@@ -502,6 +510,9 @@ struct sv_s
 
 	unsigned int	connection_attempts;			// The number of times we've tried to connect unsuccessfully (used for backing off), used when qtv_backoff == 2.
 	unsigned int	connection_delay;				// Time to reconnect try, used when qtv_backoff == 1.
+
+	io_stat_t		socket_stat;					// read/write stats for socket
+	io_stat_t		proxies_socket_stat;			// read/write stats for proxies sockets
 
 	//
 	// Fields above saved on each QTV_Connect()
@@ -611,6 +622,8 @@ typedef struct cluster_s
 
 	oproxy_t *pendingproxies;			// Incoming request are queued here, after a request is served it's unlinked from here.
 
+	io_stat_t		socket_stat;		// read/write stats for all sockets
+
 	availdemo_t availdemos[2048];		// lala, insane... but we support it, I checked.
 	int availdemoscount;
 	ullong last_demos_update;			// Miliseconds, last time when Cluster_BuildAvailableDemoList() was issued, saving CPU time
@@ -719,9 +732,6 @@ extern cvar_t	qtv_backoff;
 #define dem_mask		7
 
 
-// Checking is buffer contain at least one parse able packet.
-//int				SV_ConsistantMVDData(unsigned char *buffer, int remaining);
-
 // Read upstream (mvd or connection header), forawrd stream to clients/qtvs
 qbool			Net_ReadStream(sv_t *qtv);
 
@@ -755,6 +765,10 @@ void			QTV_Shutdown(cluster_t *cluster, sv_t *qtv);
 // malloc(qtv) and init, call QTV_Connect and link to servers list.
 sv_t			*QTV_NewServerConnection(cluster_t *cluster, const char *server, char *password, 
 								qbool force, qbool autoclose, qbool noduplicates, qbool query);
+
+// add read/write stats for prox, qtv, cluster.
+void			QTV_SocketIOStats(sv_t *qtv, int r, int w);
+
 // Parse qtv connection header
 qbool			QTV_ParseHeader(sv_t *qtv);
 
@@ -876,6 +890,9 @@ void			SV_ReadPendingProxies(cluster_t *cluster);
 // Serve pending proxies.
 void			SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster);
 
+// add read/write stats for prox, qtv, cluster
+void			SV_ProxySocketIOStats(oproxy_t *prox, int r, int w);
+
 // Check changes of mvdport variable and do appropriate action.
 void			SV_CheckMVDPort(cluster_t *cluster);
 
@@ -936,7 +953,7 @@ void			HTTPSV_GenerateImage(cluster_t *cluster, oproxy_t *dest, char *imgfilenam
 void			HTTPSV_GenerateLevelshot(cluster_t *cluster, oproxy_t *dest, char *name);
 void			HTTPSV_GenerateDemoDownload(cluster_t *cluster, oproxy_t *dest, char *name);
 void			HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str);
-void			HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest);
+void			HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest, char *str);
 
 
 //

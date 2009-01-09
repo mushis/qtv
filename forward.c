@@ -41,6 +41,7 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 	else
 	{
 		length = send(prox->sock, (char *) prox->_buffer_, prox->_buffersize_, 0);
+		SV_ProxySocketIOStats(prox, 0, length);
 	}
 
 	switch (length)

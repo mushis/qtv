@@ -825,9 +825,10 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 // STATUS
 //========================================================================
 
-void HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest)
+void HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest, char *str)
 {
 	unsigned int d, h, m;
+	char *net;
 
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/html", true);
 	HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Status");
@@ -838,6 +839,25 @@ void HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest)
 
 	Net_ProxyPrintf(dest, "servers: %i/%i\n", g_cluster.NumServers, maxservers.integer);
 	Net_ProxyPrintf(dest, "clients: %i/%i\n", g_cluster.numproxies, get_maxclients());
+	Net_ProxyPrintf(dest, "net: in/out %llu/%llu\n", g_cluster.socket_stat.r, g_cluster.socket_stat.w);
+
+	// parse something like http://localhost?net=xxx
+	if ((net = strstr(str, "?net=")) || (net = strstr(str, "&net=")))
+	{
+		net += sizeof("*net=")-1;
+
+		if (atoi(net))
+		{
+			if (g_cluster.servers)
+			{
+				sv_t *qtv;
+
+				for (qtv = g_cluster.servers; qtv; qtv = qtv->next)
+					Net_ProxyPrintf(dest, "net: %s in/out %llu/%llu clients: in/out %llu/%llu\n", 
+						qtv->server, qtv->socket_stat.r, qtv->socket_stat.w, qtv->proxies_socket_stat.r, qtv->proxies_socket_stat.w);
+			}
+		}
+	}
 
 	Get_Uptime(g_cluster.curtime / 1000, &d, &h, &m);
 

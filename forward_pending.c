@@ -236,6 +236,7 @@ static qbool SV_ReceivePendingProxyRequest(cluster_t *cluster, oproxy_t *pend)
 
 	len = sizeof(pend->inbuffer) - pend->inbuffersize - 1;
 	len = recv(pend->sock, (char *) pend->inbuffer + pend->inbuffersize, len, 0);
+	SV_ProxySocketIOStats(pend, len, 0);
 	
 	// Remote side closed connection.
 	if (len == 0)
@@ -685,6 +686,33 @@ void SV_FreeProxy(oproxy_t *prox)
 
 	Sys_free(prox->_buffer_); // free buffer
 	Sys_free(prox);
+}
+
+// add read/write stats for prox, qtv, cluster
+void SV_ProxySocketIOStats(oproxy_t *prox, int r, int w)
+{
+	r = max(0, r);
+	w = max(0, w);
+
+	if (r)
+	{
+		prox->socket_stat.r += r; // individual
+
+		if (prox->qtv)
+			prox->qtv->proxies_socket_stat.r += r; // cummulative for all proxies of particular qtv
+
+		g_cluster.socket_stat.r += r; // cummulative for all
+	}
+
+	if (w)
+	{
+		prox->socket_stat.w += w; // individual
+
+		if (prox->qtv)
+			prox->qtv->proxies_socket_stat.w += w; // cummulative for all proxies of particular qtv
+
+		g_cluster.socket_stat.w += w; // cummulative for all
+	}
 }
 
 void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster)

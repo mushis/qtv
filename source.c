@@ -593,6 +593,25 @@ sv_t *QTV_NewServerConnection(cluster_t *cluster, const char *server, char *pass
 	return qtv;
 }
 
+// add read/write stats for prox, qtv, cluster
+void QTV_SocketIOStats(sv_t *qtv, int r, int w)
+{
+	r = max(0, r);
+	w = max(0, w);
+
+	if (r)
+	{
+		qtv->socket_stat.r += r; // individual
+		g_cluster.socket_stat.r += r; // cummulative for all
+	}
+
+	if (w)
+	{
+		qtv->socket_stat.w += w; // individual
+		g_cluster.socket_stat.w += w; // cummulative for all
+	}
+}
+
 void Net_QueueUpstream(sv_t *qtv, int size, char *buffer)
 {
 	if (qtv->UpstreamBufferSize < 0 || qtv->UpstreamBufferSize > sizeof(qtv->UpstreamBuffer))
@@ -639,6 +658,7 @@ qbool Net_WriteUpStream(sv_t *qtv)
 	    }
 
 		len = send(qtv->src.s, (char *) qtv->UpstreamBuffer, qtv->UpstreamBufferSize, 0);
+		QTV_SocketIOStats(qtv, 0, len);
 
 		if (len == 0)
 			return false; // Hm, nothing was sent.
@@ -668,58 +688,6 @@ qbool Net_WriteUpStream(sv_t *qtv)
 
 	return true; // Something was sent, or does't require sending.
 }
-
-#if 0
-int SV_ConsistantMVDData(unsigned char *buffer, int remaining)
-{
-	int lengthofs;
-	int length;
-	int available = 0;
-
-	while (true)
-	{
-		if (remaining < 2)
-			return available;
-
-		// buffer[0] is time
-
-		switch (buffer[1]&dem_mask)
-		{
-			case dem_set:
-				length = 10;
-
-				goto gottotallength;
-
-			case dem_multiple:
-				lengthofs = 6;
-				break;
-
-			default:
-				lengthofs = 2;
-				break;
-		}
-
-		if (lengthofs + 4 > remaining)
-			return available;
-
-		length = (buffer[lengthofs]<<0) + (buffer[lengthofs+1]<<8) + (buffer[lengthofs+2]<<16) + (buffer[lengthofs+3]<<24);
-
-		length += lengthofs + 4;
-
-		if (length > 1400) // some demos have it more that 1400, is it really corrupted?
-			Sys_Printf(NULL, "Corrupt mvd\n");
-
-gottotallength:
-
-		if (remaining < length)
-			return available;
-		
-		remaining -= length;
-		available += length;
-		buffer += length;
-	}
-}
-#endif
 
 qbool Net_ReadStream(sv_t *qtv)
 {
@@ -777,6 +745,7 @@ qbool Net_ReadStream(sv_t *qtv)
 			}
 
 			read = recv(qtv->src.s, buffer, maxreadable, 0);
+			QTV_SocketIOStats(qtv, read, 0);
 			break;
 		}
 		default:
@@ -791,20 +760,6 @@ qbool Net_ReadStream(sv_t *qtv)
 		qtv->io_time = qtv->curtime; // Update IO activity.
 
 		qtv->buffersize += read;
-
-		// qqshka: turned this off
-		#if 0
-		if (!qtv->ParsingQTVheader)	// QTV header being the auth part of the connection rather than the stream.
-		{
-
-			int forwardable = SV_ConsistantMVDData(qtv->buffer, qtv->buffersize);
-
-			if (forwardable > 0)
-			{
-				SV_ForwardStream(qtv, qtv->buffer, forwardable);
-			}
-		}
-		#endif
 	}
 	else
 	{
