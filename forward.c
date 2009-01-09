@@ -136,7 +136,7 @@ void Net_ProxyPrintf(oproxy_t *prox, char *fmt, ...)
 	char		string[2048] = {0};
 	
 	va_start (argptr, fmt);
-	Q_vsnprintf (string, sizeof(string), fmt, argptr);
+	vsnprintf (string, sizeof(string), fmt, argptr);
 	va_end (argptr);
 
 	Net_ProxySend(&g_cluster, prox, string, strlen(string));
@@ -185,7 +185,7 @@ void Prox_Printf(cluster_t *cluster, oproxy_t *prox, int dem_type, unsigned int 
 		return; // no thx, we trying empty their buffer
 	
 	va_start (argptr, fmt);
-	Q_vsnprintf (string + PREFIX_LEN, sizeof(string) - PREFIX_LEN, fmt, argptr);
+	vsnprintf (string + PREFIX_LEN, sizeof(string) - PREFIX_LEN, fmt, argptr);
 	va_end (argptr);
 
 	// two bytes prefix

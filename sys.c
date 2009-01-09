@@ -10,7 +10,7 @@ Also contain some "misc" functions, have no idea where to put it, u r welcome to
 
 //FIXME: replace this shit with linux/FreeBSD code, so we will be equal on all OSes
 
-int snprintf(char *buffer, size_t count, char const *format, ...)
+int qsnprintf(char *buffer, size_t count, char const *format, ...)
 {
 	int ret;
 	va_list argptr;
@@ -23,7 +23,7 @@ int snprintf(char *buffer, size_t count, char const *format, ...)
 	return ret;
 }
 
-int Q_vsnprintf(char *buffer, size_t count, const char *format, va_list argptr)
+int qvsnprintf(char *buffer, size_t count, const char *format, va_list argptr)
 {
 	int ret;
 	if (!count)
@@ -195,7 +195,7 @@ void Sys_Printf(cluster_t *cluster, char *fmt, ...)
 	unsigned char *t;
 	
 	va_start (argptr, fmt);
-	Q_vsnprintf (string, sizeof(string), fmt, argptr);
+	vsnprintf (string, sizeof(string), fmt, argptr);
 	va_end (argptr);
 
 	// cluster may be NULL, if someday u start use it...
@@ -243,7 +243,7 @@ void Sys_DPrintf(cluster_t *cluster, char *fmt, ...)
 		return;
 	
 	va_start (argptr, fmt);
-	Q_vsnprintf (string, sizeof(string), fmt, argptr);
+	vsnprintf (string, sizeof(string), fmt, argptr);
 	va_end (argptr);
 
 	Sys_Printf(cluster, "%s", string);
@@ -261,7 +261,7 @@ void Sys_Error (char *error, ...)
 	char		text[2048];
 
 	va_start (argptr, error);
-	Q_vsnprintf (text, sizeof(text), error, argptr);
+	vsnprintf (text, sizeof(text), error, argptr);
 	va_end (argptr);
 
 	strlcat(text, "\n", sizeof(text));

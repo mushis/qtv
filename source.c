@@ -616,7 +616,7 @@ void Net_UpstreamPrintf(sv_t *qtv, char *fmt, ...)
 	char		string[MAX_PROXY_UPSTREAM + 10] = {0};
 	
 	va_start(argptr, fmt);
-	Q_vsnprintf(string, sizeof(string), fmt, argptr);
+	vsnprintf(string, sizeof(string), fmt, argptr);
 	va_end(argptr);
 
 	Net_QueueUpstream(qtv, strlen(string), string);

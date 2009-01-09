@@ -50,7 +50,7 @@ char *HTMLprintf(char *outb, int outl, qbool qfont, const char *fmt, ...)
 	char *inb = qfmt;
 
 	va_start(val, fmt);
-	Q_vsnprintf(qfmt, sizeof(qfmt), fmt, val);
+	vsnprintf(qfmt, sizeof(qfmt), fmt, val);
 	va_end(val);
 
 	outl--;

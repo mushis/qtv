@@ -143,15 +143,13 @@ typedef unsigned long long int ullong;
 
 #ifdef _WIN32
 
-int		snprintf(char *str, size_t n, char const *fmt, ...);
-int		Q_vsnprintf(char *buffer, size_t count, const char *format, va_list argptr);
+int		qsnprintf(char *str, size_t n, char const *fmt, ...);
+int		qvsnprintf(char *buffer, size_t count, const char *format, va_list argptr);
 
-#else
-
-#define Q_vsnprintf vsnprintf
+#define snprintf qsnprintf
+#define vsnprintf qvsnprintf
 
 #endif
-
 
 #if defined(__linux__) || defined(_WIN32) || defined(__CYGWIN__)
 size_t	strlcpy (char *dst, const char *src, size_t siz);
