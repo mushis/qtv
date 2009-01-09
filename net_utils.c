@@ -126,9 +126,6 @@ SOCKET Net_TCPListenPort(int port)
 	SOCKET sock;
 
 	struct sockaddr_in	address;
-#ifdef SOCKET_CLOSE_TIME
-	struct linger	lingeropt;
-#endif
 
 	unsigned long nonblocking = true;
 
@@ -140,20 +137,6 @@ SOCKET Net_TCPListenPort(int port)
 	{
 		return INVALID_SOCKET;
 	}
-
-#ifdef SOCKET_CLOSE_TIME
-	// hard close: in case of closesocket(), socket will be closen after SOCKET_CLOSE_TIME or earlier
-	memset(&lingeropt, 0, sizeof(lingeropt));
-	lingeropt.l_onoff  = 1;
-	lingeropt.l_linger = SOCKET_CLOSE_TIME;
-
-	if (setsockopt(sock, SOL_SOCKET, SO_LINGER, (void*)&lingeropt, sizeof(lingeropt)) == -1)
-	{
-//        Sys_Printf(NULL, "Net_TCPListenPort: Could not set SO_LINGER socket option\n");
-		closesocket(sock);
-		return INVALID_SOCKET;
-    }
-#endif
 
 	if (ioctlsocket (sock, FIONBIO, &nonblocking) == -1)
 	{

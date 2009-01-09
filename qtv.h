@@ -232,9 +232,6 @@ extern "C" {
 #define RECONNECT_TIME			(1000 * 30)
 #define DEMO_RECONNECT_TIME		(1000 * 2)				// If demo end, start play it again faster, do not wait 30 seconds.
 
-// I turned this off atm, probably cause problems
-//#define SOCKET_CLOSE_TIME		(10*60)					// Seconds OS wait before finally close socket, this way we can loose data, but at least ports will be accessible
-
 //======================================
 
 #include "qconst.h"

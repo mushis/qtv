@@ -693,9 +693,6 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster)
 	SOCKET sock;
 	netadr_t addr;
 	socklen_t addrlen;
-	#ifdef SOCKET_CLOSE_TIME
-	struct linger	lingeropt;
-	#endif
 
 	unsigned long nonblocking = true;
 
@@ -713,20 +710,6 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster)
 		closesocket(sock);
 		return;
 	}
-
-	#ifdef SOCKET_CLOSE_TIME
-	// hard close: in case of closesocket(), socket will be closed after SOCKET_CLOSE_TIME or earlier
-	memset(&lingeropt, 0, sizeof(lingeropt));
-	lingeropt.l_onoff  = 1;
-	lingeropt.l_linger = SOCKET_CLOSE_TIME;
-
-	if (setsockopt(sock, SOL_SOCKET, SO_LINGER, (void*)&lingeropt, sizeof(lingeropt) ) == -1)
-	{
-		Sys_Printf(NULL, "SV_FindProxies: Could not set SO_LINGER socket option\n");
-		closesocket(sock);
-		return;
-	}
-	#endif // SOCKET_CLOSE_TIME
 
 	if (ioctlsocket(sock, FIONBIO, &nonblocking) == INVALID_SOCKET) 
 	{

@@ -211,9 +211,6 @@ qbool Net_ConnectToTCPServer(sv_t *qtv, char *ip)
 	int err;
 	netadr_t from;
 	unsigned long nonblocking = true;
-#ifdef SOCKET_CLOSE_TIME
-	struct linger	lingeropt;
-#endif
 
 	if (qtv->src.type != SRC_TCP) 
 	{
@@ -237,16 +234,6 @@ qbool Net_ConnectToTCPServer(sv_t *qtv, char *ip)
 	qtv->src.s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (qtv->src.s == INVALID_SOCKET)
 		return false;
-
-#ifdef SOCKET_CLOSE_TIME
-	// Hard close: in case of closesocket(), socket will be closen after SOCKET_CLOSE_TIME or earlier
-	memset(&lingeropt, 0, sizeof(lingeropt));
-	lingeropt.l_onoff  = 1;
-	lingeropt.l_linger = SOCKET_CLOSE_TIME;
-
-	if (setsockopt(qtv->src.s, SOL_SOCKET, SO_LINGER, (void*)&lingeropt, sizeof(lingeropt)) == -1)
-		return false;
-#endif // SOCKET_CLOSE_TIME
 
 	memset(&from, 0, sizeof(from));
 	((struct sockaddr*)&from)->sa_family = ((struct sockaddr*)&qtv->ServerAddress)->sa_family;
