@@ -960,6 +960,13 @@ void			HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest, char *str);
 // cl_cmds.c
 //
 
+// search proxy/client by id
+oproxy_t		*proxy_by_id(sv_t *qtv, int id);
+// search proxy/client by name
+oproxy_t		*proxy_by_name(sv_t *qtv, const char *name);
+// search proxy/client by id or name
+oproxy_t		*proxy_by_id_or_name(sv_t *qtv, const char *id_or_name);
+
 extern cvar_t	floodprot;
 extern cvar_t	demo_dir;
 #define DEMO_DIR (demo_dir.string[0] ? demo_dir.string : "demos")

@@ -41,7 +41,30 @@ oproxy_t *proxy_by_id(sv_t *qtv, int id)
 	return NULL;
 }
 
+oproxy_t *proxy_by_name(sv_t *qtv, const char *name)
+{
+	oproxy_t *prox;
+	char tmp[MAX_INFO_KEY];
 
+	if (!qtv || !name || !name[0])
+		return NULL;
+
+	for (prox = qtv->proxies; prox; prox = prox->next)
+		if (!strcmp(name, Info_Get(&prox->ctx, "name", tmp, sizeof(tmp))))
+			return prox;
+
+	return NULL;
+}
+
+oproxy_t *proxy_by_id_or_name(sv_t *qtv, const char *id_or_name)
+{
+	oproxy_t *prox = proxy_by_id(qtv, atoi(id_or_name ? id_or_name : "0"));
+
+	if (prox)
+		return prox;
+
+	return proxy_by_name(qtv, id_or_name);
+}
 
 //============================================================================
 // say/say_team
@@ -696,6 +719,7 @@ static void Clcmd_Ptrack_f(sv_t *qtv, oproxy_t *prox)
 static void Clcmd_Follow_f(sv_t *qtv, oproxy_t *prox)
 {
 	oproxy_t *tmp;
+	char name[MAX_INFO_KEY];
 
 	if (Cmd_Argc() != 2)
 	{
@@ -704,23 +728,22 @@ static void Clcmd_Follow_f(sv_t *qtv, oproxy_t *prox)
 		return;
 	}
 
-	prox->follow_id = atoi(Cmd_Argv(1));
+	tmp = proxy_by_id_or_name(qtv, Cmd_Argv(1));
 
-	if (prox->follow_id == prox->id)
+	if (!tmp)
 	{
-		Sys_Printf(NULL, "follow: Is it really wise for Silicon Valley to sic the government on Microsoft?\n");
-		prox->follow_id = 0;
+		Sys_Printf(NULL, "follow: user %s not found\n", Cmd_Argv(1));
 		return;
 	}
 
-	if (!(tmp = proxy_by_id(qtv, prox->follow_id)))
+	if (tmp->id == prox->id)
 	{
-		Sys_Printf(NULL, "follow: no user with id %d\n", prox->follow_id);
-		prox->follow_id = 0;
+		Sys_Printf(NULL, "follow: huh? you can't follow yourself\n");
 		return;
 	}
 
-	Sys_Printf(NULL, "follow: %d\n", tmp->id);
+	prox->follow_id = tmp->id;
+	Sys_Printf(NULL, "follow: %s\n", Info_Get(&tmp->ctx, "name", name, sizeof(name)));
 }
 
 //============================================================================
