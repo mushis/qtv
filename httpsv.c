@@ -130,6 +130,42 @@ int HTTPSV_UnescapeURL(const char *url, char *out, size_t outsize)
 	return 0;
 }
 
+int HTTPSV_EscapeURL(const char *url, char *out, size_t outsize)
+{
+	const char *s = url;
+	const char *escaped_chars = " <>#%{}|\\^~[]`;/?:@=&$";
+	const char *hex = "0123456789ABCDEF";
+	size_t wrote_chars = 0;
+
+	while (*s && wrote_chars < outsize) {
+		if (strchr(escaped_chars, *s)) {
+			if (wrote_chars + 3 < outsize) {
+				int character = *s++;
+				*out++ = '%';
+				*out++ = hex[character / 16];
+				*out++ = hex[character % 16];
+				wrote_chars += 3;
+			}
+			else {
+				break;
+			}
+		}
+		else {
+			*out++ = *s++;
+			wrote_chars++;
+		}
+	}
+
+	if (wrote_chars < outsize) {
+		*out = '\0';
+		return wrote_chars;
+	}
+	else {
+		out[outsize-1] = '\0';
+		return outsize;
+	}
+}
+
 void HTTPSV_SendHTTPHeader(cluster_t *cluster, oproxy_t *dest, char *error_code, char *content_type, qbool nocache)
 {
 	char *s;

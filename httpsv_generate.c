@@ -517,7 +517,9 @@ void HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char
 void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 {
 	int i;
-	char link[1024], name[sizeof(cluster->availdemos[0].name) * 5];
+	char link[1024],
+		name[sizeof(cluster->availdemos[0].name) * 5],
+		href[sizeof(cluster->availdemos[0].name) * 5];
 	char *s;
 
 	dest->_bufferautoadjustmaxsize_ = 1024 * 1024; // NOTE: this allow 1MB buffer...
@@ -538,6 +540,9 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 	Cluster_BuildAvailableDemoList(cluster);
 	for (i = 0; i < cluster->availdemoscount; i++)
 	{
+		// URL escaping (inside <a href='...'>)
+		HTTPSV_EscapeURL(cluster->availdemos[i].name, href, sizeof(href));
+		// HTML escaping (in HTML text)
 		HTMLprintf(name, sizeof(name), false, "%s", cluster->availdemos[i].name);
 
 		snprintf(link, sizeof(link), "<tr class='%s'><td class='stream'>", ((i % 2) ? "even" : "odd"));
@@ -546,7 +551,7 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 		if (stricmp(name + strlen(name) - 4, ".mvd") == 0) {
 			snprintf(link, sizeof(link),
 				"<a href='/watch.qtv?demo=%s'><img src='/stream.png' width='14' height='15' /></a>",
-				name);
+				href);
 			Net_ProxySend(cluster, dest, link, strlen(link));
 		}
 		
@@ -554,7 +559,7 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 			"<td class='save'><a href='/dl/demos/%s'><img src='/save.png' width='16' height='16' /></a></td>"
 			"<td class='name'>%s</td><td class='size'>%i kB</td>"
 			"</tr>\n",
-			name, name, cluster->availdemos[i].size/1024);
+			href, name, cluster->availdemos[i].size/1024);
 		Net_ProxySend(cluster, dest, link, strlen(link));
 	}
 	s = "</tbody></table>\n";
