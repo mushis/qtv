@@ -939,7 +939,7 @@ void			HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend); //, char *postdata
 void			HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend);
 qbool			HTTPSV_GetHostname(cluster_t *cluster, oproxy_t *dest, char *hostname, int buffersize);
 int				HTTPSV_UnescapeURL(const char *url, char *out, size_t outsize);
-int				HTTPSV_EscapeURL(const char *url, char *out, size_t outsize);
+size_t			HTTPSV_EscapeURL(const char *url, char *out, size_t outsize);
 
 //
 // httpsv_generate.c

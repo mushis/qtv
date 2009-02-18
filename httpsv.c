@@ -130,39 +130,48 @@ int HTTPSV_UnescapeURL(const char *url, char *out, size_t outsize)
 	return 0;
 }
 
-int HTTPSV_EscapeURL(const char *url, char *out, size_t outsize)
+// escapes certain characters with %hex codes, returns length of string in out_buf
+size_t HTTPSV_EscapeURL(const char *url, char *out, size_t outsize)
 {
+	char *out_buf = out;
 	const char *s = url;
 	const char *escaped_chars = " <>#%{}|\\^~[]`;/?:@=&$";
 	const char *hex = "0123456789ABCDEF";
 	size_t wrote_chars = 0;
 
-	while (*s && wrote_chars < outsize) {
-		if (strchr(escaped_chars, *s)) {
-			if (wrote_chars + 3 < outsize) {
+	while (*s && wrote_chars < outsize)
+	{
+		if (strchr(escaped_chars, *s))
+		{
+			if (wrote_chars + 3 < outsize)
+			{
 				int character = *s++;
 				*out++ = '%';
 				*out++ = hex[character / 16];
 				*out++ = hex[character % 16];
 				wrote_chars += 3;
 			}
-			else {
+			else
+			{
 				break;
 			}
 		}
-		else {
+		else
+		{
 			*out++ = *s++;
 			wrote_chars++;
 		}
 	}
 
-	if (wrote_chars < outsize) {
+	if (wrote_chars < outsize)
+	{
 		*out = '\0';
 		return wrote_chars;
 	}
-	else {
-		out[outsize-1] = '\0';
-		return outsize;
+	else
+	{
+		out_buf[outsize-1] = '\0';
+		return outsize-1;
 	}
 }
 
