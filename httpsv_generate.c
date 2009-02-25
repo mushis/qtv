@@ -691,6 +691,7 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 	char hostname[1024];
 	char tmp[2048];
 	char tmp2[2048];
+	char mapname[MAX_QPATH];
 	int player;
 
 	// Get the hostname from the header.
@@ -793,6 +794,9 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 		// Set the url to the stream.
 		snprintf(link, sizeof(link), link_fmt, hostname, streams->streamid);
 
+		strlcpy(mapname, streams->modellist[1].name[0] ? streams->modellist[1].name : "maps/notready.bsp", sizeof(mapname));
+		FS_StripPathAndExtension(mapname);
+
 		item_fmt = CRLF
 				"<type>text/plain</type>" CRLF
 				"<title>%s</title>" CRLF 
@@ -801,7 +805,9 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 				"<pubDate>%s</pubDate>" CRLF
 				"<guid>%s</guid>" CRLF
 				"<hostname>%s</hostname>" CRLF
-				"<port>%i</port>" CRLF;
+				"<port>%i</port>" CRLF
+				"<map>%s</map>" CRLF
+				"<observercount>%u</observercount>" CRLF;
 
 		{
 			// Separate the hostname and port.
@@ -812,8 +818,9 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 			while (*t && (*t != ':')) ++t;
 			*t = 0;
 			port = atoi(++t);
+			port = (port == 0) ? 27500 : port;
 
-			snprintf(s, item_len, item_fmt, server, link, playerlist, "", "", tmp, port);
+			snprintf(s, item_len, item_fmt, server, link, playerlist, "", "", tmp, port, mapname, Clcmd_UsersCount(streams));
 			HTMLPRINT(s);
 		}
 
