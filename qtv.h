@@ -91,7 +91,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#define ioctlsocket ioctl
 	#define closesocket close
 
-#elif defined(__linux__) || defined(ixemul)
+#elif defined(__linux__) || defined(ixemul) || defined(__FreeBSD__)
 	#include <sys/time.h>
 	#include <sys/types.h>
 	#include <sys/socket.h>
