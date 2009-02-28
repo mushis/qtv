@@ -5,7 +5,8 @@ STRIP=strip
 
 STRIPFLAGS=--strip-unneeded --remove-section=.comment
 
-OBJS = cmd.o crc.o cvar.o forward.o forward_pending.o info.o main.o mdfour.o \
+OBJS = \
+	cmd.o crc.o cvar.o forward.o forward_pending.o info.o main.o mdfour.o \
 	msg.o net_utils.o parse.o qw.o source.o source_cmds.o sys.o build.o token.o httpsv.o httpsv_generate.o \
 	cl_cmds.o fs.o ban.o
 
