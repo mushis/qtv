@@ -664,27 +664,39 @@ static void Clcmd_StopDownload_f(sv_t *qtv, oproxy_t *prox)
 //============================================================================
 // ptrack/follow
 
-static void apply_pov(sv_t *qtv, oproxy_t *p)
+static void apply_pov_msg(sv_t *qtv, oproxy_t *p, netmsg_t *msg)
 {
-	oproxy_t *prox;
-	char 	buffer[128 + 10], buf[128];
-	netmsg_t msg;
+	char 	buf[64];
 
 	if (!p->pov)
 		return; // FIXME
 
-	InitNetMsg(&msg, buffer, sizeof(buffer));
-
-	WriteByte (&msg, svc_stufftext);
 	if (p->pov)
 		snprintf(buf, sizeof(buf), "track %d\n", qtv->players[(int)bound(0, p->pov - 1, MAX_CLIENTS - 1)].userid);
 	else
 		snprintf(buf, sizeof(buf), "track off\n"); // FIXME
-	WriteData (&msg, buf, strlen(buf) + 1);
+
+	msg_StuffCommand(msg, buf);
+}
+
+static void apply_pov(sv_t *qtv, oproxy_t *p, oproxy_t *only)
+{
+	oproxy_t *prox;
+	char 	buffer[64 + 10];
+	netmsg_t msg;
+
+	InitNetMsg(&msg, buffer, sizeof(buffer));
+	apply_pov_msg(qtv, p, &msg);
+
+	if (!msg.cursize)
+		return;
 
 	for (prox = qtv->proxies; prox; prox = prox->next)
 	{
 		if (prox->flushing)
+			continue;
+
+		if (only && only != prox)
 			continue;
 
 		if (prox->follow_id && prox->follow_id == p->id)
@@ -697,7 +709,7 @@ static void Clcmd_Ptrack_f(sv_t *qtv, oproxy_t *prox)
 	if (Cmd_Argc() != 2)
 	{
 		prox->pov = 0;
-		apply_pov(qtv, prox);
+		apply_pov(qtv, prox, NULL);
 		return;
 	}
 
@@ -707,19 +719,19 @@ static void Clcmd_Ptrack_f(sv_t *qtv, oproxy_t *prox)
 	{
 		Sys_Printf(NULL, "Invalid client to track: %d\n", prox->pov);
 		prox->pov = 0;
-		apply_pov(qtv, prox);
+		apply_pov(qtv, prox, NULL);
 		return;
 	}
 
 	prox->pov++; // and here we increase it
 
-	apply_pov(qtv, prox);
+	apply_pov(qtv, prox, NULL);
 }
 
 static void Clcmd_Follow_f(sv_t *qtv, oproxy_t *prox)
 {
-	oproxy_t *tmp;
-	char name[MAX_INFO_KEY];
+	oproxy_t	*tmp;
+	char		name[MAX_INFO_KEY];
 
 	if (Cmd_Argc() != 2)
 	{
@@ -744,6 +756,9 @@ static void Clcmd_Follow_f(sv_t *qtv, oproxy_t *prox)
 
 	prox->follow_id = tmp->id;
 	Sys_Printf(NULL, "follow: %s\n", Info_Get(&tmp->ctx, "name", name, sizeof(name)));
+
+	// try to switch 'proxy pov' to 'tmp pov' immediately
+	apply_pov(qtv, tmp, prox);
 }
 
 //============================================================================
