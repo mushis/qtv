@@ -8,7 +8,6 @@
 	header("Pragma: no-cache");
 	header("Content-type: text/html; charset=utf-8");
 
-
 	require "config.php";
 	if (DEBUG_MODE) {
 		error_reporting(E_ALL);
@@ -16,6 +15,9 @@
 	else {
 		error_reporting(0);
 	}
+
+	define ("STREAM_ID", 0);
+	define ("STREAM_URL", 1);
 	
 	$qtvlist = NULL;
 	require "qtvlist.php";
@@ -25,7 +27,7 @@
 	$tablelev = 0;
 	$ignoreline = false;
 	$errors = "";
-	$ignore_empty = IGNORE_EMPTY && !isset($_GET["full"]);
+	$brief_listing = !isset($_GET["full"]);
 	
 	// outpu buffers
 	$output_arr = array();
@@ -37,6 +39,47 @@
 	
 	// type of server line
 	$line_type = false;
+	
+	// for time logging, performance monitoring
+	$timelog = "";
+	$lastlogtime = 0;
+	
+	function run_time()
+	{
+		static $clockstart = 0;
+		
+		if ($clockstart == 0) {
+			$clockstart = microtime(true);
+			return 0;
+		}
+		else {
+			return microtime(true)-$clockstart;
+		}
+	}
+	
+	function logtime($str)
+	{
+		if (!DEBUG_MODE)
+			return;
+		
+		global $timelog;
+		global $lastlogtime;
+		
+		$time = run_time(true);
+		$timediff = number_format($time-$lastlogtime,3);
+		$timelog .= sprintf("%20s - %s (+%s)\n", $str, number_format($time, 3), $timediff);
+		$lastlogtime = $time; 
+	}
+	
+	function dumplog()
+	{
+		if (!DEBUG_MODE)
+			return;
+		
+		global $timelog;
+		
+		echo $timelog;
+	}
 	
 	function output($s)
 	{
@@ -81,9 +124,9 @@
 	function output_dump()
 	{
 		global $output_arr;
-		global $ignore_empty;
+		global $brief_listing;
 		
-		if ($ignore_empty) {
+		if ($brief_listing) {
 			usort($output_arr, "cmp_rows");
 		}
 		
@@ -101,7 +144,7 @@
 		global $tablelev;
 		global $cururl;
 		global $ignoreline;
-		global $ignore_empty;
+		global $brief_listing;
 		global $inobservers;
 		global $line_type;
 		
@@ -113,7 +156,7 @@
 
 		// we are entering a row which represents an empty server
 		// so if user wants, we will set ignore flag on
-		if ($name == "tr" && $ignore_empty && $tablelev == 1) {
+		if ($name == "tr" && $brief_listing && $tablelev == 1) {
 			$ignoreline = $line_type == "empty";
 		}
 		
@@ -202,7 +245,7 @@
 		return TRUE;
 	}
 	
-	/**
+/**
   * Translate literal entities to their numeric equivalents and vice
 versa.
   *
@@ -224,25 +267,25 @@ to their numeric equivalent
 literal entities.
   * @return The XML string with translatet entities.
   */
-	function _translateLiteral2NumericEntities($xmlSource, $reverse =
-FALSE) {
-    static $literal2NumericEntity;
-    
-    if (empty($literal2NumericEntity)) {
-      $transTbl = get_html_translation_table(HTML_ENTITIES);
-      foreach ($transTbl as $char => $entity) {
-        if (strpos('&"<>', $char) !== FALSE) continue;
-        $literal2NumericEntity[$entity] = '&#'.ord($char).';';
-      }
-    }
-    if ($reverse) {
-      return strtr($xmlSource, array_flip($literal2NumericEntity));
-    } else {
-      return strtr($xmlSource, $literal2NumericEntity);
-    }
-  }
+	function _translateLiteral2NumericEntities($xmlSource, $reverse = FALSE)
+	{
+		static $literal2NumericEntity;
 	
-	function InsertUrl($url)
+		if (empty($literal2NumericEntity)) {
+			$transTbl = get_html_translation_table(HTML_ENTITIES);
+			foreach ($transTbl as $char => $entity) {
+				if (strpos('&"<>', $char) !== FALSE) continue;
+				$literal2NumericEntity[$entity] = '&#'.ord($char).';';
+			}
+		}
+		if ($reverse) {
+			return strtr($xmlSource, array_flip($literal2NumericEntity));
+		} else {
+			return strtr($xmlSource, $literal2NumericEntity);
+		}
+	}
+	
+	function InsertUrl($url, $data)
 	{
 		global $xml_parser;
 		global $intable;
@@ -254,13 +297,13 @@ FALSE) {
 		$intable = false;
 		$tablelev = 0;
 		$ignoreline = false;
-		
 		$cururl = $url;
-		$fp = @fopen($url, "r");
-		if (!$fp) {
+		
+		if ($data === false) {
 			$errors .= "<p>Couldn't open {$url}</p>";
 			return;
 		}
+		$data = _translateLiteral2NumericEntities($data);
 		
 		$xml_parser = xml_parser_create();
 		if (!$xml_parser) {
@@ -271,43 +314,62 @@ FALSE) {
 		xml_set_element_handler($xml_parser, "startElement", "endElement");
 		xml_set_character_data_handler($xml_parser, "cdata");
 		xml_set_default_handler($xml_parser, "defaultdata");
-		
-		$data = "";
-		while (!feof($fp)) {
-		    $chunk = fread($fp, 4096);
-		    if ($chunk === false) {
-		      $errors .= "<p>fread on stream ended with error</p>";
-					break;
-				}
-				else {
-					$data .= $chunk;
-				}
-		}
-		$data = _translateLiteral2NumericEntities($data);
-		if (!xml_parse($xml_parser, $data, true)) {
-		  $err = xml_get_error_code($xml_parser);
+		if (!xml_parse($xml_parser, $data, true)) {    
+			$err = xml_get_error_code($xml_parser);
 			$errors .= "<p>XML Parser returned error ".$err."</p>";
 		  $errors .= "<p>".xml_error_string($err)."</p>";
 		}
-		
-		
 		xml_parser_free($xml_parser);
-		fclose($fp);
 	}
-
-	include "header.html";
 	
-	if ($ignore_empty) {
+	include "header.html";
+	flush();
+
+	$streams = array();
+	$stream_data = array();
+	foreach ($qtvlist as $url => $name) {
+		$parsed_url = parse_url($url);
+		$host = $parsed_url["host"];
+		logtime($url);
+		logtime("before fsockopen");
+		$stream = fsockopen($parsed_url["host"], $parsed_url["port"], $errno, $errstr, SOCKET_OPEN_TIMEOUT);
+		if ($stream !== false) {
+			fwrite($stream, "GET /nowplaying HTTP/1.1\nHost: {$host}\n\n");
+			$streams[] = array(STREAM_ID => $stream, STREAM_URL => $url);
+			$stream_data[$url] = "";
+		}
+		logtime("afterfsockopen");
+	}
+	
+	logtime("before reading");
+	while (count($streams)) {
+		foreach ($streams as $sid => $stream) {
+			$data = fread($stream[STREAM_ID], 1500);
+			if ($data !== false) {
+				$stream_data[$stream[STREAM_URL]] .= $data;
+			}
+			if (feof($stream[STREAM_ID])) {
+				fclose($stream[STREAM_ID]);
+				unset($streams[$sid]);
+			}
+		}
+	}
+	
+	logtime("after reading");
+
+	if ($brief_listing) {
 		foreach ($qtvlist as $url => $name) {
-			InsertURL($url);
+			InsertURL($url, strstr($stream_data[$url],"<?xml"));
+			logtime($name);
 		}
 		output_dump();
 	}
 	else {
 		foreach ($qtvlist as $url => $name) {
 			echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</a></td></tr>";
-			InsertURL($url);
+			InsertURL($url, strstr($stream_data[$url],"<?xml"));
 			output_dump();
+			flush();
 		}
 	}
 
@@ -317,7 +379,11 @@ FALSE) {
 	}
 	
 	echo "</table>\n";
-	echo "<p id='version'><strong><a href='http://qtv.qw-dev.net'><em>Meta</em>-QTV</a> 1.01</strong></p>\n";
+	echo "<p id='version'><strong><a href='http://qtv.qw-dev.net'><em>Meta</em>-QTV</a> 1.02</strong></p>\n";
 	echo "</body>\n</html>\n";
-
+	if (DEBUG_MODE) {
+		echo "<!--\n";
+		dumplog();
+		echo "-->\n";
+	}
 ?>

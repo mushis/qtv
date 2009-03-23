@@ -1,7 +1,6 @@
 <?php
 
-	/// \file config.php
-	define ("IGNORE_EMPTY", true);
 	define ("DEBUG_MODE", false);
-
+	define ("SOCKET_OPEN_TIMEOUT", 1.0);
+	
 ?>
