@@ -88,32 +88,35 @@ void sourceclose_f(void)
 
 void sourcelist_f(void)
 {
-    char *type, *tmp;
+    char *type;
 	sv_t *qtv;
-	int cnt;
 
-	for (cnt = 0, qtv = g_cluster.servers; qtv; qtv = qtv->next)
+	if (!g_cluster.NumServers)
+		Sys_Printf (NULL, "Sources list: empty\n");
+
+	Sys_Printf (NULL,   "Sources list:\n"
+						"%4.4s %4.4s %3.3s %4.4s %s\n", "#Id", "Type", "Tmp", "Echo", "Name");
+
+	for (qtv = g_cluster.servers; qtv; qtv = qtv->next)
 	{
-		if (!cnt) // print banner
-			Sys_Printf (NULL,   "Sources list:\n"
-								"%4.4s %4.4s %3.3s %s\n", "#Id", "Type", "Tmp", "Name");
-
-		cnt++;
-
-		switch(qtv->src.type) {
-		case SRC_DEMO: type = "demo"; break;
-		case SRC_TCP:  type = "tcp";  break;
-		case SRC_BAD:  type = "bad";  break;
-		default:	   type = "unkn"; break; // unknown
+		switch(qtv->src.type)
+		{
+			case SRC_DEMO: type = "demo"; break;
+			case SRC_TCP:  type = "tcp";  break;
+			case SRC_BAD:  type = "bad";  break;
+			default:	   type = "unkn"; break; // unknown
 		}
 
-		tmp = qtv->DisconnectWhenNooneIsWatching ? "yes" : "no";
-
-		Sys_Printf (NULL, "%4d %4.4s %3.3s %s\n", qtv->streamid, type, tmp, qtv->server);
+		Sys_Printf (NULL, "%4d %4.4s %3.3s %4.4s %s\n", qtv->streamid, type, 
+			(qtv->DisconnectWhenNooneIsWatching ? "yes" : "no"), 
+			(qtv->EchoInServerConsole ? "yes" : "no"), qtv->server);
 	}
 
-	if (!cnt)
-		Sys_Printf (NULL, "Sources list: empty\n");
+	Sys_Printf(NULL, "\nId = Source ID.\n");
+	Sys_Printf(NULL, "Type = Type of source.\n");
+	Sys_Printf(NULL, "Tmp = Disconnect when noone is watching.\n");
+	Sys_Printf(NULL, "Echo = Echo the console from this source to the server console.\n");
+	Sys_Printf(NULL, "Name = The name of the source.\n");
 }
 
 void status_f(void)

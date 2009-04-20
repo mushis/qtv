@@ -276,7 +276,8 @@ static void ParsePrint(sv_t *tv, netmsg_t *m, int to, unsigned int mask, qbool p
 				Sys_ConPrintf(tv, "");
 			}
 			
-			Sys_Printf(NULL, "%s", text);
+			if (tv->EchoInServerConsole)
+				Sys_Printf(NULL, "%s", text);
 		}
 	}
 }
