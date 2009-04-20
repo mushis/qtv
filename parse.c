@@ -43,9 +43,9 @@ static void ParseServerData(sv_t *tv, netmsg_t *m, int to, unsigned int playerma
 
 	qw = !strcmp(tv->gamedir, "qw");
 	// Show Gamedir if different than qw.
-	Sys_Printf(NULL, "%s: ---------------------\n", tv->server);
-	Sys_Printf(NULL, "%s: Map: %s%s%s\n", tv->server, tv->mapname, (qw ? "" : "\nGamedir: "), (qw ? "" : tv->gamedir));
-	Sys_Printf(NULL, "%s: ---------------------\n", tv->server);
+	Sys_ConPrintf(tv, "---------------------\n");
+	Sys_ConPrintf(tv, "Map: %s%s%s\n", tv->mapname, (qw ? "" : "\nGamedir: "), (qw ? "" : tv->gamedir));
+	Sys_ConPrintf(tv, "---------------------\n");
 
 	// Get the movevars.
 	tv->movevars.gravity			= ReadFloat(m);
@@ -272,7 +272,9 @@ static void ParsePrint(sv_t *tv, netmsg_t *m, int to, unsigned int mask, qbool p
 		if (level > 1)
 		{
 			if (printsource)
-				Sys_Printf(NULL, "%s: ", tv->server);
+			{
+				Sys_ConPrintf(tv, "");
+			}
 			
 			Sys_Printf(NULL, "%s", text);
 		}
@@ -333,7 +335,7 @@ static void ParseStaticSound(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 	if (tv->staticsound_count == MAX_STATICSOUNDS)
 	{
 		tv->staticsound_count--;	// Don't be fatal.
-		Sys_Printf(NULL, "%s: Too many static sounds\n", tv->server);
+		Sys_ConPrintf(tv, "Too many static sounds\n");
 	}
 
 	tv->staticsound[tv->staticsound_count].origin[0] = ReadShort(m);
@@ -361,7 +363,7 @@ void ParseSpawnStatic(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 	if (tv->spawnstatic_count == MAX_STATICENTITIES)
 	{
 		tv->spawnstatic_count--;	// Don't be fatal.
-		Sys_Printf(NULL, "%s: Too many static entities\n", tv->server);
+		Sys_ConPrintf(tv, "Too many static entities\n");
 	}
 
 	ParseEntityState(&tv->spawnstatic[tv->spawnstatic_count], m);
@@ -390,7 +392,7 @@ static void ParsePlayerInfo(sv_t *tv, netmsg_t *m, qbool clearoldplayers)
 	if (num >= MAX_CLIENTS)
 	{
 		num = 0;	// don't be fatal.
-		Sys_Printf(NULL, "%s: Too many svc_playerinfos, wrapping\n", tv->server);
+		Sys_ConPrintf(tv, "Too many svc_playerinfos, wrapping\n");
 	}
 	tv->players[num].old = tv->players[num].current;
 
@@ -718,7 +720,9 @@ static void ParseUpdatePing(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 	if (pnum < MAX_CLIENTS)
 		tv->players[pnum].ping = ping;
 	else
-		Sys_Printf(NULL, "%s: svc_updateping: invalid player number\n", tv->server);
+	{
+		Sys_ConPrintf(tv, "svc_updateping: invalid player number\n");
+	}
 }
 
 static void ParseUpdateFrags(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
@@ -731,7 +735,9 @@ static void ParseUpdateFrags(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 	if (pnum < MAX_CLIENTS)
 		tv->players[pnum].frags = frags;
 	else
-		Sys_Printf(NULL, "%s: svc_updatefrags: invalid player number\n", tv->server);
+	{
+		Sys_ConPrintf(tv, "svc_updatefrags: invalid player number\n");
+	}
 }
 
 static void ParseUpdateStat(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
@@ -752,7 +758,9 @@ static void ParseUpdateStat(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 		}
 	}
 	else
-		Sys_Printf(NULL, "%s: svc_updatestat: invalid stat number\n", tv->server);
+	{
+		Sys_ConPrintf(tv, "svc_updatestat: invalid stat number\n");
+	}
 }
 
 static void ParseUpdateStatLong(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
@@ -773,7 +781,9 @@ static void ParseUpdateStatLong(sv_t *tv, netmsg_t *m, int to, unsigned int mask
 		}
 	}
 	else
-		Sys_Printf(NULL, "%s: svc_updatestatlong: invalid stat number\n", tv->server);
+	{
+		Sys_ConPrintf(tv, "svc_updatestatlong: invalid stat number\n");
+	}
 }
 
 static void ParseUpdateUserinfo(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
@@ -788,7 +798,7 @@ static void ParseUpdateUserinfo(sv_t *tv, netmsg_t *m, int to, unsigned int mask
 	}
 	else
 	{
-		Sys_Printf(NULL, "%s: svc_updateuserinfo: invalid player number\n", tv->server);
+		Sys_ConPrintf(tv, "svc_updateuserinfo: invalid player number\n");
 		while (ReadByte(m))	//suck out the message.
 		{
 		}
@@ -806,7 +816,9 @@ static void ParsePacketloss(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 	if (pnum < MAX_CLIENTS)
 		tv->players[pnum].packetloss = value;
 	else
-		Sys_Printf(NULL, "%s: svc_updatepl: invalid player number\n", tv->server);
+	{
+		Sys_ConPrintf(tv, "svc_updatepl: invalid player number\n");
+	}
 }
 
 static void ParseUpdateEnterTime(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
@@ -820,7 +832,9 @@ static void ParseUpdateEnterTime(sv_t *tv, netmsg_t *m, int to, unsigned int mas
 	if (pnum < MAX_CLIENTS)
 		tv->players[pnum].entertime = value;
 	else
-		Sys_Printf(NULL, "%s: svc_updateentertime: invalid player number\n", tv->server);
+	{
+		Sys_ConPrintf(tv, "svc_updateentertime: invalid player number\n");
+	}
 }
 
 static void ParseSound(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
@@ -970,7 +984,7 @@ static void ParseTempEntity(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 		ReadShort (m);
 		break;
 	default:
-		Sys_Printf(NULL, "%s: temp entity %i not recognised\n", tv->server, i);
+		Sys_ConPrintf(tv, "temp entity %i not recognised\n", i);
 		return;
 	}
 }
@@ -983,7 +997,7 @@ void ParseLightstyle(sv_t *tv, netmsg_t *m)
 		ReadString(m, tv->lightstyle[style].name, sizeof(tv->lightstyle[style].name));
 	else
 	{
-		Sys_Printf(NULL, "%s: svc_lightstyle: invalid lightstyle index (%i)\n", tv->server, style);
+		Sys_ConPrintf(tv, "svc_lightstyle: invalid lightstyle index (%i)\n", style);
 		while (ReadByte(m))	// Suck out the message.
 		{
 		}
@@ -1015,7 +1029,7 @@ void ParseDownload(sv_t *tv, netmsg_t *m)
 
 	if (size < 0)
 	{
-		Sys_Printf(NULL, "%s: Downloading failed\n", tv->server);
+		Sys_ConPrintf(tv, "Downloading failed\n");
 		tv->drop = true;
 		return;
 	}
@@ -1033,7 +1047,9 @@ void ParseDisconnect(sv_t *tv, netmsg_t *m)
 	ReadString(m, EndOfDemo, sizeof(EndOfDemo));
 
 	if (strcmp(EndOfDemo, ENDOFDEMO))
-		Sys_Printf(NULL, "%s: WARNING: non standard disconnect message '%s'\n", tv->server, EndOfDemo);
+	{
+		Sys_ConPrintf(tv, "WARNING: non standard disconnect message '%s'\n", EndOfDemo);
+	}
 }
 
 void ShowMvdHeaderInfo(sv_t *tv, int length, int to, int mask)
@@ -1065,7 +1081,7 @@ void ShowMvdHeaderInfo(sv_t *tv, int length, int to, int mask)
 			break;
 	}
 
-	Sys_Printf(NULL, "%s: MVD msg: size: %4d type: %s mask: 0x%x\n", tv->server, length, str_to, mask);
+	Sys_ConPrintf(tv, "MVD msg: size: %4d type: %s mask: 0x%x\n", length, str_to, mask);
 
 	// List the names of the players that will receive this message.
 	if ((shownet.integer >= 2) && (to != dem_all) && (to != dem_read))
@@ -1074,26 +1090,29 @@ void ShowMvdHeaderInfo(sv_t *tv, int length, int to, int mask)
 		qbool first = true;
 		char name[64];
 
-		Sys_Printf(NULL, "  [");
+		if (tv->EchoInServerConsole)
+		{
+			Sys_Printf(NULL, "  [");
 		
-		for (player = 0; player < MAX_CLIENTS; player++)
-		{	
-			// Is this player supposed to receive the message?
-			if (mask & (1 << player))
-			{
-				Info_ValueForKey(tv->players[player].userinfo, "name", name, sizeof(name));
-				
-				if (!first)
+			for (player = 0; player < MAX_CLIENTS; player++)
+			{	
+				// Is this player supposed to receive the message?
+				if (mask & (1 << player))
 				{
-					Sys_Printf(NULL, ", ");
+					Info_ValueForKey(tv->players[player].userinfo, "name", name, sizeof(name));
+					
+					if (!first)
+					{
+						Sys_Printf(NULL, ", ");
+					}
+
+					Sys_Printf(NULL, name);
+					first = false;
 				}
-
-				Sys_Printf(NULL, name);
-				first = false;
 			}
-		}
 
-		Sys_Printf(NULL, "]\n");
+			Sys_Printf(NULL, "]\n");
+		}
 	}
 }
 
@@ -1117,7 +1136,7 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 	{
 		if (buf.readpos > buf.cursize)
 		{
-			Sys_Printf(NULL, "%s: Read past end of parse buffer\n", tv->server);
+			Sys_ConPrintf(tv, "Read past end of parse buffer\n");
 			return;
 		}
 
@@ -1126,7 +1145,9 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 		svc = ReadByte(&buf);
 
 		if (shownet.integer)
-			Sys_Printf(NULL, "%s: svc: %3d: %s\n", tv->server, svc, ( svc >=0 && svc < svc_strings_size && svc_strings[svc] ) ? svc_strings[svc] : "UNKNOWN");
+		{
+			Sys_ConPrintf(tv, "svc: %3d: %s\n", svc, ( svc >=0 && svc < svc_strings_size && svc_strings[svc] ) ? svc_strings[svc] : "UNKNOWN");
+		}
 
 		// Only print the server name once if we get several consecutive svc_print messages
 		// since one message can be split up in several pieces.
@@ -1138,12 +1159,12 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 			case svc_bad:
 			{
 				ParseError(&buf);
-				Sys_Printf(NULL, "%s: ParseMessage: svc_bad\n", tv->server);
+				Sys_ConPrintf(tv, "ParseMessage: svc_bad\n");
 				return;
 			}
 			case svc_nop:	// Quakeworld isn't meant to send these.
 			{
-				Sys_Printf(NULL, "%s: svc_nop\n", tv->server);
+				Sys_ConPrintf(tv, "svc_nop\n");
 				break;
 			}
 			case svc_disconnect:
@@ -1405,11 +1426,11 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 				
 				if ((message_type >= 0) && (message_type < svc_strings_size))
 				{
-					Sys_Printf(NULL, "%s: Can't handle %s (%i)\n", tv->server, svc_strings[message_type], message_type);
+					Sys_ConPrintf(tv, "Can't handle %s (%i)\n", svc_strings[message_type], message_type);
 				}
 				else
 				{
-					Sys_Printf(NULL, "%s: Can't handle svc %i\n", tv->server, message_type);
+					Sys_ConPrintf(tv, "Can't handle svc %i\n", message_type);
 				}
 
 				return;

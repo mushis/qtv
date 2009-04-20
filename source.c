@@ -552,6 +552,7 @@ sv_t *QTV_NewServerConnection(cluster_t *cluster, const char *server, char *pass
 	init_source(qtv); // Set source to proper state, SRC_BAD, thought direct call to init_source() need only here.
 
 	qtv->DisconnectWhenNooneIsWatching = autoclose;
+	qtv->EchoInServerConsole = false;
 
 	qtv->ServerQuery = query;
 

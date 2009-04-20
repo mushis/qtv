@@ -233,6 +233,21 @@ void Sys_Printf(cluster_t *cluster, char *fmt, ...)
 	printf("%s", string);
 }
 
+// Used only for stuff that never gets redirected 
+// (so that the server console is more pleasant to use).
+void Sys_ConPrintf(sv_t *tv, char *fmt, ...)
+{
+	va_list		argptr;
+	char		string[2048];
+	
+	va_start(argptr, fmt);
+	vsnprintf(string, sizeof(string), fmt, argptr);
+	va_end(argptr);
+
+	if (tv && tv->EchoInServerConsole)
+		Sys_Printf(NULL, "%s: %s", tv->server, string);
+}
+
 // print debug
 // this is just wrapper for Sys_Printf(), but print nothing if developer 0
 void Sys_DPrintf(cluster_t *cluster, char *fmt, ...)

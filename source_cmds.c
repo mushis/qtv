@@ -72,11 +72,14 @@ void sourceclose_f(void)
 	cnt = 0;
 
 	for (qtv = g_cluster.servers; qtv; qtv = qtv->next)
-		if (all || qtv->streamid == id) {
+	{
+		if (all || qtv->streamid == id) 
+		{
 			Sys_Printf (NULL, "Source id:%d aka %s will be dropped asap\n", qtv->streamid, qtv->server);
 			qtv->drop = true;
 			cnt++;
 		}
+	}
 
 	if (!cnt)
 		Sys_Printf (NULL, "Source id:%d not found\n", id);
@@ -217,6 +220,39 @@ void kick_f(void)
 	Sys_Printf(NULL, "client with id %d not found\n", id);
 }
 
+void showoutput_f(void)
+{
+	sv_t *qtv;
+	unsigned int id, cnt;
+	qbool all;
+	qbool show;
+
+	if (Cmd_Argc() < 3 || !*Cmd_Argv(1) || !*Cmd_Argv(2))  // not less than one param, first param non empty
+	{
+		Sys_Printf (NULL, "Usage: %s <#id | all> <0|1>\n", Cmd_Argv(0));
+		return;
+	}
+
+	if (!g_cluster.servers) 
+	{
+		Sys_Printf (NULL, "There are no sources.\n");
+		return;
+	}
+
+	id  = (unsigned int) atoi(Cmd_Argv(1));
+	all = !stricmp(Cmd_Argv(1), "all");
+	show = (qbool) atoi(Cmd_Argv(2));
+	cnt = 0;
+
+	for (qtv = g_cluster.servers; qtv; qtv = qtv->next)
+	{
+		if (all || qtv->streamid == id) 
+		{
+			qtv->EchoInServerConsole = show;
+		}
+	}
+}
+
 void Source_Init(void)
 {
 	Cvar_Register (&maxservers);
@@ -230,6 +266,7 @@ void Source_Init(void)
 	Cmd_AddCommand ("playdemo", playdemo_f);
 	Cmd_AddCommand ("sourcelist", sourcelist_f);
 	Cmd_AddCommand ("sourceclose", sourceclose_f);
+	Cmd_AddCommand ("showoutput", showoutput_f);
 	Cmd_AddCommand ("status", status_f);
 	Cmd_AddCommand ("quit", quit_f);
 

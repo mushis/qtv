@@ -501,6 +501,7 @@ struct sv_s
 
 	qbool			ServerQuery;					// We're quering some info from server/qtv but not trying stream something.
 	qbool			DisconnectWhenNooneIsWatching;	// No comments.
+	qbool			EchoInServerConsole;			// Echo output from this server in the server console.
 
 	oproxy_t		*proxies;						// List of clients for this QTV stream.
 
@@ -654,6 +655,7 @@ void			Sys_RedirectStop(void);
 
 ullong			Sys_Milliseconds (void);
 void			Sys_Printf (cluster_t *cluster, char *fmt, ...);
+void			Sys_ConPrintf(sv_t *tv, char *fmt, ...);
 void			Sys_DPrintf(cluster_t *cluster, char *fmt, ...);	// This is just wrapper for Sys_Printf(), but print nothing if developer 0
 void			Sys_Exit(int code);
 void			Sys_Error (char *error, ...);

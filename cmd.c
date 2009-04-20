@@ -766,6 +766,11 @@ qbool Cmd_Exists (char *cmd_name)
 	return false;
 }
 
+void Cmd_Help_f (void)
+{
+	Sys_Printf(NULL, "Use cmdlist to get a list of commands or cvarlist to get a list of variables.\n");
+}
+
 void Cmd_CmdList_f (void)
 {
 	cmd_function_t	*cmd;
@@ -1086,6 +1091,7 @@ void Cmd_Init (void)
 	Cmd_AddCommand ("alias",Cmd_Alias_f);
 	Cmd_AddCommand ("wait", Cmd_Wait_f);
 	Cmd_AddCommand ("cmdlist", Cmd_CmdList_f);
+	Cmd_AddCommand ("help", Cmd_Help_f); // A bit more logical :)
 	Cmd_AddCommand ("unaliasall", Cmd_UnAliasAll_f);
 	Cmd_AddCommand ("unalias", Cmd_UnAlias_f);
 	Cmd_AddCommand ("if", Cmd_If_f);
