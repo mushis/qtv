@@ -91,7 +91,7 @@ void Cbuf_AddTextEx (cbuf_t *cbuf, char *text)
 	new_bufsize = cbuf->text_end-cbuf->text_start+len;
 	if (new_bufsize > MAXCMDBUF)
 	{
-		Sys_Printf (NULL, "Cbuf_AddText: overflow\n");
+		Sys_Printf("Cbuf_AddText: overflow\n");
 		return;
 	}
 
@@ -132,7 +132,7 @@ void Cbuf_InsertTextEx (cbuf_t *cbuf, char *text)
 	new_bufsize = cbuf->text_end - cbuf->text_start + len + 1;
 	if (new_bufsize > MAXCMDBUF)
 	{
-		Sys_Printf (NULL, "Cbuf_InsertText: overflow\n");
+		Sys_Printf("Cbuf_InsertText: overflow\n");
 		return;
 	}
 
@@ -214,7 +214,7 @@ void Cbuf_ExecuteEx (cbuf_t *cbuf)
 		else
 		{
 			line[0] = 0;
-			Sys_Printf(NULL, "Cbuf_ExecuteEx: too long\n");
+			Sys_Printf("Cbuf_ExecuteEx: too long\n");
 		}
 
 		// delete the text from the command buffer and move remaining commands down
@@ -235,7 +235,7 @@ void Cbuf_ExecuteEx (cbuf_t *cbuf)
 
 /* FIXME: we are not ktpro, need return to previous version of this function, before hack for ktpro
 		if (is_ktpro && semicolon > 1)
-			Sys_Printf(NULL, "ATTENTION: possibly tried to use ktpro's security hole, "
+			Sys_Printf("ATTENTION: possibly tried to use ktpro's security hole, "
 						"server don't run command after ';'!\nCommand: %s\n", line);
 		else
 */
@@ -338,18 +338,18 @@ void Cmd_Exec_f (void)
 
 	if (Cmd_Argc () != 2)
 	{
-		Sys_Printf (NULL, "exec <filename> : execute a script file\n");
+		Sys_Printf("exec <filename> : execute a script file\n");
 		return;
 	}
 
 	name = Cmd_Argv(1);
 	if (!FS_SafePath(name)) {
-		Sys_Printf (NULL, "exec: absolute paths are prohibited\n");
+		Sys_Printf("exec: absolute paths are prohibited\n");
 		return;
 	}
 
 	if(stricmp(".cfg", FS_FileExtension(name))) {
-		Sys_Printf (NULL, "exec: cfg extension required\n");
+		Sys_Printf("exec: cfg extension required\n");
 		return;
 	}
 
@@ -361,12 +361,12 @@ void Cmd_Exec_f (void)
 
 		if (!FS_ReadFile("qw", name, buf, &size))
 		{
-			Sys_Printf (NULL, "exec: couldn't exec %s\n", name);
+			Sys_Printf("exec: couldn't exec %s\n", name);
 			return;
 		}
 	}
 
-	Sys_Printf (NULL, "execing %s\n", name);
+	Sys_Printf("execing %s\n", name);
 	Cbuf_InsertText (buf);
 }
 
@@ -383,8 +383,8 @@ void Cmd_Echo_f (void)
 	int		i;
 
 	for (i=1 ; i<Cmd_Argc() ; i++)
-		Sys_Printf (NULL, "%s ",Cmd_Argv(i));
-	Sys_Printf (NULL, "\n");
+		Sys_Printf("%s ",Cmd_Argv(i));
+	Sys_Printf("\n");
 }
 
 /*
@@ -445,16 +445,16 @@ void Cmd_Alias_f (void)
 	c = Cmd_Argc();
 	if (c == 1)
 	{
-		Sys_Printf (NULL, "Current alias commands:\n");
+		Sys_Printf("Current alias commands:\n");
 		for (a = cmd_alias ; a ; a=a->next)
-			Sys_Printf (NULL, "%s : %s\n\n", a->name, a->value);
+			Sys_Printf("%s : %s\n\n", a->name, a->value);
 		return;
 	}
 
 	s = Cmd_Argv(1);
 	if (strlen(s) >= MAX_ALIAS_NAME)
 	{
-		Sys_Printf (NULL, "Alias name is too long\n");
+		Sys_Printf("Alias name is too long\n");
 		return;
 	}
 
@@ -465,7 +465,7 @@ void Cmd_Alias_f (void)
 			Cvar_Delete (var->name);
 		else
 		{
-			//			Sys_Printf (NULL, "%s is a variable\n");
+			//			Sys_Printf("%s is a variable\n");
 			return;
 		}
 	}
@@ -560,19 +560,19 @@ void Cmd_UnAlias_f (void)
 
 	if (Cmd_Argc() != 2)
 	{
-		Sys_Printf (NULL, "unalias <alias>: erase an existing alias\n");
+		Sys_Printf("unalias <alias>: erase an existing alias\n");
 		return;
 	}
 
 	s = Cmd_Argv(1);
 	if (strlen(s) >= MAX_ALIAS_NAME)
 	{
-		Sys_Printf (NULL, "Alias name is too long\n");
+		Sys_Printf("Alias name is too long\n");
 		return;
 	}
 
 	if (!Cmd_DeleteAlias(s))
-		Sys_Printf (NULL, "Unknown alias \"%s\"\n", s);
+		Sys_Printf("Unknown alias \"%s\"\n", s);
 }
 
 // remove all aliases
@@ -720,7 +720,7 @@ void Cmd_AddCommand (char *cmd_name, xcommand_t function)
 	// fail if the command is a variable name
 	if (Cvar_FindVar(cmd_name))
 	{
-		Sys_Printf (NULL, "Cmd_AddCommand: %s already defined as a var\n", cmd_name);
+		Sys_Printf("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
 		return;
 	}
 
@@ -731,7 +731,7 @@ void Cmd_AddCommand (char *cmd_name, xcommand_t function)
 	{
 		if (!stricmp (cmd_name, cmd->name))
 		{
-			Sys_Printf (NULL, "Cmd_AddCommand: %s already defined\n", cmd_name);
+			Sys_Printf("Cmd_AddCommand: %s already defined\n", cmd_name);
 			return;
 		}
 	}
@@ -768,7 +768,7 @@ qbool Cmd_Exists (char *cmd_name)
 
 void Cmd_Help_f (void)
 {
-	Sys_Printf(NULL, "Use cmdlist to get a list of commands or cvarlist to get a list of variables.\n");
+	Sys_Printf("Use cmdlist to get a list of commands or cvarlist to get a list of variables.\n");
 }
 
 void Cmd_CmdList_f (void)
@@ -777,9 +777,9 @@ void Cmd_CmdList_f (void)
 	int	i;
 
 	for (cmd=cmd_functions, i=0 ; cmd ; cmd=cmd->next, i++)
-		Sys_Printf(NULL, "%s\n", cmd->name);
+		Sys_Printf("%s\n", cmd->name);
 
-	Sys_Printf (NULL, "------------\n%d commands\n", i);
+	Sys_Printf("------------\n%d commands\n", i);
 }
 
 
@@ -929,7 +929,7 @@ void Cmd_ExecuteString (char *text)
 //	if (PR_ConsoleCmd())
 //		return;
 
-	Sys_Printf (NULL, "Unknown command \"%s\"\n", Cmd_Argv(0));
+	Sys_Printf("Unknown command \"%s\"\n", Cmd_Argv(0));
 }
 
 
@@ -954,7 +954,7 @@ void Cmd_If_f (void)
 	c = Cmd_Argc ();
 	if (c < 5)
 	{
-		Sys_Printf (NULL, "usage: if <expr1> <op> <expr2> <command> [else <command>]\n");
+		Sys_Printf("usage: if <expr1> <op> <expr2> <command> [else <command>]\n");
 		return;
 	}
 
@@ -984,8 +984,8 @@ void Cmd_If_f (void)
 		result = strstr(Cmd_Argv(3), Cmd_Argv(1)) == NULL;
 	else
 	{
-		Sys_Printf (NULL, "unknown operator: %s\n", op);
-		Sys_Printf (NULL, "valid operators are ==, =, !=, <>, >, <, >=, <=, isin, !isin\n");
+		Sys_Printf("unknown operator: %s\n", op);
+		Sys_Printf("valid operators are ==, =, !=, <>, >, <, >=, <=, isin, !isin\n");
 		return;
 	}
 

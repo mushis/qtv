@@ -12,7 +12,7 @@ void qtv_f(void)
 
 	if (Cmd_Argc() < 2 || !*Cmd_Argv(1)) // not less than one param, first param non empty
 	{
-		Sys_Printf (NULL, "Usage: %s ip:port [password]\n", Cmd_Argv(0));
+		Sys_Printf("Usage: %s ip:port [password]\n", Cmd_Argv(0));
 		return;
 	}
 
@@ -21,11 +21,11 @@ void qtv_f(void)
 
 	if (!qtv)
 	{
-		Sys_Printf (NULL, "Failed to connect to server %s, connection aborted\n", addr);
+		Sys_Printf("Failed to connect to server %s, connection aborted\n", addr);
 		return;
 	}
 
-	Sys_Printf (NULL, "Source registered %s (#%d)\n", addr, qtv->streamid);
+	Sys_Printf("Source registered %s (#%d)\n", addr, qtv->streamid);
 }
 
 // opened .mvd demo as source
@@ -36,18 +36,18 @@ void playdemo_f(void)
 
 	if (Cmd_Argc() < 2 || !*Cmd_Argv(1))  // not less than one param, first param non empty
 	{
-		Sys_Printf (NULL, "Usage: %s demoname.mvd\n", Cmd_Argv(0));
+		Sys_Printf("Usage: %s demoname.mvd\n", Cmd_Argv(0));
 		return;
 	}
 
 	snprintf(addr, sizeof(addr), "demo:%s", Cmd_Argv(1));
 
 	if (!QTV_NewServerConnection(&g_cluster, addr, Cmd_Argv(2), false, false, false, false)) {
-		Sys_Printf (NULL, "Failed to open demo %s\n", addr);
+		Sys_Printf("Failed to open demo %s\n", addr);
 		return;
 	}
 
-	Sys_Printf (NULL, "Source registered %s\n", addr);
+	Sys_Printf("Source registered %s\n", addr);
 }
 
 void sourceclose_f(void)
@@ -58,12 +58,12 @@ void sourceclose_f(void)
 
 	if (Cmd_Argc() < 2 || !*Cmd_Argv(1))  // not less than one param, first param non empty
 	{
-		Sys_Printf (NULL, "Usage: %s <#id | all>\n", Cmd_Argv(0));
+		Sys_Printf("Usage: %s <#id | all>\n", Cmd_Argv(0));
 		return;
 	}
 
 	if (!g_cluster.servers) {
-		Sys_Printf (NULL, "source list alredy empty\n");
+		Sys_Printf("source list alredy empty\n");
 		return;
 	}
 
@@ -75,14 +75,14 @@ void sourceclose_f(void)
 	{
 		if (all || qtv->streamid == id) 
 		{
-			Sys_Printf (NULL, "Source id:%d aka %s will be dropped asap\n", qtv->streamid, qtv->server);
+			Sys_Printf("Source id:%d aka %s will be dropped asap\n", qtv->streamid, qtv->server);
 			qtv->drop = true;
 			cnt++;
 		}
 	}
 
 	if (!cnt)
-		Sys_Printf (NULL, "Source id:%d not found\n", id);
+		Sys_Printf("Source id:%d not found\n", id);
 }
 
 
@@ -92,9 +92,9 @@ void sourcelist_f(void)
 	sv_t *qtv;
 
 	if (!g_cluster.NumServers)
-		Sys_Printf (NULL, "Sources list: empty\n");
+		Sys_Printf("Sources list: empty\n");
 
-	Sys_Printf (NULL,   "Sources list:\n"
+	Sys_Printf("Sources list:\n"
 						"%4.4s %4.4s %3.3s %4.4s %s\n", "#Id", "Type", "Tmp", "Echo", "Name");
 
 	for (qtv = g_cluster.servers; qtv; qtv = qtv->next)
@@ -107,28 +107,28 @@ void sourcelist_f(void)
 			default:	   type = "unkn"; break; // unknown
 		}
 
-		Sys_Printf (NULL, "%4d %4.4s %3.3s %4.4s %s\n", qtv->streamid, type, 
+		Sys_Printf("%4d %4.4s %3.3s %4.4s %s\n", qtv->streamid, type, 
 			(qtv->DisconnectWhenNooneIsWatching ? "yes" : "no"), 
 			(qtv->EchoInServerConsole ? "yes" : "no"), qtv->server);
 	}
 
-	Sys_Printf(NULL, "\nId = Source ID.\n");
-	Sys_Printf(NULL, "Type = Type of source.\n");
-	Sys_Printf(NULL, "Tmp = Disconnect when noone is watching.\n");
-	Sys_Printf(NULL, "Echo = Echo the console from this source to the server console.\n");
-	Sys_Printf(NULL, "Name = The name of the source.\n");
+	Sys_Printf("\nId = Source ID.\n");
+	Sys_Printf("Type = Type of source.\n");
+	Sys_Printf("Tmp = Disconnect when noone is watching.\n");
+	Sys_Printf("Echo = Echo the console from this source to the server console.\n");
+	Sys_Printf("Name = The name of the source.\n");
 }
 
 void status_f(void)
 {
-	Sys_Printf(NULL, "Status:\n");
-	Sys_Printf(NULL, " servers: %4i/%i\n", g_cluster.NumServers, maxservers.integer);
-	Sys_Printf(NULL, " clients: %4i/%i\n", g_cluster.numproxies, get_maxclients());
+	Sys_Printf("Status:\n");
+	Sys_Printf(" servers: %4i/%i\n", g_cluster.NumServers, maxservers.integer);
+	Sys_Printf(" clients: %4i/%i\n", g_cluster.numproxies, get_maxclients());
 
-	Sys_Printf(NULL, "Options:\n");
-	Sys_Printf(NULL, "   hostname: %s\n", hostname.string);
-	Sys_Printf(NULL, "    mvdport: %i%s\n", mvdport.integer, g_cluster.tcpsocket == INVALID_SOCKET ? " (INVALID)" : "");
-	Sys_Printf(NULL, " allow_http: %s\n", allow_http.integer ? "yes" : "no");
+	Sys_Printf("Options:\n");
+	Sys_Printf("   hostname: %s\n", hostname.string);
+	Sys_Printf("    mvdport: %i%s\n", mvdport.integer, g_cluster.tcpsocket == INVALID_SOCKET ? " (INVALID)" : "");
+	Sys_Printf(" allow_http: %s\n", allow_http.integer ? "yes" : "no");
 }
 
 void quit_f(void)
@@ -154,23 +154,23 @@ void clientlist(sv_t *qtv, qbool showempty)
 
 		if (!c)
 		{
-			Sys_Printf (NULL, "source: %d, %s\n"
+			Sys_Printf("source: %d, %s\n"
 							  "userid ip              name\n"
 							  "------ --------------- ----\n", qtv->streamid, qtv->server);
 		}
 
-		Sys_Printf(NULL, "%6d %15s %s\n", tmp->id, NET_BaseAdrToString(&tmp->addr, ip, sizeof(ip)), Info_Get(&tmp->ctx, "name", name, sizeof(name)));
+		Sys_Printf("%6d %15s %s\n", tmp->id, NET_BaseAdrToString(&tmp->addr, ip, sizeof(ip)), Info_Get(&tmp->ctx, "name", name, sizeof(name)));
 		c++;
 	}	
 
 	if (c)
 	{
-		Sys_Printf(NULL, "%d total users\n", c);
+		Sys_Printf("%d total users\n", c);
 	}
 	else
 	{
 		if (showempty)
-			Sys_Printf (NULL, "source: %d, %s, no clients\n", qtv->streamid, qtv->server);
+			Sys_Printf("source: %d, %s, no clients\n", qtv->streamid, qtv->server);
 	}
 }
 
@@ -187,16 +187,16 @@ void clientlist_f(void)
 			continue;
 
 		if (!c)
-			Sys_Printf(NULL, "Client list:\n");
+			Sys_Printf("Client list:\n");
 
 		clientlist(qtv, showempty);
 		c++;
 	}
 
 	if (c)
-		Sys_Printf(NULL, "%d sources found%s\n", c, showempty ? "" : ", empty sources are not shown");
+		Sys_Printf("%d sources found%s\n", c, showempty ? "" : ", empty sources are not shown");
 	else
-		Sys_Printf(NULL, "source list empty or no particular stream was found\n", id);
+		Sys_Printf("source list empty or no particular stream was found\n", id);
 }
 
 void kick_f(void)
@@ -215,12 +215,12 @@ void kick_f(void)
 				continue;
 
 			tmp->drop = true;
-			Sys_Printf(NULL, "kicked: %d %s %s\n", tmp->id, NET_BaseAdrToString(&tmp->addr, ip, sizeof(ip)), Info_Get(&tmp->ctx, "name", name, sizeof(name)));
+			Sys_Printf("kicked: %d %s %s\n", tmp->id, NET_BaseAdrToString(&tmp->addr, ip, sizeof(ip)), Info_Get(&tmp->ctx, "name", name, sizeof(name)));
 			return;
 		}	
 	}
 
-	Sys_Printf(NULL, "client with id %d not found\n", id);
+	Sys_Printf("client with id %d not found\n", id);
 }
 
 void showoutput_f(void)
@@ -232,13 +232,13 @@ void showoutput_f(void)
 
 	if (Cmd_Argc() < 3 || !*Cmd_Argv(1) || !*Cmd_Argv(2))  // not less than one param, first param non empty
 	{
-		Sys_Printf (NULL, "Usage: %s <#id | all> <0|1>\n", Cmd_Argv(0));
+		Sys_Printf("Usage: %s <#id | all> <0|1>\n", Cmd_Argv(0));
 		return;
 	}
 
 	if (!g_cluster.servers) 
 	{
-		Sys_Printf (NULL, "There are no sources.\n");
+		Sys_Printf("There are no sources.\n");
 		return;
 	}
 

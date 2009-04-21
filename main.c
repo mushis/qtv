@@ -128,7 +128,7 @@ void Cluster_BuildAvailableDemoList(cluster_t *cluster)
 		}
 		else
 		{
-			Sys_Printf(cluster, "Couldn't open dir for demo listings\n");
+			Sys_Printf("Couldn't open dir for demo listings\n");
 		}
 	}
 	#endif // _WIN32 else
@@ -287,7 +287,7 @@ int main(int argc, char **argv)
 
 	cluster_initialized = true;
 
-	Sys_Printf(&g_cluster, "QTV %s, build %i (build date: %s)\n", PROXY_VERSION, g_cluster.buildnumber, BUILD_DATE);
+	Sys_Printf("QTV %s, build %i (build date: %s)\n", PROXY_VERSION, g_cluster.buildnumber, BUILD_DATE);
 
 	// Process command line arguments.
 	Cmd_StuffCmds(argc, argv);

@@ -95,7 +95,7 @@ static void ParseStufftext(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 	qbool fromproxy;
 
 	ReadString(m, text, sizeof(text));
-//	Sys_Printf(NULL, "stuffcmd: %s", text);
+//	Sys_Printf("stuffcmd: %s", text);
 
 	if (strstr(text, "screenshot"))
 		return;
@@ -277,7 +277,7 @@ static void ParsePrint(sv_t *tv, netmsg_t *m, int to, unsigned int mask, qbool p
 			}
 			
 			if (tv->EchoInServerConsole)
-				Sys_Printf(NULL, "%s", text);
+				Sys_Printf("%s", text);
 		}
 	}
 }
@@ -515,7 +515,7 @@ static int ExpandFrame(unsigned int newmax, frame_t *frame)
 
 	newmax += 16;
 
-	Sys_Printf(NULL, "max %d\n", newmax);
+	Sys_Printf("max %d\n", newmax);
 
 	newents = malloc(sizeof(*newents) * newmax);
 	if (!newents)
@@ -1093,7 +1093,7 @@ void ShowMvdHeaderInfo(sv_t *tv, int length, int to, int mask)
 
 		if (tv->EchoInServerConsole)
 		{
-			Sys_Printf(NULL, "  [");
+			Sys_Printf("  [");
 		
 			for (player = 0; player < MAX_CLIENTS; player++)
 			{	
@@ -1104,15 +1104,15 @@ void ShowMvdHeaderInfo(sv_t *tv, int length, int to, int mask)
 					
 					if (!first)
 					{
-						Sys_Printf(NULL, ", ");
+						Sys_Printf(", ");
 					}
 
-					Sys_Printf(NULL, name);
+					Sys_Printf(name);
 					first = false;
 				}
 			}
 
-			Sys_Printf(NULL, "]\n");
+			Sys_Printf("]\n");
 		}
 	}
 }

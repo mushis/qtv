@@ -74,13 +74,13 @@ qbool TCP_Set_KEEPALIVE(int sock)
 
 	if (sock == INVALID_SOCKET)
 	{
-		Sys_Printf(NULL, "TCP_Set_KEEPALIVE: invalid socket\n");
+		Sys_Printf("TCP_Set_KEEPALIVE: invalid socket\n");
 		return false;
 	}
 
 	if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (void*)&iOptVal, sizeof(iOptVal)) == -1) 
 	{
-		Sys_Printf (NULL, "TCP_Set_KEEPALIVE: setsockopt SO_KEEPALIVE: (%i): %s\n", qerrno, strerror (qerrno));
+		Sys_Printf("TCP_Set_KEEPALIVE: setsockopt SO_KEEPALIVE: (%i): %s\n", qerrno, strerror (qerrno));
 		return false;
 	}
 
@@ -93,7 +93,7 @@ qbool TCP_Set_KEEPALIVE(int sock)
 
 	if (setsockopt(sock, SOL_TCP, TCP_KEEPIDLE, (void*)&iOptVal, sizeof(iOptVal)) == -1) 
 	{
-		Sys_Printf (NULL, "TCP_Set_KEEPALIVE: setsockopt TCP_KEEPIDLE: (%i): %s\n", qerrno, strerror(qerrno));
+		Sys_Printf("TCP_Set_KEEPALIVE: setsockopt TCP_KEEPIDLE: (%i): %s\n", qerrno, strerror(qerrno));
 		return false;
 	}
 
@@ -102,7 +102,7 @@ qbool TCP_Set_KEEPALIVE(int sock)
 
 	if (setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, (void*)&iOptVal, sizeof(iOptVal)) == -1) 
 	{
-		Sys_Printf (NULL, "TCP_Set_KEEPALIVE: setsockopt TCP_KEEPINTVL: (%i): %s\n", qerrno, strerror(qerrno));
+		Sys_Printf("TCP_Set_KEEPALIVE: setsockopt TCP_KEEPINTVL: (%i): %s\n", qerrno, strerror(qerrno));
 		return false;
 	}
 
@@ -111,7 +111,7 @@ qbool TCP_Set_KEEPALIVE(int sock)
 
 	if (setsockopt(sock, SOL_TCP, TCP_KEEPCNT, (void*)&iOptVal, sizeof(iOptVal)) == -1) 
 	{
-		Sys_Printf (NULL, "TCP_Set_KEEPALIVE: setsockopt TCP_KEEPCNT: (%i): %s\n", qerrno, strerror(qerrno));
+		Sys_Printf("TCP_Set_KEEPALIVE: setsockopt TCP_KEEPCNT: (%i): %s\n", qerrno, strerror(qerrno));
 		return false;
 	}
 #else

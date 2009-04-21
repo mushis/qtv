@@ -654,9 +654,9 @@ void			Sys_RedirectStart(char *buf, int size);				// So Sys_Printf() messages go
 void			Sys_RedirectStop(void);
 
 ullong			Sys_Milliseconds (void);
-void			Sys_Printf (cluster_t *cluster, char *fmt, ...);
+void			Sys_Printf (char *fmt, ...);
 void			Sys_ConPrintf(sv_t *tv, char *fmt, ...);
-void			Sys_DPrintf(cluster_t *cluster, char *fmt, ...);	// This is just wrapper for Sys_Printf(), but print nothing if developer 0
+void			Sys_DPrintf(char *fmt, ...);	// This is just wrapper for Sys_Printf(), but print nothing if developer 0
 void			Sys_Exit(int code);
 void			Sys_Error (char *error, ...);
 int				Sys_Build_Number (void);

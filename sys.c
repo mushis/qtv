@@ -169,7 +169,7 @@ void Sys_RedirectStart(char *buf, int size)
 {
 	if (redirect_buf) {
 		Sys_RedirectStop();
-		Sys_Printf(NULL, "BUG: second Sys_RedirectStart() without Sys_RedirectStop()\n");
+		Sys_Printf("BUG: second Sys_RedirectStart() without Sys_RedirectStop()\n");
 	}
 	
 	if (size < 1 || !buf)
@@ -183,13 +183,13 @@ void Sys_RedirectStart(char *buf, int size)
 void Sys_RedirectStop(void)
 {
 	if (!redirect_buf)
-		Sys_Printf(NULL, "BUG: Sys_RedirectStop() without Sys_RedirectStart()\n");
+		Sys_Printf("BUG: Sys_RedirectStop() without Sys_RedirectStart()\n");
 
 	redirect_buf		= NULL;
 	redirect_buf_size	= 0;
 }
 
-void Sys_Printf(cluster_t *cluster, char *fmt, ...)
+void Sys_Printf(char *fmt, ...)
 {
 	va_list		argptr;
 	char		string[2048];
@@ -200,7 +200,7 @@ void Sys_Printf(cluster_t *cluster, char *fmt, ...)
 	va_end (argptr);
 
 	// cluster may be NULL, if someday u start use it...
-	// some Sys_Printf used as Sys_Printf (NULL, "lalala\n"); so...
+	// some Sys_Printf used as Sys_Printf("lalala\n"); so...
 
 	if (redirect_buf && redirect_buf_size > 0)
 		strlcat(redirect_buf, string, redirect_buf_size);
@@ -245,12 +245,12 @@ void Sys_ConPrintf(sv_t *tv, char *fmt, ...)
 	va_end(argptr);
 
 	if (tv && tv->EchoInServerConsole)
-		Sys_Printf(NULL, "%s: %s", tv->server, string);
+		Sys_Printf("%s: %s", tv->server, string);
 }
 
 // print debug
 // this is just wrapper for Sys_Printf(), but print nothing if developer 0
-void Sys_DPrintf(cluster_t *cluster, char *fmt, ...)
+void Sys_DPrintf(char *fmt, ...)
 {
 	va_list		argptr;
 	char		string[2048];
@@ -262,7 +262,7 @@ void Sys_DPrintf(cluster_t *cluster, char *fmt, ...)
 	vsnprintf (string, sizeof(string), fmt, argptr);
 	va_end (argptr);
 
-	Sys_Printf(cluster, "%s", string);
+	Sys_Printf("%s", string);
 }
 
 
@@ -281,7 +281,7 @@ void Sys_Error (char *error, ...)
 	va_end (argptr);
 
 	strlcat(text, "\n", sizeof(text));
-	Sys_Printf(NULL, text);
+	Sys_Printf(text);
 
 	Sys_Exit (1);
 }
@@ -364,7 +364,7 @@ void Sys_ReadSTDIN(cluster_t *cluster, fd_set socketset)
 
 		if (c == '\n' || c == '\r')
 		{
-			Sys_Printf(cluster, "\n");
+			Sys_Printf("\n");
 			if (cluster->inputlength)
 			{
 				cluster->commandinput[cluster->inputlength] = '\0';
@@ -378,9 +378,9 @@ void Sys_ReadSTDIN(cluster_t *cluster, fd_set socketset)
 		{
 			if (cluster->inputlength > 0)
 			{
-				Sys_Printf(cluster, "%c", c);
-				Sys_Printf(cluster, " ", c);
-				Sys_Printf(cluster, "%c", c);
+				Sys_Printf("%c", c);
+				Sys_Printf(" ", c);
+				Sys_Printf("%c", c);
 
 				cluster->inputlength--;
 				cluster->commandinput[cluster->inputlength] = '\0';
@@ -388,7 +388,7 @@ void Sys_ReadSTDIN(cluster_t *cluster, fd_set socketset)
 		}
 		else
 		{
-			Sys_Printf(cluster, "%c", c);
+			Sys_Printf("%c", c);
 			if (cluster->inputlength < sizeof(cluster->commandinput)-1)
 			{
 				cluster->commandinput[cluster->inputlength++] = c;

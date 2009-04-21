@@ -393,11 +393,11 @@ void Info_PrintList(ctxinfo_t *ctx)
 
 	for (a = ctx->info_list; a; a = a->next)
 	{
-		Sys_Printf(NULL, "%-20s %s\n", a->name, a->value);
+		Sys_Printf("%-20s %s\n", a->name, a->value);
 		cnt++;
 	}
 
-	Sys_Printf(NULL, " %d infos\n", cnt);
+	Sys_Printf(" %d infos\n", cnt);
 }
 
 #ifdef INFODEBUG
@@ -419,49 +419,49 @@ void Info_PrintHash(ctxinfo_t *ctx)
 		if (!(a = ctx->info_hash[i]))
 			continue;
 
-		Sys_Printf(NULL, "KEY: %d\n", i);
+		Sys_Printf("KEY: %d\n", i);
 
 		for (; a; a = a->hash_next)
 		{
-			Sys_Printf(NULL, "'%s' is '%s'\n", a->name, a->value);
+			Sys_Printf("'%s' is '%s'\n", a->name, a->value);
 			cnt++;
 		}
 	}
 
-	Sys_Printf(NULL, "%d infos\n", cnt);
+	Sys_Printf("%d infos\n", cnt);
 }
 
 void infoset_f(void)
 {
 	qbool set = Info_Set(&g_ctx, Cmd_Argv(1), Cmd_Argv(2));
 
-	Sys_Printf(NULL, "info '%s' %sset to '%s'\n", Cmd_Argv(1), set ? "" : "not ", Cmd_Argv(2));
+	Sys_Printf("info '%s' %sset to '%s'\n", Cmd_Argv(1), set ? "" : "not ", Cmd_Argv(2));
 }
 
 void infoget_f(void)
 {
-	Sys_Printf(NULL, "'%s' is '%s'\n", Cmd_Argv(1), Info_Get(&g_ctx, Cmd_Argv(1)));
+	Sys_Printf("'%s' is '%s'\n", Cmd_Argv(1), Info_Get(&g_ctx, Cmd_Argv(1)));
 }
 
 void inforemove_f(void)
 {
 	qbool rem = Info_Remove(&g_ctx, Cmd_Argv(1));
 
-	Sys_Printf(NULL, "'%s' %sremoved\n", Cmd_Argv(1), rem ? "" : "not ");
+	Sys_Printf("'%s' %sremoved\n", Cmd_Argv(1), rem ? "" : "not ");
 }
 
 void inforemoveall_f(void)
 {
 	Info_RemoveAll(&g_ctx);
 
-	Sys_Printf(NULL, "removeall\n");
+	Sys_Printf("removeall\n");
 }
 
 void infoconvert_f(void)
 {
 	qbool conv = Info_Convert(&g_ctx, Cmd_Argv(1));
 
-	Sys_Printf(NULL, "'%s' %s\n", Cmd_Argv(1), conv ? "converted" : "not converted");
+	Sys_Printf("'%s' %s\n", Cmd_Argv(1), conv ? "converted" : "not converted");
 }
 
 void infoprinthash_f(void)

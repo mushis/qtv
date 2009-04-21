@@ -105,7 +105,7 @@ static qbool StringToFilter (char *s, ipfilter_t *f)
 	{
 		if (*s < '0' || *s > '9')
 		{
-			//Sys_Printf (NULL,"Bad filter address: %s\n", s);
+			//Sys_Printf("Bad filter address: %s\n", s);
 			return false;
 		}
 
@@ -146,7 +146,7 @@ static void SV_AddIP_f (void)
 
 	if (!StringToFilter (Cmd_Argv(1), &f) || f.compare == 0)
 	{
-		Sys_Printf (NULL,"Bad filter address: %s\n", Cmd_Argv(1));
+		Sys_Printf("Bad filter address: %s\n", Cmd_Argv(1));
 		return;
 	}
 
@@ -156,7 +156,7 @@ static void SV_AddIP_f (void)
 	else if (!strcmp(s, "safe"))
 		ipft = ipft_safe;
 	else {
-		Sys_Printf (NULL,"Wrong filter type %s, use ban or safe\n", Cmd_Argv(2));
+		Sys_Printf("Wrong filter type %s, use ban or safe\n", Cmd_Argv(2));
 		return;
 	}
 
@@ -182,7 +182,7 @@ static void SV_AddIP_f (void)
 	{
 		if (numipfilters == MAX_IPFILTERS)
 		{
-			Sys_Printf (NULL,"IP filter list is full\n");
+			Sys_Printf("IP filter list is full\n");
 			return;
 		}
 		numipfilters++;
@@ -203,7 +203,7 @@ static void SV_RemoveIP_f (void)
 
 	if (!StringToFilter (Cmd_Argv(1), &f))
 	{
-		Sys_Printf (NULL,"Bad filter address: %s\n", Cmd_Argv(1));
+		Sys_Printf("Bad filter address: %s\n", Cmd_Argv(1));
 		return;
 	}
 
@@ -214,12 +214,12 @@ static void SV_RemoveIP_f (void)
 			for (j=i+1 ; j<numipfilters ; j++)
 				ipfilters[j-1] = ipfilters[j];
 			numipfilters--;
-			Sys_Printf (NULL,"Removed.\n");
+			Sys_Printf("Removed.\n");
 			return;
 		}
 	}
 
-	Sys_Printf (NULL,"Didn't find %s.\n", Cmd_Argv(1));
+	Sys_Printf("Didn't find %s.\n", Cmd_Argv(1));
 }
 
 /*
@@ -233,21 +233,21 @@ static void SV_ListIP_f (void)
 	int		i;
 	unsigned char	b[4];
 
-	Sys_Printf (NULL,"Filter list:\n");
+	Sys_Printf("Filter list:\n");
 	for (i=0 ; i<numipfilters ; i++)
 	{
 		*(unsigned *)b = ipfilters[i].compare;
-		Sys_Printf (NULL,"%3i.%3i.%3i.%3i | ", b[0], b[1], b[2], b[3]);
+		Sys_Printf("%3i.%3i.%3i.%3i | ", b[0], b[1], b[2], b[3]);
 		switch((int)ipfilters[i].type)
 		{
-			case ipft_ban:  Sys_Printf (NULL," ban"); break;
-			case ipft_safe: Sys_Printf (NULL,"safe"); break;
-			default: Sys_Printf (NULL,"unkn"); break;
+			case ipft_ban:  Sys_Printf(" ban"); break;
+			case ipft_safe: Sys_Printf("safe"); break;
+			default: Sys_Printf("unkn"); break;
 		}
 		if (ipfilters[i].time)
-			Sys_Printf (NULL," | %i s", (int)(ipfilters[i].time-long_time));
+			Sys_Printf(" | %i s", (int)(ipfilters[i].time-long_time));
 
-		Sys_Printf (NULL,"\n");
+		Sys_Printf("\n");
 	}
 }
 
@@ -265,12 +265,12 @@ static void SV_WriteIP_f (void)
 
 	snprintf (name, sizeof(name), "qtv/listip.cfg");
 
-	Sys_Printf (NULL, "Writing %s.\n", name);
+	Sys_Printf("Writing %s.\n", name);
 
 	f = fopen (name, "wb");
 	if (!f)
 	{
-		Sys_Printf (NULL,"Couldn't open %s\n", name);
+		Sys_Printf("Couldn't open %s\n", name);
 		return;
 	}
 
@@ -314,12 +314,12 @@ static void Do_BanList(ipfiltertype_t ipft)
 			continue;
 
 		*(unsigned *)b = ipfilters[i].compare;
-		Sys_Printf (NULL,"%3i|%3i.%3i.%3i.%3i", i, b[0], b[1], b[2], b[3]);
+		Sys_Printf("%3i|%3i.%3i.%3i.%3i", i, b[0], b[1], b[2], b[3]);
 		switch((int)ipfilters[i].type)
 		{
-			case ipft_ban:  Sys_Printf (NULL,"| ban"); break;
-			case ipft_safe: Sys_Printf (NULL,"|safe"); break;
-			default: Sys_Printf (NULL,"|unkn"); break;
+			case ipft_ban:  Sys_Printf("| ban"); break;
+			case ipft_safe: Sys_Printf("|safe"); break;
+			default: Sys_Printf("|unkn"); break;
 		}
 
 		if (ipfilters[i].time)
@@ -335,18 +335,18 @@ static void Do_BanList(ipfiltertype_t ipft)
 			s = df;
 
 			if (d)
-				Sys_Printf (NULL,"|%4ldd:%2ldh", d, h);
+				Sys_Printf("|%4ldd:%2ldh", d, h);
 			else if (h)
-				Sys_Printf (NULL,"|%4ldh:%2ldm", h, m);
+				Sys_Printf("|%4ldh:%2ldm", h, m);
 			else
-				Sys_Printf (NULL,"|%4ldm:%2lds", m, s);
+				Sys_Printf("|%4ldm:%2lds", m, s);
 		}
 		else
 		{
-			Sys_Printf (NULL,"|permanent");
+			Sys_Printf("|permanent");
 		}
 
-		Sys_Printf (NULL,"\n");
+		Sys_Printf("\n");
 	}
 }
 
@@ -356,11 +356,11 @@ static void SV_BanList (void)
 
 	if (numipfilters < 1)
 	{
-		Sys_Printf (NULL,"Ban list: empty\n");
+		Sys_Printf("Ban list: empty\n");
 		return;
 	}
 
-	Sys_Printf (NULL,"%s\n"
+	Sys_Printf("%s\n"
 				"\235\236\236\236\236\236\236\236\236\236\236\236\236\236\236\236"
 				"\236\236\236\236\236\236\236\236\236\236\236\236\236\236\236\236\236\237\n"
 				"%3.3s|%15.15s|%4.4s|%9.9s\n",
@@ -403,19 +403,19 @@ static void SV_Cmd_Banip_f(void)
 	c = Cmd_Argc ();
 	if (c < 3)
 	{
-		Sys_Printf (NULL,"usage: %s <ip> <time<s m h d>>\n", Cmd_Argv(0));
+		Sys_Printf("usage: %s <ip> <time<s m h d>>\n", Cmd_Argv(0));
 		return;
 	}
 
 	if (!StringToFilter (Cmd_Argv(1), &f))
 	{
-		Sys_Printf (NULL,"ban: bad ip address: %s\n", Cmd_Argv(1));
+		Sys_Printf("ban: bad ip address: %s\n", Cmd_Argv(1));
 		return;
 	}
 
 	if (!SV_CanAddBan(&f))
 	{
-		Sys_Printf (NULL,"ban: can't ban such ip: %s\n", Cmd_Argv(1));
+		Sys_Printf("ban: can't ban such ip: %s\n", Cmd_Argv(1));
 		return;
 	}
 
@@ -424,7 +424,7 @@ static void SV_Cmd_Banip_f(void)
 	// sscanf safe here since sizeof(arg2) == sizeof(arg2c), right?
 	if (sscanf(arg2, "%d%s", &t, arg2c) != 2 || strlen(arg2c) != 1)
 	{
-		Sys_Printf (NULL, "ban: wrong time arg\n");
+		Sys_Printf("ban: wrong time arg\n");
 		return;
 	}
 
@@ -436,12 +436,12 @@ static void SV_Cmd_Banip_f(void)
 		case 'h': d *= 60*60; break; // 3600 seconds per hour
 		case 'd': d *= 60*60*24; break; // 86400 seconds per day
 		default:
-		Sys_Printf (NULL,"ban: wrong time arg\n");
+		Sys_Printf("ban: wrong time arg\n");
 		return;
 	}
 
 	*(unsigned *)b = f.compare;
-	Sys_Printf (NULL, "%3i.%3i.%3i.%3i was banned for %d%s\n", b[0], b[1], b[2], b[3], t, arg2c);
+	Sys_Printf("%3i.%3i.%3i.%3i was banned for %d%s\n", b[0], b[1], b[2], b[3], t, arg2c);
 
 	snprintf(tmp_str, sizeof(tmp_str), "addip %i.%i.%i.%i ban %s%.0lf\n", b[0], b[1], b[2], b[3], d ? "+" : "", d);
 	Cbuf_AddText(tmp_str);
@@ -455,7 +455,7 @@ static void SV_Cmd_Banremove_f(void)
 
 	if (Cmd_Argc () < 2)
 	{
-		Sys_Printf (NULL,"usage: %s [banid]\n", Cmd_Argv(0));
+		Sys_Printf("usage: %s [banid]\n", Cmd_Argv(0));
 		SV_BanList();
 		return;
 	}
@@ -464,18 +464,18 @@ static void SV_Cmd_Banremove_f(void)
 
 	if (id < 0 || id >= numipfilters)
 	{
-		Sys_Printf (NULL,"Wrong ban id: %d\n", id);
+		Sys_Printf("Wrong ban id: %d\n", id);
 		return;
 	}
 
 	if (ipfilters[id].type == ipft_safe)
 	{
-		Sys_Printf (NULL,"Can't remove such ban with id: %d\n", id);
+		Sys_Printf("Can't remove such ban with id: %d\n", id);
 		return;
 	}
 
 	*(unsigned *)b = ipfilters[id].compare;
-	Sys_Printf (NULL, "%3i.%3i.%3i.%3i was unbanned\n", b[0], b[1], b[2], b[3]);
+	Sys_Printf("%3i.%3i.%3i.%3i was unbanned\n", b[0], b[1], b[2], b[3]);
 
 	SV_RemoveBansIPFilter (id);
 	Cbuf_AddText("writeip\n");

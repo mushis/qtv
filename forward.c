@@ -23,7 +23,7 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 
 	if ((prox->_buffersize_ < 0) || (prox->_buffersize_ > prox->_buffermaxsize_))
 	{
-		Sys_Printf(cluster, "(proxy #%3i): Net_TryFlushProxyBuffer: prox->buffersize fucked\n", prox->id);
+		Sys_Printf("(proxy #%3i): Net_TryFlushProxyBuffer: prox->buffersize fucked\n", prox->id);
 		prox->drop = true;
 		return;
 	}
@@ -56,7 +56,7 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 		{
 			if (qerrno != EWOULDBLOCK && qerrno != EAGAIN)	// Not a problem, so long as we can flush it later.
 			{
-				Sys_Printf(cluster, "(proxy #%3i): write error to QTV client, dropping\n", prox->id);
+				Sys_Printf("(proxy #%3i): write error to QTV client, dropping\n", prox->id);
 				prox->drop = true;	// Drop them if we get any errors.
 			}
 			break;
@@ -74,7 +74,7 @@ void Net_ProxySend(cluster_t *cluster, oproxy_t *prox, char *buffer, size_t leng
 {
 	if (prox->_buffersize_ < 0 || prox->_buffersize_ > prox->_buffermaxsize_)
 	{
-		Sys_Printf(cluster, "(proxy #%3i): Net_ProxySend: prox->buffersize fucked\n", prox->id);
+		Sys_Printf("(proxy #%3i): Net_ProxySend: prox->buffersize fucked\n", prox->id);
 		prox->drop = true;
 		return;
 	}
@@ -102,24 +102,24 @@ void Net_ProxySend(cluster_t *cluster, oproxy_t *prox, char *buffer, size_t leng
 
 				if (new_buf)
 				{
-					Sys_DPrintf(NULL, "EXPANDED %d -> %d\n", prox->_buffermaxsize_, new_size);
+					Sys_DPrintf("EXPANDED %d -> %d\n", prox->_buffermaxsize_, new_size);
 					prox->_buffer_        = new_buf;
 					prox->_buffermaxsize_ = new_size;
 				}
 				else
 				{
-					Sys_DPrintf(NULL, "FAILED TO EXPAND %d -> %d\n", prox->_buffermaxsize_, new_size);
+					Sys_DPrintf("FAILED TO EXPAND %d -> %d\n", prox->_buffermaxsize_, new_size);
 				}
 			}
 			else
 			{
-				Sys_DPrintf(NULL, "IMPOSSIBLE TO EXPAND %d -> %d\n", prox->_bufferautoadjustmaxsize_, prox->_buffersize_ + length);
+				Sys_DPrintf("IMPOSSIBLE TO EXPAND %d -> %d\n", prox->_bufferautoadjustmaxsize_, prox->_buffersize_ + length);
 			}
 
 			if (prox->_buffersize_ + length > prox->_buffermaxsize_) // damn, still too big.
 			{
 				// they're too slow. hopefully it was just momentary lag
-				Sys_Printf(NULL, "(proxy #%3i): QTV client is too lagged\n", prox->id);
+				Sys_Printf("(proxy #%3i): QTV client is too lagged\n", prox->id);
 				prox->flushing = true;
 				return;
 			}
@@ -162,7 +162,7 @@ void Prox_SendMessage(cluster_t *cluster, oproxy_t *prox, char *buf, int length,
 		Net_TryFlushProxyBuffer(cluster, prox);	//try flushing
 		if (prox->_buffersize_ + length + msg.cursize > prox->_buffermaxsize_)	//damn, still too big.
 		{	//they're too slow. hopefully it was just momentary lag
-			Sys_Printf(NULL, "(proxy #%3i): QTV client is too lagged\n", prox->id);
+			Sys_Printf("(proxy #%3i): QTV client is too lagged\n", prox->id);
 			prox->flushing = true;
 			return;
 		}
@@ -296,11 +296,11 @@ void Net_SendConnectionMVD_1_0(sv_t *qtv, oproxy_t *prox)
 	netmsg_t msg;
 	int prespawn;
 
-//	Sys_Printf(NULL, "DBG: Net_SendConnectionMVD: map: %s\n", qtv->mapname);
+//	Sys_Printf("DBG: Net_SendConnectionMVD: map: %s\n", qtv->mapname);
 
 	if (qtv->qstate != qs_active || !*qtv->mapname || prox->download)
 	{
-//		Sys_Printf(NULL, "DBG: Net_SendConnectionMVD: set flush\n");
+//		Sys_Printf("DBG: Net_SendConnectionMVD: set flush\n");
 		prox->flushing = true; // so they get Net_SendConnectionMVD() ASAP later
 		return;
 	}
@@ -358,7 +358,7 @@ void Net_SendConnectionMVD_1_0(sv_t *qtv, oproxy_t *prox)
 
 	if (prox->flushing)
 	{
-		Sys_Printf(NULL, "%s (proxy #%3i): Connection data is too big, dropping proxy client\n", qtv->server, prox->id);
+		Sys_Printf("%s (proxy #%3i): Connection data is too big, dropping proxy client\n", qtv->server, prox->id);
 		prox->drop = true;	//this is unfortunate...
 	}
 	else
@@ -373,11 +373,11 @@ void Net_SendConnectionMVD_NEW(sv_t *qtv, oproxy_t *prox)
 	char buffer[MAX_MSGLEN*8];
 	netmsg_t msg;
 
-//	Sys_Printf(NULL, "DBG: Net_SendConnectionMVD: map: %s\n", qtv->mapname);
+//	Sys_Printf("DBG: Net_SendConnectionMVD: map: %s\n", qtv->mapname);
 
 	if (qtv->qstate != qs_active || !*qtv->mapname || prox->download)
 	{
-//		Sys_Printf(NULL, "DBG: Net_SendConnectionMVD: set flush\n");
+//		Sys_Printf("DBG: Net_SendConnectionMVD: set flush\n");
 		prox->flushing = true; // so they get Net_SendConnectionMVD() ASAP later
 		return;
 	}
@@ -398,7 +398,7 @@ void Net_SendConnectionMVD_NEW(sv_t *qtv, oproxy_t *prox)
 
 	if (prox->flushing)
 	{
-		Sys_Printf(NULL, "%s (proxy #%3i): Connection data is too big, dropping proxy client\n", qtv->server, prox->id);
+		Sys_Printf("%s (proxy #%3i): Connection data is too big, dropping proxy client\n", qtv->server, prox->id);
 		prox->drop = true;	//this is unfortunate...
 	}
 	else
@@ -476,7 +476,7 @@ void SV_ForwardStream(sv_t *qtv, unsigned char *buffer, int length)
 	{
 #if 0 // debug
 		if (prox->buffersize)
-			Sys_Printf(NULL, "DBG: prx buffer: %5d\n", prox->buffersize);
+			Sys_Printf("DBG: prx buffer: %5d\n", prox->buffersize);
 #endif
 
 		if (prox->file)
@@ -485,7 +485,7 @@ void SV_ForwardStream(sv_t *qtv, unsigned char *buffer, int length)
 		// FIXME: This will drop down stream if our qtv not connected since we don't have any activity on downstream socket.
 		if (prox->io_time + max(RECONNECT_TIME + 10 * 1000, 1000 * downstream_timeout.integer) <= qtv->curtime)
 		{
-			Sys_Printf(NULL, "%s (proxy #%3i): Down stream proxy timeout\n", qtv->server, prox->id);
+			Sys_Printf("%s (proxy #%3i): Down stream proxy timeout\n", qtv->server, prox->id);
 			prox->drop = true;
 		}
 	}

@@ -192,9 +192,9 @@ static void SV_CheckProxyTimeout(cluster_t *cluster, oproxy_t *pend)
 {
 	if (pend->io_time + max(10 * 1000, 1000 * downstream_timeout.integer) <= cluster->curtime)
 	{
-		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, pending stream timeout, dropping\n", pend->id);
+		Sys_DPrintf("SV_ReadPendingProxy: id #%d, pending stream timeout, dropping\n", pend->id);
 		if (developer.integer > 1)
-			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
+			Sys_DPrintf("SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
 
 		pend->drop = true;
 	}
@@ -217,9 +217,9 @@ static void SV_ReadUntilDrop(oproxy_t *pend)
 	// Ok we have empty buffer, now we can drop.
 	if (!pend->_buffersize_) 
 	{
-		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, empty buffer, dropping\n", pend->id);
+		Sys_DPrintf("SV_ReadPendingProxy: id #%d, empty buffer, dropping\n", pend->id);
 		if (developer.integer > 1)
-			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
+			Sys_DPrintf("SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
 
 		pend->drop = true;
 	}
@@ -241,9 +241,9 @@ static qbool SV_ReceivePendingProxyRequest(cluster_t *cluster, oproxy_t *pend)
 	// Remote side closed connection.
 	if (len == 0)
 	{
-		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, remote side closed connection, dropping\n", pend->id);
+		Sys_DPrintf("SV_ReadPendingProxy: id #%d, remote side closed connection, dropping\n", pend->id);
 		if (developer.integer > 1)
-			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
+			Sys_DPrintf("SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
 
 		pend->drop = true;
 		return false;
@@ -273,9 +273,9 @@ static qbool SV_ReceivePendingProxyRequest(cluster_t *cluster, oproxy_t *pend)
 		   )
 	   )
 	{	
-		Sys_DPrintf(NULL, "SV_ReadPendingProxy: id #%d, unknown client, dropping\n", pend->id);
+		Sys_DPrintf("SV_ReadPendingProxy: id #%d, unknown client, dropping\n", pend->id);
 		if (developer.integer > 1)
-			Sys_DPrintf(NULL, "SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
+			Sys_DPrintf("SV_ReadPendingProxy: inbuffer: %s\n", pend->inbuffer);
 	
 		// I have no idea what the smeg you are.
 		pend->drop = true;
@@ -340,7 +340,7 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 			{
 				if (!colon)
 				{
-					Sys_DPrintf(NULL, "qtv cl, got (%s)\n", s);
+					Sys_DPrintf("qtv cl, got (%s)\n", s);
 
 					if (!strcmp(s, "QTV"))
 					{
@@ -369,13 +369,13 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 					}
 					else
 					{
-						Sys_Printf(NULL, "(pending proxy #%3i): Unrecognised token in QTV connection request (%s)\n", pend->id, s);
+						Sys_Printf("(pending proxy #%3i): Unrecognised token in QTV connection request (%s)\n", pend->id, s);
 					}
 				}
 				else
 				{
 					*colon++ = '\0';
-					Sys_DPrintf(NULL, "qtv cl, got (%s) (%s)\n", s, colon);
+					Sys_DPrintf("qtv cl, got (%s) (%s)\n", s, colon);
 
 					if (!strcmp(s, "VERSION"))
 					{
@@ -409,7 +409,7 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 					}
 					else
 					{
-						Sys_Printf(NULL, "(pending proxy #%3i): Unrecognised token in QTV connection request (%s)\n", pend->id, s);
+						Sys_Printf("(pending proxy #%3i): Unrecognised token in QTV connection request (%s)\n", pend->id, s);
 					}
 				}
 			}
@@ -652,12 +652,12 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, netadr_t *addr)
 	// Since infostrings count is limited, we reserve at least the name.
 	if(!Info_Set(&prox->ctx, "name", "")) 
 	{
-		Sys_Printf(NULL, "Can't reserve name for client, dropping\n");
+		Sys_Printf("Can't reserve name for client, dropping\n");
 		prox->drop = true;
 	}
 
 	if (developer.integer > 1)
-		Sys_DPrintf(NULL, "SV_NewProxy: New proxy id #%d\n", prox->id);
+		Sys_DPrintf("SV_NewProxy: New proxy id #%d\n", prox->id);
 	
 	return prox;
 }
@@ -734,21 +734,21 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster)
 	if (SV_IsBanned(&addr))
 	{
 		char ip[] = "xxx.xxx.xxx.xxx";
-		Sys_DPrintf(NULL, "rejected connect from banned ip: %s\n", NET_BaseAdrToString(&addr, ip, sizeof(ip)));
+		Sys_DPrintf("rejected connect from banned ip: %s\n", NET_BaseAdrToString(&addr, ip, sizeof(ip)));
 		closesocket(sock);
 		return;
 	}
 
 	if (ioctlsocket(sock, FIONBIO, &nonblocking) == INVALID_SOCKET) 
 	{
-		Sys_Printf(NULL, "SV_FindProxies: ioctl FIONBIO: (%i)\n", qerrno);
+		Sys_Printf("SV_FindProxies: ioctl FIONBIO: (%i)\n", qerrno);
 		closesocket(sock);
 		return;
 	}
 
 	if (!TCP_Set_KEEPALIVE(sock))
 	{
-		Sys_Printf(NULL, "SV_FindProxies: TCP_Set_KEEPALIVE: failed\n");
+		Sys_Printf("SV_FindProxies: TCP_Set_KEEPALIVE: failed\n");
 		closesocket(sock);
 		return;
 	}
@@ -790,10 +790,10 @@ void SV_CheckMVDPort(cluster_t *cluster)
 			closesocket(cluster->tcpsocket);
 			cluster->tcpsocket = INVALID_SOCKET;
 
-			Sys_Printf(NULL, "mvdport is now closed\n");
+			Sys_Printf("mvdport is now closed\n");
 		}
 		else
-			Sys_Printf(NULL, "mvdport already closed\n");
+			Sys_Printf("mvdport already closed\n");
 	}
 	else
 	{
@@ -805,10 +805,10 @@ void SV_CheckMVDPort(cluster_t *cluster)
 				closesocket(cluster->tcpsocket);
 			cluster->tcpsocket = news;
 
-			Sys_Printf(NULL, "mvdport %d opened\n", newp);
+			Sys_Printf("mvdport %d opened\n", newp);
 		}
 		else
-			Sys_Printf(NULL, "mvdport %d failed to open\n", newp);
+			Sys_Printf("mvdport %d failed to open\n", newp);
 	}
 
 	mvdport.modified = false;
@@ -901,7 +901,7 @@ void Prox_FixName(sv_t *qtv, oproxy_t *prox)
 		{
 			if(!Info_Set(&prox->ctx, "name", newname))
 			{
-				Sys_Printf(NULL, "(proxy #%3i): can't set duplicate name for client, dropping\n", prox->id);
+				Sys_Printf("(proxy #%3i): can't set duplicate name for client, dropping\n", prox->id);
 				prox->drop = true;
 			}
 

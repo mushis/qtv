@@ -98,7 +98,7 @@ char *Cvar_String (char *var_name)
 
 void SV_SendServerInfoChange(char *key, char *value)
 {
-	Sys_Printf(NULL, "SV_SendServerInfoChange FIXME\n");
+	Sys_Printf("SV_SendServerInfoChange FIXME\n");
 }
 
 
@@ -180,7 +180,7 @@ void Cvar_SetByName (char *var_name, char *value)
 	var = Cvar_FindVar (var_name);
 	if (!var)
 	{	// there is an error in C code if this happens
-		Sys_Printf (NULL, "Cvar_Set: variable %s not found\n", var_name);
+		Sys_Printf("Cvar_Set: variable %s not found\n", var_name);
 		return;
 	}
 
@@ -234,14 +234,14 @@ void Cvar_Register (cvar_t *variable)
 	// first check to see if it has already been defined
 	if (Cvar_FindVar (variable->name))
 	{
-		Sys_Printf (NULL, "Can't register variable %s, already defined\n", variable->name);
+		Sys_Printf("Can't register variable %s, already defined\n", variable->name);
 		return;
 	}
 
 	// check for overlap with a command
 	if (Cmd_Exists (variable->name))
 	{
-		Sys_Printf (NULL, "Cvar_Register: %s is a command\n", variable->name);
+		Sys_Printf("Cvar_Register: %s is a command\n", variable->name);
 		return;
 	}
 
@@ -285,7 +285,7 @@ qbool Cvar_Command (void)
 	c = Cmd_Argc();
 	if (c == 1)
 	{
-		Sys_Printf (NULL, "\"%s\" is \"%s\"\n", v->name, v->string);
+		Sys_Printf("\"%s\" is \"%s\"\n", v->name, v->string);
 		return true;
 	}
 
@@ -312,14 +312,14 @@ void Cvar_Toggle_f (void)
 
 	if (Cmd_Argc() != 2)
 	{
-		Sys_Printf (NULL, "toggle <cvar> : toggle a cvar on/off\n");
+		Sys_Printf("toggle <cvar> : toggle a cvar on/off\n");
 		return;
 	}
 
 	var = Cvar_FindVar (Cmd_Argv(1));
 	if (!var)
 	{
-		Sys_Printf (NULL, "Unknown variable \"%s\"\n", Cmd_Argv(1));
+		Sys_Printf("Unknown variable \"%s\"\n", Cmd_Argv(1));
 		return;
 	}
 
@@ -339,12 +339,12 @@ void Cvar_CvarList_f (void)
 	int i;
 
 	for (var=cvar_vars, i=0 ; var ; var=var->next, i++)
-		Sys_Printf(NULL, "%c%c %s\n",
+		Sys_Printf("%c%c %s\n",
 		           var->flags & CVAR_ARCHIVE    ? '*' : ' ',
 		           var->flags & CVAR_SERVERINFO ? 's' : ' ',
 		           var->name);
 
-	Sys_Printf (NULL, "------------\n%d variables\n", i);
+	Sys_Printf("------------\n%d variables\n", i);
 }
 
 /*
@@ -454,7 +454,7 @@ void Cvar_Set_f (void)
 
 	if (Cmd_Argc() != 3)
 	{
-		Sys_Printf (NULL, "usage: set <cvar> <value>\n");
+		Sys_Printf("usage: set <cvar> <value>\n");
 		return;
 	}
 
@@ -469,7 +469,7 @@ void Cvar_Set_f (void)
 	{
 		if (Cmd_Exists(var_name))
 		{
-			Sys_Printf (NULL, "\"%s\" is a command\n", var_name);
+			Sys_Printf("\"%s\" is a command\n", var_name);
 			return;
 		}
 
@@ -491,14 +491,14 @@ void Cvar_Inc_f (void)
 	c = Cmd_Argc();
 	if (c != 2 && c != 3)
 	{
-		Sys_Printf (NULL, "inc <cvar> [value]\n");
+		Sys_Printf("inc <cvar> [value]\n");
 		return;
 	}
 
 	var = Cvar_FindVar (Cmd_Argv(1));
 	if (!var)
 	{
-		Sys_Printf (NULL, "Unknown variable \"%s\"\n", Cmd_Argv(1));
+		Sys_Printf("Unknown variable \"%s\"\n", Cmd_Argv(1));
 		return;
 	}
 
@@ -517,12 +517,12 @@ static void Cvar_Hash_Print_f (void)
 	int		i, count;
 	cvar_t	*cvar;
 
-	Sys_Printf (NULL, "Cvar hash:\n");
+	Sys_Printf("Cvar hash:\n");
 	for (i = 0; i<32; i++)
 	{
 		count = 0;
 		for (cvar = cvar_hash[i]; cvar; cvar=cvar->hash_next, count++);
-			Sys_Printf (NULL, "%i: %i\n", i, count);
+			Sys_Printf("%i: %i\n", i, count);
 	}
 
 }
