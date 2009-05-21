@@ -334,6 +334,9 @@ literal entities.
 		logtime("before fsockopen");
 		$stream = fsockopen($parsed_url["host"], $parsed_url["port"], $errno, $errstr, SOCKET_OPEN_TIMEOUT);
 		if ($stream !== false) {
+			if (!stream_set_timeout($stream, SOCKET_READ_TIMEOUT)) {
+				trigger_error("stream_set_timeout failed for ".$url, E_USER_ERROR);
+			}
 			fwrite($stream, "GET /nowplaying HTTP/1.1\nHost: {$host}\n\n");
 			$streams[] = array(STREAM_ID => $stream, STREAM_URL => $url);
 			$stream_data[$url] = "";
@@ -359,17 +362,21 @@ literal entities.
 
 	if ($brief_listing) {
 		foreach ($qtvlist as $url => $name) {
-			InsertURL($url, strstr($stream_data[$url],"<?xml"));
-			logtime($name);
+			if (isset($stream_data[$url])) {
+				InsertURL($url, strstr($stream_data[$url],"<?xml"));
+				logtime($name);
+			}
 		}
 		output_dump();
 	}
 	else {
 		foreach ($qtvlist as $url => $name) {
-			echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</a></td></tr>";
-			InsertURL($url, strstr($stream_data[$url],"<?xml"));
-			output_dump();
-			flush();
+			if (isset($stream_data[$url])) {
+				echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</a></td></tr>";
+				InsertURL($url, strstr($stream_data[$url],"<?xml"));
+				output_dump();
+				flush();
+			}
 		}
 	}
 
