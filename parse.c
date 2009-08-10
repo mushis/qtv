@@ -1023,7 +1023,6 @@ void ParseDownload(sv_t *tv, netmsg_t *m)
 {
 	int size, b;
 	unsigned int percent;
-	char buffer[2048];
 
 	size = (signed short)ReadShort(m);
 	percent = ReadByte(m);
@@ -1036,7 +1035,7 @@ void ParseDownload(sv_t *tv, netmsg_t *m)
 	}
 
 	for (b = 0; b < size; b++)
-		buffer[b] = ReadByte(m);
+		ReadByte(m);
 }
 
 void ParseDisconnect(sv_t *tv, netmsg_t *m)
