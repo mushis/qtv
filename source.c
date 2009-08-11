@@ -1185,7 +1185,8 @@ int QTV_ParseMVD(sv_t *qtv)
 
 	float demospeed;
 
-	unsigned int length, nextpackettime;
+	ullong nextpackettime;
+	unsigned int length;
 	unsigned char *buffer;
 	unsigned char message_type;
 
