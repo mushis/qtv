@@ -262,7 +262,33 @@ qbool Info_Set (ctxinfo_t *ctx, const char *name, const char *value)
 	}
 
 	// copy value
-	a->value = Sys_strdup (value);
+#if 0
+	{
+		// unfortunatelly evil users use non printable/controll chars, so that does not work well
+		a->value = Sys_strdup (value);
+	}
+#else
+	{
+		// skip some controll chars, doh
+		char v_buf[MAX_INFO_KEY] = {0}, *v = v_buf;
+		int i;
+
+		for (i = 0; value[i]; i++) // len of 'value' should be less than MAX_INFO_KEY according to above checks
+		{
+			if ((unsigned char)value[i] > 13)
+				*v++ = value[i];
+		}
+		*v = 0;
+
+		a->value = Sys_strdup (v_buf);
+	}
+#endif
+
+	// hrm, empty value, remove it then
+	if (!a->value[0])
+	{
+		return Info_Remove(ctx, name);
+	}
 
 	return true;
 }
