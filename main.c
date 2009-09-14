@@ -179,7 +179,7 @@ void Cluster_Sleep(cluster_t *cluster)
 	
 	#else //_WIN32
 
-	usleep(1000);
+	usleep(100000);
 
 	#endif // _WIN32 else
 
