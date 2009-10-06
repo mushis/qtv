@@ -109,7 +109,7 @@ class RSSParser
 global $rss_url;
 
 // Set feed
-$rss_url = "http://qwdrama.com/qwnetwork/rss.php";
+$rss_url = "http://network.quakeworld.nu/bar/rss.php";
 
 $xml_parser = xml_parser_create();
 $rss_parser = new RSSParser();

@@ -1,5 +1,7 @@
 <?php
 
+	define ('ROOT', '.');
+	
 	// disable caching, from PHP manual
 	header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
 	header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
@@ -8,7 +10,9 @@
 	header("Pragma: no-cache");
 	header("Content-type: text/html; charset=utf-8");
 
-	require "config.php";
+	require ROOT."/inc/config.php";
+	require ROOT."/inc/model.php";
+	
 	if (DEBUG_MODE) {
 		error_reporting(E_ALL);
 	}
@@ -19,8 +23,8 @@
 	define ("STREAM_ID", 0);
 	define ("STREAM_URL", 1);
 	
-	$qtvlist = NULL;
-	require "qtvlist.php";
+	$model = new ServerList;
+	$qtvlist = $model->getList();
 	
 	$cururl = "";
 	$intable = false;
@@ -322,24 +326,44 @@ literal entities.
 		xml_parser_free($xml_parser);
 	}
 	
-	include "header.html";
+	include ROOT."/inc/header.php";
 	flush();
 
 	$streams = array();
 	$stream_data = array();
-	foreach ($qtvlist as $url => $name) {
-		$parsed_url = parse_url($url);
-		$host = $parsed_url["host"];
+	foreach ($qtvlist as $id => $server) {
+		if (!$server->isEnabled()) continue;
+		$url = "http://{$server->hostname}:{$server->port}/";
 		logtime($url);
 		logtime("before fsockopen");
-		$stream = fsockopen($parsed_url["host"], $parsed_url["port"], $errno, $errstr, SOCKET_OPEN_TIMEOUT);
+		$stream = fsockopen($server->ip, $server->port, $errno, $errstr, SOCKET_OPEN_TIMEOUT);
 		if ($stream !== false) {
 			if (!stream_set_timeout($stream, SOCKET_READ_TIMEOUT)) {
 				trigger_error("stream_set_timeout failed for ".$url, E_USER_ERROR);
 			}
-			fwrite($stream, "GET /nowplaying HTTP/1.1\nHost: {$host}\n\n");
+			fwrite($stream, "GET /nowplaying HTTP/1.1\nHost: {$server->hostname}\n\n");
 			$streams[] = array(STREAM_ID => $stream, STREAM_URL => $url);
 			$stream_data[$url] = "";
+		}
+		else {
+			logtime("fsockopen failed");
+			$newip = gethostbyname($server->hostname);
+			if ($newip != $server->hostname) {
+				if ($server->ip == $newip) {
+					$model->increaseErrors($id);
+					if (++$server->errors >= MAX_ERRORS) {
+						$model->errorServer($id);
+					}
+				}
+				else {
+					$model->setServerIp($id, $newip);
+					$model->resetErrors($id);
+					// will retry this new ip on next load, but not now
+				}
+			}
+			else {
+				$model->increaseErrors($id);
+			}
 		}
 		logtime("afterfsockopen");
 	}
@@ -361,7 +385,10 @@ literal entities.
 	logtime("after reading");
 
 	if ($brief_listing) {
-		foreach ($qtvlist as $url => $name) {
+		foreach ($qtvlist as $id => $server) {
+			if (!$server->isEnabled()) continue;
+			$url = "http://{$server->hostname}:{$server->port}/";
+			$name = $server->name;
 			if (isset($stream_data[$url])) {
 				InsertURL($url, strstr($stream_data[$url],"<?xml"));
 				logtime($name);
@@ -370,7 +397,10 @@ literal entities.
 		output_dump();
 	}
 	else {
-		foreach ($qtvlist as $url => $name) {
+		foreach ($qtvlist as $id => $server) {
+			if (!$server->isEnabled()) continue;
+			$url = "http://{$server->hostname}:{$server->port}/";
+			$name = $server->name;
 			if (isset($stream_data[$url])) {
 				echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</a></td></tr>";
 				InsertURL($url, strstr($stream_data[$url],"<?xml"));
