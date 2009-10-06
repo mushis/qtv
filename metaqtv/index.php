@@ -338,6 +338,9 @@ literal entities.
 		logtime("before fsockopen");
 		$stream = fsockopen($server->ip, $server->port, $errno, $errstr, SOCKET_OPEN_TIMEOUT);
 		if ($stream !== false) {
+			if ($server->errors > 0 && mt_rand(0,100000) < ERROR_REDUCTION_COEF*100000) {
+				$model->decreaseErrors($id);
+			}
 			if (!stream_set_timeout($stream, SOCKET_READ_TIMEOUT)) {
 				trigger_error("stream_set_timeout failed for ".$url, E_USER_ERROR);
 			}

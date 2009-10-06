@@ -108,11 +108,16 @@ class ServerList {
 		$this->unlockList();
 	}
 	
-	private function setServerProperty($id, $property, $state) {
+	private function setServerProperty($id, $property, $newval = NULL, $change = NULL) {
 		if (!$this->lockList()) return;
 		$list = $this->getList();
 		if (isset($list[$id])) {
-			$list[$id]->$property = $state;
+			if (!is_null($newval)) {
+				$list[$id]->$property = $newval;
+			}
+			else if (!is_null($change)) {
+				$list[$id]->$property += $change;
+			}
 			$this->writeList($list);
 		}
 		$this->unlockList();
@@ -142,13 +147,11 @@ class ServerList {
 	}
 	
 	public function increaseErrors($id) {
-		if (!$this->lockList()) return;
-		$list = $this->getList();
-		if (isset($list[$id])) {
-			$list[$id]->errors++;
-			$this->writeList($list);
-		}
-		$this->unlockList();
+		$this->setServerProperty($id, "errors", NULL, +1);
+	}
+
+	public function decreaseErrors($id) {
+		$this->setServerProperty($id, "errors", NULL, -1);
 	}
 	
 	public function resetErrors($id) {
