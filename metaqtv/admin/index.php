@@ -51,6 +51,13 @@
 		}
 	}
 	
+	function delete() {
+		if (posted("server")) {
+			$list = new ServerList;
+			$list->deleteServer($_POST["server"]);
+		}
+	}
+	
 	function getServerList() {
 		$list = new ServerList;
 		return $list->getList();
@@ -80,6 +87,10 @@
 				break;
 			case "setorder":
 				setOrder();
+				refresh();
+				break;
+			case "delete":
+				delete();
 				refresh();
 				break;
 			default:

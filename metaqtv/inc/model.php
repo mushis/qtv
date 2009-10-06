@@ -41,7 +41,7 @@ class ServerList {
 	private $lock;
 	
 	function ServerList() {
-		$this->filename = ROOT."/inc/serverlist.dat";
+		$this->filename = ROOT."/conf/serverlist.dat";
 	}
 	
 	public function getList() {
@@ -58,7 +58,14 @@ class ServerList {
 	
 	private function lockList() {
 		$this->lock = fopen(".lock", "w");
-		return flock($this->lock, LOCK_EX);
+		if (!$this->lock) {
+			return;
+		}
+		$ret = flock($this->lock, LOCK_EX);
+		if (!$ret) {
+			fclose($this->lock);
+		}
+		return $ret;
 	}
 	
 	private function unlockList() {
@@ -122,6 +129,16 @@ class ServerList {
 	public function enableServer($id) {
 		$this->setServerProperty($id, "state", ServerState::state_enabled);
 		$this->resetErrors($id);
+	}
+	
+	public function deleteServer($id) {
+		if (!$this->lockList()) return;
+		$list = $this->getList();
+		if (isset($list[$id])) {
+			unset($list[$id]);
+			$this->writeList($list);
+		}
+		$this->unlockList();
 	}
 	
 	public function increaseErrors($id) {

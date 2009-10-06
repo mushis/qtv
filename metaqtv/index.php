@@ -10,7 +10,7 @@
 	header("Pragma: no-cache");
 	header("Content-type: text/html; charset=utf-8");
 
-	require ROOT."/inc/config.php";
+	require ROOT."/conf/config.php";
 	require ROOT."/inc/model.php";
 	
 	if (DEBUG_MODE) {
@@ -416,7 +416,7 @@ literal entities.
 	}
 	
 	echo "</table>\n";
-	echo "<p id='version'><strong><a href='http://qtv.qw-dev.net'><em>Meta</em>-QTV</a> 1.02</strong></p>\n";
+	echo "<p id='version'><strong><a href='http://qtv.qw-dev.net'><em>Meta</em>-QTV</a> 1.03</strong></p>\n";
 	echo "</body>\n</html>\n";
 	if (DEBUG_MODE) {
 		echo "<!--\n";
