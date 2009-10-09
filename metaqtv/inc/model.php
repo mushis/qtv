@@ -57,7 +57,7 @@ class ServerList {
 	}
 	
 	private function lockList() {
-		$this->lock = fopen(".lock", "w");
+		$this->lock = fopen(ROOT."/conf/.lock", "w");
 		if (!$this->lock) {
 			return;
 		}
@@ -71,7 +71,7 @@ class ServerList {
 	private function unlockList() {
 		flock($this->lock, LOCK_UN);
 		fclose($this->lock);
-		unlink(".lock");
+		unlink(ROOT."/conf/.lock");
 	}
 	
 	private function getOrderMax($list) {

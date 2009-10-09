@@ -354,18 +354,27 @@ literal entities.
 			if ($newip != $server->hostname) {
 				if ($server->ip == $newip) {
 					$model->increaseErrors($id);
-					if (++$server->errors >= MAX_ERRORS) {
-						$model->errorServer($id);
-					}
+					$server->errors++;
 				}
 				else {
 					$model->setServerIp($id, $newip);
 					$model->resetErrors($id);
+					$server->errors = 0;
 					// will retry this new ip on next load, but not now
 				}
 			}
 			else {
 				$model->increaseErrors($id);
+				$server->errors++;
+			}
+			if ($server->errors >= MAX_ERRORS) {
+				$model->errorServer($id);
+				if (defined('ADMIN_EMAIL') && strlen('ADMIN_EMAIL')) {
+					mail(ADMIN_EMAIL, "Server removed from MetaQTV", 
+						"Server http://{$id}/ was removed from MetaQTV @ ".$_SERVER['SERVER_NAME']." due to high error count.\n"
+						."This is automated message, do not reply.\n",
+						"From: metaqtv@{$_SERVER['SERVER_NAME']}");
+				}
 			}
 		}
 		logtime("afterfsockopen");

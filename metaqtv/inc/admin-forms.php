@@ -1,6 +1,6 @@
 <h1>MetaQTV Administration</h1>
 
-<?=$_SERVER['PHP_AUTH_USER']?>
+<p><a href="../">MetaQTV</a> | <a href=".">Refresh</a> | Logged in as: <?=$_SERVER['PHP_AUTH_USER']?></p>
 
 <h2>Servers</h2>
 <table>
