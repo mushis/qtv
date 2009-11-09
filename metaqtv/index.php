@@ -26,13 +26,34 @@
 	$model = new ServerList;
 	$qtvlist = $model->getList();
 	
+	if (isset($_GET["full"])) {
+		$request_type = "htmlfull";
+		$requested_page = "/nowplaying";
+		$brief_listing = false;
+	}
+	else if (isset($_GET["rss"])) {
+		$request_type = "rss";
+		$requested_page = "/rss";
+		if (isset($_GET["limit"])) {
+			$observers_limit = (int) $_GET["limit"];
+		}
+		else {
+			$observers_limit = 0;
+		}
+	}
+	else {
+		$requested_page = "/nowplaying";
+		$request_type = "htmlactive";
+		$brief_listing = true;
+	}
+	
+	// parsing state
 	$cururl = "";
 	$intable = false;
 	$tablelev = 0;
 	$ignoreline = false;
 	$errors = "";
-	$brief_listing = !isset($_GET["full"]);
-	
+		
 	// outpu buffers
 	$output_arr = array();
 	$output_buf = "";
@@ -326,8 +347,25 @@ literal entities.
 		xml_parser_free($xml_parser);
 	}
 	
-	include ROOT."/inc/header.php";
-	flush();
+	function ProcessRSS($url, $data, $observers_limit)
+	{
+		$xml = new SimpleXMLElement($data);
+		foreach ($xml->channel->item as $stream) {
+			$observers_count = ((int) ((string) $stream->observercount));
+			if ($observers_count >= $observers_limit) {
+				echo $stream->asXML();
+			}
+		}
+	}
+	
+	if ($request_type == "htmlactive" || $request_type == "htmlfull") { 
+		include ROOT."/inc/header.php";
+		flush();
+	}
+	else if ($request_type == "rss") {
+		include ROOT."/inc/header_rss.php";
+		flush();
+	}
 
 	$streams = array();
 	$stream_data = array();
@@ -344,7 +382,7 @@ literal entities.
 			if (!stream_set_timeout($stream, SOCKET_READ_TIMEOUT)) {
 				trigger_error("stream_set_timeout failed for ".$url, E_USER_ERROR);
 			}
-			fwrite($stream, "GET /nowplaying HTTP/1.1\nHost: {$server->hostname}\n\n");
+			fwrite($stream, "GET {$requested_page} HTTP/1.1\nHost: {$server->hostname}:{$server->port}\n\n");
 			$streams[] = array(STREAM_ID => $stream, STREAM_URL => $url);
 			$stream_data[$url] = "";
 		}
@@ -396,40 +434,65 @@ literal entities.
 	
 	logtime("after reading");
 
-	if ($brief_listing) {
-		foreach ($qtvlist as $id => $server) {
-			if (!$server->isEnabled()) continue;
-			$url = "http://{$server->hostname}:{$server->port}/";
-			$name = $server->name;
-			if (isset($stream_data[$url])) {
-				InsertURL($url, strstr($stream_data[$url],"<?xml"));
-				logtime($name);
+	/// XXX refactor this for less repetition of the code
+	switch ($request_type) {
+		case "htmlactive": {
+			foreach ($qtvlist as $id => $server) {
+				if (!$server->isEnabled()) continue;
+				$url = "http://{$server->hostname}:{$server->port}/";
+				$name = $server->name;
+				if (isset($stream_data[$url])) {
+					InsertURL($url, strstr($stream_data[$url],"<?xml"));
+					logtime($name);
+				}
+			}
+			output_dump();
+		}
+		break;
+		
+		case "htmlfull": {
+			foreach ($qtvlist as $id => $server) {
+				if (!$server->isEnabled()) continue;
+				$url = "http://{$server->hostname}:{$server->port}/";
+				$name = $server->name;
+				if (isset($stream_data[$url])) {
+					echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</a></td></tr>";
+					InsertURL($url, strstr($stream_data[$url],"<?xml"));
+					output_dump();
+					flush();
+				}
 			}
 		}
-		output_dump();
-	}
-	else {
-		foreach ($qtvlist as $id => $server) {
-			if (!$server->isEnabled()) continue;
-			$url = "http://{$server->hostname}:{$server->port}/";
-			$name = $server->name;
-			if (isset($stream_data[$url])) {
-				echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</a></td></tr>";
-				InsertURL($url, strstr($stream_data[$url],"<?xml"));
-				output_dump();
-				flush();
+		break;
+		
+		case "rss": {
+			foreach ($qtvlist as $id => $server) {
+				if (!$server->isEnabled()) continue;
+				$url = "http://{$server->hostname}:{$server->port}/";
+				$name = $server->name;
+				if (isset($stream_data[$url])) {
+					ProcessRSS($url, strstr($stream_data[$url],"<?xml"), $observers_limit);
+				}			
 			}
 		}
+		break;
 	}
 
-	if (DEBUG_MODE && strlen($errors)) {
-		echo "</table>";
-		echo "<div id='errors'>".$errors."</div><table>\n";
+	if ($request_type == "htmlfull" || $request_type == "htmlactive") {
+		if (DEBUG_MODE && strlen($errors)) {
+			echo "</table>";
+			echo "<div id='errors'>".$errors."</div><table>\n";
+		}
+	
+		echo "</table>\n";
+		echo "<p id='version'><strong><a href='http://qtv.qw-dev.net'><em>Meta</em>-QTV</a> 1.03</strong></p>\n";
+		echo "</body>\n</html>\n";
+	}
+	else if ($request_type == "rss") {
+		echo "</channel>\n";
+		echo "</rss>\n";
 	}
 	
-	echo "</table>\n";
-	echo "<p id='version'><strong><a href='http://qtv.qw-dev.net'><em>Meta</em>-QTV</a> 1.03</strong></p>\n";
-	echo "</body>\n</html>\n";
 	if (DEBUG_MODE) {
 		echo "<!--\n";
 		dumplog();
