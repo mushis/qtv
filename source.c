@@ -521,6 +521,32 @@ void QTV_Shutdown(cluster_t *cluster, sv_t *qtv)
 	Sys_free(qtv);
 }
 
+sv_t *QTV_Stream_by_ID(unsigned int id)
+{
+	sv_t *qtv;
+
+	for (qtv = g_cluster.servers; qtv; qtv = qtv->next)
+	{
+		if (qtv->streamid == id)
+			return qtv;
+	}
+
+	return NULL;
+}
+
+static unsigned int QTV_GenerateStreamID(void)
+{
+	unsigned int id;
+
+	for (id = 1; ; id++)
+	{
+		if (!QTV_Stream_by_ID(id))
+			return id;
+	}
+
+	return 1; // not reachable code
+}
+
 sv_t *QTV_NewServerConnection(cluster_t *cluster, const char *server, char *password, qbool force, qbool autoclose, qbool noduplicates, qbool query)
 {
 	sv_t *qtv;
@@ -556,7 +582,7 @@ sv_t *QTV_NewServerConnection(cluster_t *cluster, const char *server, char *pass
 
 	qtv->ServerQuery = query;
 
-	qtv->streamid = ++cluster->nextstreamid; // New source, bad idea, after some time this may grow to huge values.
+	qtv->streamid = QTV_GenerateStreamID(); // assign stream ID
 
 	// Connect to and link QTV to the cluster.
 	{

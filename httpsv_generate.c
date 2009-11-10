@@ -350,7 +350,7 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 			}
 
 			// number of observers
-			snprintf(buffer,sizeof(buffer), "<p class='observers'>Observers: <span>%u</span></p>", Clcmd_UsersCount(streams));
+			snprintf(buffer,sizeof(buffer), "<p class='observers'>Observers: <span>%u</span></p>", Proxy_UsersCount(streams));
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 			
 			HTMLPRINT("</td></tr>");
@@ -820,7 +820,7 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 			port = atoi(++t);
 			port = (port == 0) ? 27500 : port;
 
-			snprintf(s, item_len, item_fmt, server, link, playerlist, "", "", tmp, port, mapname, Clcmd_UsersCount(streams));
+			snprintf(s, item_len, item_fmt, server, link, playerlist, "", "", tmp, port, mapname, Proxy_UsersCount(streams));
 			HTMLPRINT(s);
 		}
 

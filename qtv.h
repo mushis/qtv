@@ -614,8 +614,6 @@ typedef struct cluster_s
 
 	int buildnumber;					// Just our buildnumber.
 
-	unsigned int nextstreamid;			// This is used to assign id for new source.
-
 	sv_t *servers;						// List of connection to servers.
 	int NumServers;						// How many servers that are in the list.
 
@@ -763,6 +761,9 @@ qbool			QTV_Connect(sv_t *qtv, const char *serverurl);
 
 // free() memory and etc, unlink from cluster servers list.
 void			QTV_Shutdown(cluster_t *cluster, sv_t *qtv);
+
+// find stream by ID
+sv_t			*QTV_Stream_by_ID(unsigned int id);
 
 // malloc(qtv) and init, call QTV_Connect and link to servers list.
 sv_t			*QTV_NewServerConnection(cluster_t *cluster, const char *server, char *password, 
@@ -964,11 +965,13 @@ void			HTTPSV_GenerateQTVStatus(cluster_t *cluster, oproxy_t *dest, char *str);
 //
 
 // search proxy/client by id
-oproxy_t		*proxy_by_id(sv_t *qtv, int id);
+oproxy_t		*Prox_by_ID(sv_t *qtv, int id);
 // search proxy/client by name
-oproxy_t		*proxy_by_name(sv_t *qtv, const char *name);
+oproxy_t		*Prox_by_Name(sv_t *qtv, const char *name);
 // search proxy/client by id or name
-oproxy_t		*proxy_by_id_or_name(sv_t *qtv, const char *id_or_name);
+oproxy_t		*Prox_by_ID_or_Name(sv_t *qtv, const char *id_or_name);
+// Returs count of clients for this stream
+unsigned int	Proxy_UsersCount(const sv_t *qtv);
 
 extern cvar_t	floodprot;
 extern cvar_t	demo_dir;
@@ -978,7 +981,6 @@ void			FixSayFloodProtect(void);
 
 void			Proxy_ReadProxies(sv_t *qtv);
 void			Cl_Cmds_Init(void);
-unsigned int	Clcmd_UsersCount(const sv_t *qtv);
 
 typedef enum 
 {

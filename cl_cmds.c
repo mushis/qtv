@@ -27,7 +27,7 @@ cvar_t floodprot = {"floodprot", "4 2 2"};
 //============================================================================
 // search utils
 
-oproxy_t *proxy_by_id(sv_t *qtv, int id)
+oproxy_t *Prox_by_ID(sv_t *qtv, int id)
 {
 	oproxy_t *prox;
 
@@ -41,7 +41,7 @@ oproxy_t *proxy_by_id(sv_t *qtv, int id)
 	return NULL;
 }
 
-oproxy_t *proxy_by_name(sv_t *qtv, const char *name)
+oproxy_t *Prox_by_Name(sv_t *qtv, const char *name)
 {
 	oproxy_t *prox;
 	char tmp[MAX_INFO_KEY];
@@ -56,14 +56,32 @@ oproxy_t *proxy_by_name(sv_t *qtv, const char *name)
 	return NULL;
 }
 
-oproxy_t *proxy_by_id_or_name(sv_t *qtv, const char *id_or_name)
+oproxy_t *Prox_by_ID_or_Name(sv_t *qtv, const char *id_or_name)
 {
-	oproxy_t *prox = proxy_by_id(qtv, atoi(id_or_name ? id_or_name : "0"));
+	oproxy_t *prox = Prox_by_ID(qtv, atoi(id_or_name ? id_or_name : "0"));
 
 	if (prox)
 		return prox;
 
-	return proxy_by_name(qtv, id_or_name);
+	return Prox_by_Name(qtv, id_or_name);
+}
+
+//============================================================================
+// Misc utils
+
+unsigned int Proxy_UsersCount(const sv_t *qtv)
+{
+	unsigned int c = 0;
+	const oproxy_t *tmp;
+
+	for (tmp = qtv->proxies; tmp; tmp = tmp->next)
+	{
+		if (tmp->drop)
+			continue;
+		c++;
+	}	
+	
+	return c;
 }
 
 //============================================================================
@@ -740,7 +758,7 @@ static void Clcmd_Follow_f(sv_t *qtv, oproxy_t *prox)
 		return;
 	}
 
-	tmp = proxy_by_id_or_name(qtv, Cmd_Argv(1));
+	tmp = Prox_by_ID_or_Name(qtv, Cmd_Argv(1));
 
 	if (!tmp)
 	{
@@ -990,21 +1008,6 @@ static void Clcmd_LastScores_f (sv_t *qtv, oproxy_t *prox)
 
 
 //============================================================================
-
-unsigned int Clcmd_UsersCount(const sv_t *qtv)
-{
-	unsigned int c = 0;
-	const oproxy_t *tmp;
-
-	for (tmp = qtv->proxies; tmp; tmp = tmp->next)
-	{
-		if (tmp->drop)
-			continue;
-		c++;
-	}	
-	
-	return c;
-}
 
 char cl_cmd[MAX_PROXY_INBUFFER]; // global so it does't allocated on stack, this save some CPU I think
 
