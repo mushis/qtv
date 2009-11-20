@@ -5,9 +5,10 @@
   <title>QuakeTV: Now Playing</title>
   <link rel="StyleSheet" href="style.css" type="text/css" />
   <link rel="StyleSheet" href="<?=TOPBAR_CSS?>" type="text/css" />
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="?rss" />
 </head>
 <body>
 <?php @include(TOPBAR_ADDR); ?>
 <h1>QuakeTV</h1>
-<p id="subtitle">Live broadcasts from all around the world<br /><a href=".">Active only</a> | <a href="?full">Full List</a></p>
+<p id="subtitle">Live broadcasts from all around the world<br /><a href=".">Active only</a> | <a href="?full">Full List</a> | <a href="?rss&amp;limit=1">RSS</a></p>
 <table id='nowplaying' cellspacing='0'>
