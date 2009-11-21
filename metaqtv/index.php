@@ -456,7 +456,16 @@ literal entities.
 				$url = "http://{$server->hostname}:{$server->port}/";
 				$name = $server->name;
 				if (isset($stream_data[$url])) {
-					echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</a></td></tr>";
+					echo "<tr class='qtvsep'><td colspan='3'><a href='".htmlspecialchars($url)."'>".htmlspecialchars($name)."</a>";
+					
+					if (preg_match("-<h2>(.*)</h2>-", $stream_data[$url], $matches) == 1) {
+						$subheader = trim($matches[1]);
+						if (strlen($subheader) > 0) {
+							echo "<br />\n\t<span class='subheader'>{$matches[1]}</span>\n";
+						}
+					}
+					
+					echo "</td></tr>";
 					InsertURL($url, strstr($stream_data[$url],"<?xml"));
 					output_dump();
 					flush();

@@ -63,6 +63,11 @@ padding:0;
 #nowplaying tr.qtvsep td a {
 	
 }
+#nowplaying tr.qtvsep span.subheader {
+	font-weight: normal;
+	font-size: 0.8em;
+}
+
 #nowplaying tr { margin:0; padding:0; }
 #nowplaying td.wn { width: 200px; }
 #nowplaying td.wn span a, #nowplaying td.wn span a:visited {
