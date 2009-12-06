@@ -807,20 +807,24 @@ void HTTPSV_GenerateRSS(cluster_t *cluster, oproxy_t *dest, char *str)
 				"<hostname>%s</hostname>" CRLF
 				"<port>%i</port>" CRLF
 				"<map>%s</map>" CRLF
-				"<observercount>%u</observercount>" CRLF;
+				"<observercount>%u</observercount>" CRLF
+				"<status>%s</status>" CRLF;
 
 		{
 			// Separate the hostname and port.
 			char *t = NULL;
 			int port = 27500;
+			char statusbuf[MAX_INFO_KEY];
+
 			snprintf(tmp, sizeof(tmp), "%s", server);
 			t = tmp;
 			while (*t && (*t != ':')) ++t;
 			*t = 0;
 			port = atoi(++t);
 			port = (port == 0) ? 27500 : port;
+			Info_ValueForKey(streams->serverinfo, "status", statusbuf, sizeof(statusbuf));
 
-			snprintf(s, item_len, item_fmt, server, link, playerlist, "", "", tmp, port, mapname, Proxy_UsersCount(streams));
+			snprintf(s, item_len, item_fmt, server, link, playerlist, "", "", tmp, port, mapname, Proxy_UsersCount(streams), statusbuf);
 			HTMLPRINT(s);
 		}
 
