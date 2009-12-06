@@ -494,7 +494,7 @@ literal entities.
 		}
 	
 		echo "</table>\n";
-		echo "<p id='version'><strong><a href='http://qtv.qw-dev.net'><em>Meta</em>-QTV</a> 1.03</strong></p>\n";
+		echo "<p id='version'><strong><a href='http://qw-dev.net/projects/qtv/wiki/MetaQTV'><em>Meta</em>-QTV</a> 1.03</strong></p>\n";
 		echo "</body>\n</html>\n";
 	}
 	else if ($request_type == "rss") {
