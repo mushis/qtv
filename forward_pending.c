@@ -95,8 +95,10 @@ static sv_t *SV_ReadReceiveRequest(cluster_t *cluster, oproxy_t *pend)
 
 static void SV_ReadDemoListRequest(cluster_t *cluster, oproxy_t *pend)
 {
-	// Lists sources that are currently playing.
+	// Lists demos that are available.
 	int i;
+
+	pend->_bufferautoadjustmaxsize_ = 1024 * 1024; // NOTE: this allow 1MB buffer...
 
 	Cluster_BuildAvailableDemoList(cluster);
 
@@ -112,8 +114,6 @@ static void SV_ReadDemoListRequest(cluster_t *cluster, oproxy_t *pend)
 		{
 			Net_ProxyPrintf(pend, "ADEMO: %i: %15s\n", cluster->availdemos[i].size, cluster->availdemos[i].name);
 		}
-
-		//qtv = NULL;
 	}
 
 	Net_ProxyPrintf(pend, "\n");
