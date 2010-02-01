@@ -158,7 +158,6 @@ void Cbuf_ExecuteEx (cbuf_t *cbuf)
 	char line[1024];
 	int quotes;
 	int cursize;
-	int semicolon = 0;
 
 	cbuf_current = cbuf;
 
@@ -169,40 +168,20 @@ void Cbuf_ExecuteEx (cbuf_t *cbuf)
 
 		cursize = cbuf->text_end - cbuf->text_start;
 		quotes = 0;
+
 		for (i = 0; i < cursize; i++)
 		{
+			// always break
+			if (text[i] == '\n')
+				break;
+
+			// don't break if inside a quoted string
+			if (text[i] == ';' && !(quotes & 1))
+				break;
+
 			if (text[i] == '"')
 				quotes++;
-/* EXPERIMENTAL: Forbid ';' as commands separator, because ktpro didn't quote arguments
-   from admin users. Example: cmd fkick "N;quit" => kick N;quit => server will exit.*/
-			if (!(quotes & 1) && text[i] == ';')	// don't break if inside a quoted string
-			{
-				switch (semicolon)
-				{
-					case 0:
-					case 3: semicolon = 1; break;
-					case 1: semicolon = 2; break;
-					default:;
-				}
-				break;
-			}
-
-			if (text[i] == '\n')
-			{
-				switch (semicolon)
-				{
-					case 1:
-					case 2: semicolon = 3; break;
-					case 3: semicolon = 0; break;
-					default:;
-				}
-				break;
-			}
 		}
-
-		// don't execute lines without ending \n; this fixes problems with
-		// partially stuffed aliases not being executed properly
-
 
 		if (i < sizeof(line))
 		{
@@ -231,16 +210,8 @@ void Cbuf_ExecuteEx (cbuf_t *cbuf)
 			cbuf->text_start += i;
 		}
 
-		// security bugfix in ktpro
-
-/* FIXME: we are not ktpro, need return to previous version of this function, before hack for ktpro
-		if (is_ktpro && semicolon > 1)
-			Sys_Printf("ATTENTION: possibly tried to use ktpro's security hole, "
-						"server don't run command after ';'!\nCommand: %s\n", line);
-		else
-*/
-			// execute the command line
-			Cmd_ExecuteString (line);
+		// execute the command line
+		Cmd_ExecuteString (line);
 
 		if (cbuf->wait)
 		{	// skip out while text still remains in buffer, leaving it
@@ -925,9 +896,6 @@ void Cmd_ExecuteString (char *text)
 			return;
 		}
 	}
-
-//	if (PR_ConsoleCmd())
-//		return;
 
 	Sys_Printf("Unknown command \"%s\"\n", Cmd_Argv(0));
 }
