@@ -360,6 +360,7 @@ literal entities.
 	
 	if ($request_type == "htmlactive" || $request_type == "htmlfull") { 
 		include ROOT."/inc/header.php";
+		echo '<table id="nowplaying" cellspacing="0">';
 		flush();
 	}
 	else if ($request_type == "rss") {
@@ -388,23 +389,10 @@ literal entities.
 		}
 		else {
 			logtime("fsockopen failed");
-			$newip = gethostbyname($server->hostname);
-			if ($newip != $server->hostname) {
-				if ($server->ip == $newip) {
-					$model->increaseErrors($id);
-					$server->errors++;
-				}
-				else {
-					$model->setServerIp($id, $newip);
-					$model->resetErrors($id);
-					$server->errors = 0;
-					// will retry this new ip on next load, but not now
-				}
-			}
-			else {
-				$model->increaseErrors($id);
-				$server->errors++;
-			}
+
+			$model->increaseErrors($id);
+			$server->errors++;
+
 			if ($server->errors >= MAX_ERRORS) {
 				$model->errorServer($id);
 				if (defined('ADMIN_EMAIL') && strlen('ADMIN_EMAIL')) {
@@ -494,8 +482,7 @@ literal entities.
 		}
 	
 		echo "</table>\n";
-		echo "<p id='version'><strong><a href='http://qw-dev.net/projects/qtv/wiki/MetaQTV'><em>Meta</em>-QTV</a> 1.03</strong></p>\n";
-		echo "</body>\n</html>\n";
+		include ROOT."/inc/footer.php";
 	}
 	else if ($request_type == "rss") {
 		echo "</channel>\n";

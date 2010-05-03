@@ -9,10 +9,20 @@
 </head>
 <body>
 <?php @include(TOPBAR_ADDR); ?>
+<div id="toolbar">
+<a href="?rss&amp;limit=1" title="RSS Feed"><img src="img/rss.png" /></a>
+<a href="aliases.php" title="Server Aliases"><img src="img/txt.png" /></a>
+<a href="help.php" title="Help"><img src="img/help.png" /></a>
+</div>
 <h1>QuakeTV</h1>
-<p id="subtitle">Live broadcasts from all around the world<br />
-<a href=".">Active only</a>
-| <a href="?full">Full List</a>
-| <a href="?rss&amp;limit=1">RSS</a>
-| <a href="aliases.php">Server Aliases</a></p>
-<table id='nowplaying' cellspacing='0'>
+<p id="subtitle">Live broadcasts from all around the world<br /><span id="mainmenu">
+<? if (strpos($_SERVER['PHP_SELF'], 'help.php') !== false): ?>
+	<a href=".">Back</a>
+<? else: ?>
+	<? if (!isset($_GET['full'])): ?>
+		<a href=".">Refresh</a> | Active only: <a href="?full">on</a>
+	<? else: ?>
+		<a href="?full">Refresh</a> | Active only: <a href=".">off</a>
+	<? endif; ?>
+<? endif; ?> 
+</span></p>

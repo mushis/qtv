@@ -121,6 +121,20 @@ border-top: 1px solid #ab9d74;
 background-color: #9a8e6c; }
 #version a { color: #e8cf9e; }
 
+#mainmenu a {
+	color: #e1cd9b;
+}
+#mainmenu a:hover {
+	text-decoration: underline;
+}
+
+#toolbar {
+	float: right;
+	margin: 14px;
+}
+#toolbar img {
+	border: 0;
+}
 
 
 /* --------- demos --------- */
@@ -162,4 +176,17 @@ background-color: #9a8e6c; }
 }
 #demos thead th.stream, #demos thead th.save, #demos thead th.name {
   border-right: 1px solid #ab9d74;
+}
+
+/* ---------- help ------------ */
+#helptext {
+	margin: 0 2em;
+	font-size: 0.8em;
+	font-family: verdana, arial, sans-serif;
+}
+#helptext a {
+	color: #e1cd9b;
+}
+#helptext a:hover {
+	text-decoration: underline;
 }

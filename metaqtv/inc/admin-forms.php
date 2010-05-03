@@ -5,7 +5,8 @@
 <h2>Servers</h2>
 <table>
 <thead><tr>
-	<th>id</th><th>order</th><th>name</th><th>hostname</th><th>ip</th><th>port</th>
+	<th>id</th>
+	<th>order</th><th>name</th><th>hostname</th><th colspan='2'>ip</th><th>port</th>
 	<th>state</th><th>errors</th><th>toggle</th><th colspan='2'>move</th><th>remove</th>
 </tr></thead>
 <tbody>
@@ -15,6 +16,10 @@
 	<td><?=$server->order?></td>
 	<td><?=$server->name?></td>
 	<td><a href="http://<?=$server->hostname?>:<?=$server->port?>/"><?=$server->hostname?></a></td>
+	<td><form action="" method="post">
+		<input type="hidden" name="act" value="updateip" />
+		<input type="hidden" name="server" value="<?=$id?>" />
+		<input type="submit" value="update" /></form></td>
 	<td><a href="http://<?=$server->ip?>:<?=$server->port?>/"><?=$server->ip?></a></td>
 	<td><?=$server->port?></td>
 	<td><?=$server->stateName()?></td>

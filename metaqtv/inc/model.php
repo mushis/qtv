@@ -165,6 +165,23 @@ class ServerList {
 	public function setServerOrder($id, $order) {
 		$this->setServerProperty($id, "order", $order);
 	}
+	
+	public function updateServerIPAddress($id) {
+		$list = $this->getList();
+		if (isset($list[$id])) {
+			$hostname = $list[$id]->hostname;
+			$result = gethostbyname($hostname);
+			if ($hostname === $result) { // failure
+				$this->errorServer($id);
+			}
+			else if ($result == $list[$id]->ip) {
+				// no change
+			}
+			else {
+				$this->setServerProperty($id, "ip", $result);
+			}
+		}
+	}
 }	
 
 ?>

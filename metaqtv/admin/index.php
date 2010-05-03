@@ -63,6 +63,13 @@
 		return $list->getList();
 	}
 	
+	function updateIPAddress() {
+		if (posted("server")) {
+			$list = new ServerList;
+			$list->updateServerIPAddress($_POST["server"]);
+		}
+	}
+	
 	function main() {
 		if (!isset($_POST["act"])) {
 			include "../inc/admin-forms.php";
@@ -91,6 +98,10 @@
 				break;
 			case "delete":
 				delete();
+				refresh();
+				break;
+			case "updateip":
+				updateIPAddress();
 				refresh();
 				break;
 			default:
