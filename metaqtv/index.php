@@ -163,6 +163,16 @@
 		$output_arr = array();
 	}
 	
+	function isCachedImg($imgsrc)
+	{
+		if (preg_match('&^levelshots/([a-z0-9]+\.jpg)$&',$imgsrc,$matches)) {
+			if (file_exists('levelshots/'.$matches[1])) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	function startElement($parser, $name, $attrs)
 	{
 		global $intable;
@@ -201,7 +211,10 @@
 					if ($v[0] == "/") {
 						$v = substr($v, 1);
 					}
-					$v = $cururl.$v;
+
+					if ($name != 'img' || $k != 'src' || !isCachedImg($v)) {
+						$v = $cururl.$v;
+					}
 				}
 				output(' '.htmlspecialchars($k).'="'.htmlspecialchars($v).'"');
 			}
