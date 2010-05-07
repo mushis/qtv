@@ -530,7 +530,7 @@ static void Clcmd_NextDownload_f (sv_t *qtv, oproxy_t *prox)
 
 //	Sys_Printf("time %u\n", g_cluster.curtime - last);
 
-	for (i = 0; i < 3; i++)
+	for (i = 0; i < 10; i++)
 	{
 //		Sys_Printf("n: %d\n", i);
 		if (Sub_Clcmd_NextDownload(qtv, prox))
