@@ -755,10 +755,7 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster)
 
 	if (cluster->numproxies >= get_maxclients())
 	{
-		// FIXME: WTF is going on here?
-		// I think recepient will die after recive this "Proxy is full." because of broken parse process
-		const char buffer[] = {dem_all, 1, 'P','r','o','x','y',' ','i','s',' ','f','u','l','l','.'};
-		send(sock, buffer, strlen(buffer), 0);
+		// FIXME: probably we should send something as reply...
 		closesocket(sock);
 		return;
 	}
