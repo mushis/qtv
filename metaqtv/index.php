@@ -3,15 +3,13 @@
 	define ('ROOT', '.');
 	
 	// disable caching, from PHP manual
-	header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-	header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-	header("Cache-Control: no-store, no-cache, must-revalidate");
-	header("Cache-Control: post-check=0, pre-check=0", false);
-	header("Pragma: no-cache");
 	header("Content-type: text/html; charset=utf-8");
 
 	require ROOT."/conf/config.php";
 	require ROOT."/inc/model.php";
+	require ROOT."/inc/nocache.php";
+	
+	disableCacheHeaders();
 	
 	if (DEBUG_MODE) {
 		error_reporting(E_ALL);
@@ -507,4 +505,3 @@ literal entities.
 		dumplog();
 		echo "-->\n";
 	}
-?>

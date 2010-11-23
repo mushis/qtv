@@ -14,5 +14,3 @@
 	
 	define ("TOPBAR_ADDR", ROOT.'/qwnetwork/qwnetwork.php');
 	define ("TOPBAR_CSS", 'http://network.quakeworld.nu/bar/style.css');
-	
-?>

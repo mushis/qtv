@@ -182,6 +182,79 @@ class ServerList {
 			}
 		}
 	}
+	
+	public function log($msg) {
+		echo "<pre><code>".htmlspecialchars($msg)."</code></pre>\n";
+	}
+	
+	public function isWorking($server) {
+		$stream = fsockopen($server->hostname, $server->port, $errno, $errstr);
+		if ($stream === false) {
+			return false;
+		}
+		
+		$write = fwrite($stream, "GET /nowplaying HTTP/1.1\nHost: {$server->hostname}:{$server->port}\n\n");
+		
+		if ($write === false) {
+			fclose($stream);
+			return false;
+		}
+		
+		$expectedReply = "HTTP/1.1 200 OK";
+		$expectedReplyLen = strlen($expectedReply);
+		
+		$data = fread($stream, $expectedReplyLen);
+		
+		
+		if (substr($data, 0, $expectedReplyLen) == $expectedReply) {
+			fclose($stream);
+			return true;
+		}
+		else {
+			fclose($stream);
+			return false;
+		}
+	}
+	
+	public function checkErroredServers() {
+		$this->lockList();
+		$list = $this->getList();
+		$this->unlockList();
+		
+		$reenabled = 0;
+		
+		foreach ($list as $server) {
+			if ($server->state != ServerState::state_error) {
+				continue;
+			}
+			
+			$this->log("Errored server: {$server->hostname}");
+			if ($this->isWorking($server)) {
+				$hostname = $server->hostname;
+				$ip = $server->ip;
+				$result = gethostbyname($hostname);
+				if ($hostname === $result) { // failure
+				}
+				else if ($result == $ip) { // no change
+					$this->log(" .. same ip address");
+				}
+				else {
+					$this->log("New IP address!");
+					$server->ip = $result;
+				}
+				
+				$server->state = ServerState::state_enabled;
+				$server->errors = 0;
+				$reenabled++;
+				$this->log("Reenabled!");
+			}
+			else {
+				$this->log("  ... still not working");
+			}
+		}
+		
+		if ($reenabled > 0) {
+			$this->writeList($list);
+		}
+	}
 }	
-
-?>
