@@ -254,7 +254,9 @@ class ServerList {
 		}
 		
 		if ($reenabled > 0) {
+			$this->lockList();
 			$this->writeList($list);
+			$this->unlockList();
 		}
 	}
 }	
