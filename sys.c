@@ -460,3 +460,4 @@ void Get_Uptime(ullong uptime_seconds, unsigned int *days, unsigned int *h, unsi
 	uptime_seconds %= 60 * 60;
 	*m    = uptime_seconds / 60; // minutes
 }
+

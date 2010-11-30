@@ -1036,3 +1036,4 @@ qbool SV_IsBanned (netadr_t *addr);
 #ifdef __cplusplus
 }
 #endif
+
