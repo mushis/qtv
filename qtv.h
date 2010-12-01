@@ -365,7 +365,7 @@ typedef struct fp_cmd_s
 
 typedef struct netadr_s 
 {
-	char adr[64];
+	char adr[sizeof(struct sockaddr)];
 } netadr_t;
 
 #ifdef _WIN32
