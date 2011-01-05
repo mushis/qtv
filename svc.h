@@ -90,3 +90,36 @@ SVC(svc_serverinfo)				// serverinfo
 SVC(svc_updatepl)				// [qbyte] [qbyte]
 SVC(svc_nails2)					// qwe - [qbyte] num [52 bits] nxyzpy 8 12 12 12 4 8
 
+SVC(svc_unused_55)
+SVC(svc_unused_56)
+SVC(svc_unused_57)
+SVC(svc_unused_58)
+SVC(svc_unused_59)
+SVC(svc_unused_60)
+SVC(svc_unused_61)
+SVC(svc_unused_62)
+SVC(svc_unused_63)
+SVC(svc_unused_64)
+SVC(svc_unused_65)
+SVC(svc_unused_66)
+SVC(svc_unused_67)
+SVC(svc_unused_68)
+SVC(svc_unused_69)
+SVC(svc_unused_70)
+SVC(svc_unused_71)
+SVC(svc_unused_72)
+SVC(svc_unused_73)
+SVC(svc_unused_74)
+SVC(svc_unused_75)
+SVC(svc_unused_76)
+SVC(svc_unused_77)
+SVC(svc_unused_78)
+SVC(svc_unused_79)
+SVC(svc_unused_80)
+SVC(svc_unused_81)
+SVC(svc_unused_82)
+SVC(svc_unused_83)
+//#ifdef FTE_PEXT2_VOICECHAT
+SVC(svc_fte_voicechat)			// FTE voice chat.
+//#endif
+

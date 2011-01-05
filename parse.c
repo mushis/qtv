@@ -1052,6 +1052,28 @@ void ParseDisconnect(sv_t *tv, netmsg_t *m)
 	}
 }
 
+//#ifdef FTE_PEXT2_VOICECHAT
+void ParseFTEVoiceChat(sv_t *tv, netmsg_t *m)
+{
+	int bytes;
+
+	/* sender = */ ReadByte(m);
+	/* gen = */    ReadByte(m);
+	/* seq =*/     ReadByte(m);
+	bytes =		   (signed short)ReadShort(m);
+
+	if (bytes < 0)
+	{
+		Sys_ConPrintf(tv, "Voice chat failed\n");
+		tv->drop = true;
+		return;
+	}
+
+	for (; bytes; bytes--)
+		ReadByte(m);
+}
+//#endif
+
 void ShowMvdHeaderInfo(sv_t *tv, int length, int to, int mask)
 {
 	char *str_to = "unknown";
@@ -1418,6 +1440,14 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 				ParseNails(tv, &buf, true);
 				break;
 			}
+// FTE voice chat.
+//#ifdef FTE_PEXT2_VOICECHAT
+			case svc_fte_voicechat:
+			{
+				ParseFTEVoiceChat(tv, &buf);
+				break;
+			}
+//#endif
 			default:
 			{
 				unsigned int message_type;
