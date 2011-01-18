@@ -853,7 +853,7 @@ qbool QTV_ParseHeader(sv_t *qtv)
 
 	if (strncmp(qtvbuf, "QTVSV ", length))
 	{
-		Sys_Printf("%s: Server is not a QTV server (or is incompatable)\n", qtv->server);
+		Sys_Printf("%s: Server is not a QTV server (or is incompatible)\n", qtv->server);
 		qtv->drop = true;
 		return false;
 	}
