@@ -226,7 +226,7 @@ void HTTPSV_SendHTMLHeader(cluster_t *cluster, oproxy_t *dest, char *title)
 		"  <link rel=\"StyleSheet\" href=\"/style.css\" type=\"text/css\" />\n"
 		"  <link rel=\"alternate\" title=\"RSS\" href=\"/rss\" type=\"application/rss+xml\" />\n"
 		"</head>\n"
-		"<body><div id=\"navigation\"><div><p><a href=\"/nowplaying/\">Live</a> | <a href=\"/demos/\">Demos</a> | <a href=\"/admin/\">Admin</a> | <a href=\"http://qw-dev.net/wiki/qtv/\" target=\"_blank\">Help</a></p></div></div>";
+		"<body><div id=\"navigation\"><div><p><a href=\"/nowplaying/\">Live</a> | <a href=\"/demos/\">Demos</a> | <a href=\"/admin/\">Admin</a> | <a href=\"http://qtv.qw-dev.net/wiki\" target=\"_blank\">Help</a></p></div></div>";
 
 	snprintf(buffer, sizeof(buffer), s, title);
 
