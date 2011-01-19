@@ -6,7 +6,7 @@
 		"http://quakeworld.fi:28000/" => "Quakeworld.fi",
 		"http://butt.se:30000/" => "Butt.se",
 		"http://qtv.quakeservers.net:30000/" => "QuakeServers.net",
-		"http://live.qw-dev.net" => "QW-DEV.net",
+		"http://live.qw-dev.net" => "QW-DEV",
 		//"http://147.231.20.214:30000/" => "Lamicka",
 		"http://conus.mine.nu:28000/" => "conus.mine.nu",
 		"http://qw.thejews.se:28000/" => "The Jews",
