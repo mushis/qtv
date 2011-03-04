@@ -218,15 +218,17 @@ void HTTPSV_SendHTMLHeader(cluster_t *cluster, oproxy_t *dest, char *title)
 
 	s =	
     "<?xml version=\"1.0\"?>\n"
-    "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>\n"
-		"<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>\n"
-		"<head>\n"
-		"  <meta http-equiv=\"content-type\" content=\"text/html; charset=iso-8859-1\" />\n"
-		"  <title>%s</title>\n"
-		"  <link rel=\"StyleSheet\" href=\"/style.css\" type=\"text/css\" />\n"
-		"  <link rel=\"alternate\" title=\"RSS\" href=\"/rss\" type=\"application/rss+xml\" />\n"
-		"</head>\n"
-		"<body><div id=\"navigation\"><span><a href=\"/nowplaying/\">Live</a></span><span><a href=\"/demos/\">Demos</a></span><span><a href=\"/admin/\">Admin</a></span><span><a href=\"http://qtv.qw-dev.net/wiki\" target=\"_blank\">Help</a></span></div>";
+    "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>\n\n"
+		"<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>\n\n"
+		"  <head>\n"
+		"    <meta http-equiv=\"content-type\" content=\"text/html; charset=iso-8859-1\" />\n"
+		"    <title>%s</title>\n"
+		"    <link rel=\"StyleSheet\" href=\"/style.css\" type=\"text/css\" />\n"
+		"    <link rel=\"alternate\" title=\"RSS\" href=\"/rss\" type=\"application/rss+xml\" />\n"
+		"    <script language=\"Javascript\" src=\"/script.js\" type=\"text/javascript\"></script>\n"
+		"  </head>\n\n"
+		"  <body>\n\n"
+		"    <div id=\"navigation\"><span><a href=\"/nowplaying/\">Live</a></span><span><a href=\"/demos/\">Demos</a></span><span><a href=\"/admin/\">Admin</a></span><span><a href=\"http://qtv.qw-dev.net/wiki\" target=\"_blank\">Help</a></span></div>\n\n";
 
 	snprintf(buffer, sizeof(buffer), s, title);
 
@@ -238,10 +240,11 @@ void HTTPSV_SendHTMLFooter(cluster_t *cluster, oproxy_t *dest)
 	char *s;
 	char buffer[2048];
 
-	snprintf(buffer, sizeof(buffer), "<p id='version'><strong><a href='http://qtv.qw-dev.net'>QTV</a> %s, build %i</strong></p>", PROXY_VERSION, cluster->buildnumber);
+	snprintf(buffer, sizeof(buffer), "\n    <p id='version'><strong><a href='http://qtv.qw-dev.net'>QTV</a> %s, build %i</strong></p>\n", PROXY_VERSION, cluster->buildnumber);
 	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
-	s = "</body>\n"
+	s = 
+		"\n  </body>\n\n"
 		"</html>\n";
 	Net_ProxySend(cluster, dest, s, strlen(s));
 }
@@ -393,7 +396,7 @@ void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend)
 			"Content-Type: text/html" CRLF
 			"Connection: close" CRLF
 			CRLF
-			"<html><HEAD><TITLE>QuakeTV</TITLE></HEAD><BODY>No Content-Length was provided.</BODY>\n";
+			"<html>\n\n  <head>\n    <title>QuakeTV</title>\n  </head>\n\n  <body>\n    <p>No Content-Length was provided.</p>\n  </body>\n\n</html>\n";
 		Net_ProxySend(cluster, pend, s, strlen(s));
 		pend->flushing = true;
 		return;
@@ -422,7 +425,7 @@ void HTTPSV_PostMethod(cluster_t *cluster, oproxy_t *pend)
 			"Content-Type: text/html" CRLF
 			"Connection: close" CRLF
 			CRLF
-			"<html><HEAD><TITLE>QuakeTV</TITLE></HEAD><BODY>That HTTP method is not supported for that URL.</BODY></html>\n";
+			"<html>\n\n  <head>\n    <title>QuakeTV</title>\n  </head>\n\n  <body>\n    <p>That HTTP method is not supported for that URL.</p>\n  </body>\n\n</html>\n";
 		Net_ProxySend(cluster, pend, s, strlen(s));
 	}
 
@@ -515,6 +518,10 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	{
 		HTTPSV_GenerateCSSFile(cluster, pend);
 	}
+	else if (!strcmp(getpath, "/script.js"))
+	{
+		HTTPSV_GenerateJSFile(cluster, pend);
+	}
 	else if (URLCOMPARE(getpath, "/levelshots/", skiplen))
 	{
 		HTTPSV_GenerateLevelshot(cluster, pend, getpath + skiplen);
@@ -555,7 +562,7 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	{
 		HTTPSV_SendHTTPHeader(cluster, pend, "404", "text/html", true);
 		HTTPSV_SendHTMLHeader(cluster, pend, "Address not recognised");
-		s = "<h1>Address not recognised</h1>\n";
+		s = "    <h1>Address not recognised</h1>\n";
 		Net_ProxySend(cluster, pend, s, strlen(s));
 		HTTPSV_SendHTMLFooter(cluster, pend);
 	}
@@ -573,10 +580,10 @@ qbool HTTPSV_GetHostname(cluster_t *cluster, oproxy_t *dest, char *hostname, int
 		HTTPSV_SendHTTPHeader(cluster, dest, "400", "text/html", true);
 		HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Error");
 
-		s = "Your client did not send a Host field, which is required in HTTP/1.1\n<BR />"
-			"Please try a different browser.\n"
-			"</body>"
-			"</html>";
+		s = "    <p>Your client did not send a Host field, which is required in HTTP/1.1<br />"
+			"Please try a different browser.</p>\n"
+			"\n  </body>\n\n"
+			"</html>\n";
 
 		Net_ProxySend(cluster, dest, s, strlen(s));
 		return false;

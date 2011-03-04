@@ -949,6 +949,7 @@ size_t			HTTPSV_EscapeURL(const char *url, char *out, size_t outsize);
 //
 
 void			HTTPSV_GenerateCSSFile(cluster_t *cluster, oproxy_t *dest);
+void			HTTPSV_GenerateJSFile(cluster_t *cluster, oproxy_t *dest);
 void			HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest);
 void			HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamtype, char *streamid);
 void			HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char *postbody);

@@ -41,6 +41,21 @@ void HTTPSV_GenerateCSSFile(cluster_t *cluster, oproxy_t *dest)
     HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/css", false);
 }
 
+void HTTPSV_GenerateJSFile(cluster_t *cluster, oproxy_t *dest)
+{
+	int s;
+
+	if (dest->buffer_file)
+		Sys_Error("HTTPSV_GenerateJSFile: dest->buffer_file");
+	
+	dest->buffer_file = FS_OpenFile(HTMLFILESPATH, "script.js", &s);
+	if (!dest->buffer_file) {
+		HTTPSV_GenerateNotFoundError(cluster, dest);
+		return;
+	}
+
+    HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/javascript", false);
+}
 
 /***** SCOREBOARD *****/
 
@@ -152,7 +167,7 @@ void HTTPSV_GenerateTableForTeam(cluster_t *cluster, oproxy_t *dest, scoreboard 
 	int i, p;
 	char buffer[128];
 
-	HTMLPRINT("<table class='scores' cellspacing='0'><tr><th>Frags</th><th>Players</th></tr>");
+	HTMLPRINT("    <table class='scores' cellspacing='0'>\n      <tr><th>Frags</th><th>Players</th></tr>\n");
 
 	for (i = 0, p = 0; i < b->players_count; i++)
 	{
@@ -161,24 +176,24 @@ void HTTPSV_GenerateTableForTeam(cluster_t *cluster, oproxy_t *dest, scoreboard 
 
 		// row start
 		if (p++ % 2)
-			HTMLPRINT("<tr class='scodd'>");
+			HTMLPRINT("      <tr class='scodd'>\n");
 		else
-			HTMLPRINT("<tr>");
+			HTMLPRINT("      <tr>\n");
 	
 		// frags
-		snprintf(buffer, sizeof(buffer), "<td class='frags'>%i</td>", b->players[i].frags);
+		snprintf(buffer, sizeof(buffer), "        <td class='frags'>%i</td>\n", b->players[i].frags);
 		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
 		// nick
-		HTMLPRINT("<td class='nick'>");
+		HTMLPRINT("        <td class='nick'>");
 		HTMLprintf(buffer, sizeof(buffer), true, "%s", b->players[i].name);
 		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-		HTMLPRINT("</td>");
+		HTMLPRINT("</td>\n");
 		// row end
-		HTMLPRINT("</tr>");
+		HTMLPRINT("      </tr>\n");
 	}
 
-	HTMLPRINT("</table>");
+	HTMLPRINT("    </table>\n");
 }
 
 void HTTPSV_GenerateScoreBoard(cluster_t *cluster, oproxy_t *dest, scoreboard *b, qbool teams)
@@ -188,27 +203,27 @@ void HTTPSV_GenerateScoreBoard(cluster_t *cluster, oproxy_t *dest, scoreboard *b
 
 	if (teams)
 	{
-		HTMLPRINT("<table class='overallscores'><tr class='teaminfo'>");
+		HTMLPRINT("    <table class='overallscores'>\n      <tr class='teaminfo'>\n");
 		for (i = 0; i < b->teams_count; i++)
 		{
-			HTMLPRINT("<td><span>Team: </span><span class='teamname'>");
+			HTMLPRINT("        <td><span>Team: </span><span class='teamname'>");
 			HTMLprintf(buffer, sizeof(buffer), true, "%s", b->teams[i].name);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 		        HTMLPRINT("</span><span class='frags'> ");
 		        HTMLprintf(buffer, sizeof(buffer), true, "[%i]", b->teams[i].frags);
 		        Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-			HTMLPRINT("</span></td>");
+			HTMLPRINT("</span></td>\n");
 		}
-		HTMLPRINT("</tr><tr>");
+		HTMLPRINT("</tr>\n      <tr>\n");
 	}
 
 	if (teams)
 	{
 		for (t = 0; t < b->teams_count; t++)
 		{
-			HTMLPRINT("<td>");
+			HTMLPRINT("        <td>");
 			HTTPSV_GenerateTableForTeam(cluster, dest, b, b->teams[t].name);
-			HTMLPRINT("</td>");
+			HTMLPRINT("</td>\n");
 		}
 	}
 	else
@@ -218,7 +233,7 @@ void HTTPSV_GenerateScoreBoard(cluster_t *cluster, oproxy_t *dest, scoreboard *b
 	
 	if (teams)
 	{
-		HTMLPRINT("</tr></table>");
+		HTMLPRINT("      </tr>\n    </table>\n");
 	}
 }
 
@@ -237,14 +252,14 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 	HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Now Playing");
 
 	if (!strcmp(hostname.string, DEFAULT_HOSTNAME))
-		snprintf(buffer, sizeof(buffer), "<h1>QuakeTV: Now Playing</h1>");	//don't show the hostname if its set to the default
+		snprintf(buffer, sizeof(buffer), "    <h1>QuakeTV: Now Playing</h1>\n");	//don't show the hostname if its set to the default
 	else
-		snprintf(buffer, sizeof(buffer), "<h1>QuakeTV: Now Playing on %s</h1>", hostname.string);
+		snprintf(buffer, sizeof(buffer), "    <h1>QuakeTV: Now Playing on %s</h1>\n", hostname.string);
 	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-	snprintf(buffer, sizeof(buffer), "<h2>%s</h2>", hosttitle.string);
+	snprintf(buffer, sizeof(buffer), "    <h2>%s</h2>\n\n", hosttitle.string);
 	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
-	HTMLPRINT("<table id='nowplaying' cellspacing='0'>");
+	HTMLPRINT("    <table id='nowplaying' cellspacing='0'>\n");
 	for (streams = cluster->servers; streams; streams = streams->next)
 	{
 		// skip "tcp:" prefix if any
@@ -281,39 +296,39 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 		}
 
 		// table row
-		snprintf(buffer, sizeof(buffer), "<tr class='%s%s'>\n", (oddrow ? "odd" : ""), (sv_empty ? "" : " notempty netop"));
+		snprintf(buffer, sizeof(buffer), "      <tr class='%s%s'>\n", (oddrow ? "odd" : ""), (sv_empty ? "" : " notempty netop"));
 		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 		oddrow = !oddrow;
 
 		// 1st cell: watch now button
-		snprintf(buffer, sizeof(buffer), "<td class='wn'><span class=\"qtvfile\"><a href=\"/watch.qtv?sid=%i\">Watch&nbsp;Now!</a></span></td>", streams->streamid);
+		snprintf(buffer, sizeof(buffer), "        <td class='wn'><span class=\"qtvfile\"><a href=\"/watch.qtv?sid=%i\">Watch&nbsp;Now!</a></span></td>\n", streams->streamid);
 		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
 		// 2nd cell: server adress
-		HTMLPRINT("<td class='adr'>");
+		HTMLPRINT("        <td class='adr'>");
 		HTMLprintf(buffer, sizeof(buffer), true, "%s", server);
 		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-		HTMLPRINT("</td>");
+		HTMLPRINT("</td>\n");
 
 		// 3rd cell: map name
 		if (streams->qstate < qs_active)
 		{
-			HTMLPRINT("<td class='mn'>NOT CONNECTED</td>");
+			HTMLPRINT("        <td class='mn'>NOT CONNECTED</td>\n");
 		}
 		else if (!strcmp(streams->gamedir, "qw"))
 		{
-			HTMLPRINT("<td class='mn'>");
+			HTMLPRINT("        <td class='mn'>");
 			Net_ProxySend(cluster, dest, "<span>", sizeof("<span>")-1);
 			HTMLprintf(buffer, sizeof(buffer), true, "%s", streams->mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));			
 			HTMLPRINT("</span>");
 			HTMLprintf(buffer, sizeof(buffer), true, " (%s)", mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-			HTMLPRINT("</td>");
+			HTMLPRINT("</td>\n");
 		}
 		else
 		{
-			HTMLPRINT("<td class='mn'>");
+			HTMLPRINT("        <td class='mn'>");
 			HTMLPRINT("<span>");
 			HTMLprintf(buffer, sizeof(buffer), true, "%s", streams->mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));			
@@ -322,45 +337,45 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 			HTMLprintf(buffer, sizeof(buffer), true, "%s)", mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
-			HTMLPRINT("</td>");
+			HTMLPRINT("</td>\n");
 		}
 
-		HTMLPRINT("</tr>");
+		HTMLPRINT("      </tr>\n");
 		// end of row
 		
 		// details if server not empty
 		if (!sv_empty) 
 		{
 			char buf[32];
-			HTMLPRINT("<tr class='notempty nebottom'>");
+			HTMLPRINT("      <tr class='notempty nebottom'>\n");
 			
 			// map preview
-			snprintf(buffer, sizeof(buffer), "<td class='mappic'><img src='/levelshots/%s.jpg' width='144' height='108' alt='%s' title='%s' /></td>", mapname, mapname, mapname);
+			snprintf(buffer, sizeof(buffer), "        <td class='mappic'><img src='/levelshots/%s.jpg' width='144' height='108' alt='%s' title='%s' /></td>\n", mapname, mapname, mapname);
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
 			// scores table
-			HTMLPRINT("<td class='svstatus' colspan='2'>");			
+			HTMLPRINT("        <td class='svstatus' colspan='2'>\n");			
 			HTTPSV_GenerateScoreBoard(cluster, dest, &sboard, teamplay);
 
 			// (match) status
 			Info_ValueForKey(streams->serverinfo, "status", buf, sizeof(buf));
 			if (buf[0]) {
-				snprintf(buffer,sizeof(buffer), "<p class='status'>%s</p>", buf);
+				snprintf(buffer,sizeof(buffer), "          <p class='status'>%s</p>\n", buf);
 				Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 			}
 
 			// number of observers
-			snprintf(buffer,sizeof(buffer), "<p class='observers'>Observers: <span>%u</span></p>", Proxy_UsersCount(streams));
+			snprintf(buffer,sizeof(buffer), "          <p class='observers'>Observers: <span>%u</span></p>\n", Proxy_UsersCount(streams));
 			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 			
-			HTMLPRINT("</td></tr>");
+			HTMLPRINT("        </td>\n      </tr>\n");
 		}
 	}
-	HTMLPRINT("</table>");
+	HTMLPRINT("    </table>\n");
 
 	if (!cluster->servers)
 	{
-		s = "No streams are currently being played<br/>";
+		s = "    <p>No streams are currently being played</p>\n";
 		Net_ProxySend(cluster, dest, s, strlen(s));
 	}
 
@@ -405,7 +420,7 @@ void HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char
 		HTTPSV_SendHTTPHeader(cluster, dest, "403", "text/html", true);
 		HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Admin Error");
 
-		s = "The admin password is disabled. You may not log in remotely.</body></html>\n";
+		s = "    <p>The admin password is disabled. You may not log in remotely.</p>\n  </body>\n\n</html>\n";
 		Net_ProxySend(cluster, dest, s, strlen(s));
 		return;
 	}
@@ -467,17 +482,16 @@ void HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/html", true);
 	HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Admin");
 
-	s = "<h1>QuakeTV Admin: ";
+	s = "    <h1>QuakeTV Admin: ";
 	Net_ProxySend(cluster, dest, s, strlen(s));
 	s = hostname.string;
 	Net_ProxySend(cluster, dest, s, strlen(s));
-	s = "</h1>";
+	s = "</h1>\n\n";
 	Net_ProxySend(cluster, dest, s, strlen(s));
 
 
-	s =	"<form action=\"admin.html\" method=\"post\" name='f'>"
-		"<center>"
-		"Password <input name='pwd' type='password' value=\"";
+	s =	"    <form action=\"admin.html\" method=\"post\" name='f'>\n"
+		"      <center>Password <input name='pwd' type='password' value=\"";
 
 	Net_ProxySend(cluster, dest, s, strlen(s));
 	/*
@@ -489,14 +503,14 @@ void HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char
 		"<br />"
 		"Command <input name='cmd' maxlength='255' size='40' value=\"\" />"
 		"<input type='submit' value=\"Submit\" name='btn' />"
-		"</center>"
-		"</form>";
+		"</center>\n"
+		"    </form>\n";
 	Net_ProxySend(cluster, dest, s, strlen(s));
 
 	if (passwordokay)
-		HTMLPRINT("<script type='text/javascript'>document.forms[0].elements[1].focus();</script>");
+		HTMLPRINT("    <script type='text/javascript'>document.forms[0].elements[1].focus();</script>\n");
 	else
-		HTMLPRINT("<script type='text/javascript'>document.forms[0].elements[0].focus();</script>");
+		HTMLPRINT("    <script type='text/javascript'>document.forms[0].elements[0].focus();</script>\n");
 
 	while(*o)
 	{
@@ -527,14 +541,14 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/html", true);
 	HTTPSV_SendHTMLHeader(cluster, dest, "QuakeTV: Demos");
 
-	s = "<h1>QuakeTV: Demo Listing</h1>\n\n";
+	s = "    <h1>QuakeTV: Demo Listing</h1>\n\n";
 	Net_ProxySend(cluster, dest, s, strlen(s));
 
-	s = "<table id='demos' cellspacing='0'><thead><tr>"
-		"<th class='stream'>stream</th>"
-		"<th class='save'>Download</th>"
-		"<th class='name'>Demoname</th>"
-		"<th class='size'>Size</th></tr></thead>\n<tbody>\n";
+	s = "    <table id='demos' cellspacing='0'>\n      <thead>\n        <tr>\n"
+		"          <th class='stream'>stream</th>\n"
+		"          <th class='save'>Download</th>\n"
+		"          <th class='name'>Demoname</th>\n"
+		"          <th class='size'>Size</th>\n        </tr>\n      </thead>\n      <tbody>\n";
 	Net_ProxySend(cluster, dest, s, strlen(s));
 
 	Cluster_BuildAvailableDemoList(cluster);
@@ -545,7 +559,7 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 		// HTML escaping (in HTML text)
 		HTMLprintf(name, sizeof(name), false, "%s", cluster->availdemos[i].name);
 
-		snprintf(link, sizeof(link), "<tr class='%s'><td class='stream'>", ((i % 2) ? "even" : "odd"));
+		snprintf(link, sizeof(link), "        <tr class='%s'>\n          <td class='stream'>", ((i % 2) ? "even" : "odd"));
 		Net_ProxySend(cluster, dest, link, strlen(link));
 		
 		if (stricmp(name + strlen(name) - 4, ".mvd") == 0) {
@@ -555,17 +569,17 @@ void HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest)
 			Net_ProxySend(cluster, dest, link, strlen(link));
 		}
 		
-		snprintf(link, sizeof(link), "</td>"
-			"<td class='save'><a href='/dl/demos/%s'><img src='/save.png' width='16' height='16' /></a></td>"
-			"<td class='name'>%s</td><td class='size'>%i kB</td>"
-			"</tr>\n",
+		snprintf(link, sizeof(link), "</td>\n"
+			"          <td class='save'><a href='/dl/demos/%s'><img src='/save.png' width='16' height='16' /></a></td>\n"
+			"          <td class='name'>%s</td><td class='size'>%i kB</td>\n"
+			"        </tr>\n",
 			href, name, cluster->availdemos[i].size/1024);
 		Net_ProxySend(cluster, dest, link, strlen(link));
 	}
-	s = "</tbody></table>\n";
+	s = "      </tbody>\n    </table>\n";
 	Net_ProxySend(cluster, dest, s, strlen(s));
 
-	snprintf(link, sizeof(link), "<P>Total: %i demos</P>", cluster->availdemoscount);
+	snprintf(link, sizeof(link), "\n    <p>Total: %i demos</p>\n", cluster->availdemoscount);
 	Net_ProxySend(cluster, dest, link, strlen(link));
 
 	HTTPSV_SendHTMLFooter(cluster, dest);
