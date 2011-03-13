@@ -225,7 +225,7 @@ void HTTPSV_SendHTMLHeader(cluster_t *cluster, oproxy_t *dest, char *title)
 		"    <title>%s</title>\n"
 		"    <link rel=\"StyleSheet\" href=\"/style.css\" type=\"text/css\" />\n"
 		"    <link rel=\"alternate\" title=\"RSS\" href=\"/rss\" type=\"application/rss+xml\" />\n"
-		"    <script language=\"Javascript\" src=\"/script.js\" type=\"text/javascript\"></script>\n"
+		"    <script src=\"/script.js\" type=\"text/javascript\"></script>\n"
 		"  </head>\n\n"
 		"  <body>\n\n"
 		"    <div id=\"navigation\"><span><a href=\"/nowplaying/\">Live</a></span><span><a href=\"/demos/\">Demos</a></span><span><a href=\"/admin/\">Admin</a></span><span><a href=\"http://qtv.qw-dev.net/wiki\" target=\"_blank\">Help</a></span></div>\n\n";
