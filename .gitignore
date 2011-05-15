@@ -3,7 +3,6 @@
 *.dll
 *.suo
 *.ncb
-VM/
 Debug*/
 Release*/
 *.sdf
@@ -16,3 +15,4 @@ src/Makefile.dl
 src/Makefile.dl32
 src/Makefile.vm
 qtv.bin
+qtv.db
