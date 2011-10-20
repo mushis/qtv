@@ -543,8 +543,6 @@ static unsigned int QTV_GenerateStreamID(void)
 		if (!QTV_Stream_by_ID(id))
 			return id;
 	}
-
-	return 1; // not reachable code
 }
 
 sv_t *QTV_NewServerConnection(cluster_t *cluster, const char *server, char *password, qbool force, qbool autoclose, qbool noduplicates, qbool query)
@@ -749,6 +747,8 @@ qbool Net_ReadStream(sv_t *qtv)
 		}
 		case SRC_TCP:
 		{
+			socklen_t optlen;
+
 			if (qtv->src.s == INVALID_SOCKET)
 			{
 				read = 0; // Will close_source().
@@ -757,9 +757,9 @@ qbool Net_ReadStream(sv_t *qtv)
 			}
 
 			// Get any socket error.
-			read = sizeof(err);
+			optlen = sizeof(err);
 			err = 0;
-			getsockopt(qtv->src.s, SOL_SOCKET, SO_ERROR, (char *)&err, (unsigned int *)&read);
+			getsockopt(qtv->src.s, SOL_SOCKET, SO_ERROR, (char *)&err, &optlen);
 
 			if (err == ECONNREFUSED)
 			{
