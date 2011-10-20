@@ -1238,6 +1238,12 @@ int QTV_ParseMVD(sv_t *qtv)
 		buffer = qtv->buffer;
 		message_type = buffer[1] & dem_mask;
 
+		packettime     = (float)buffer[0] / demospeed;
+		nextpackettime = qtv->parsetime + packettime;
+
+		if (nextpackettime >= qtv->curtime)
+			break;
+
 		switch (message_type)
 		{
 			case dem_set:
@@ -1254,16 +1260,17 @@ int QTV_ParseMVD(sv_t *qtv)
 					continue;
 				}
 
-				qtv->parsetime += buffer[0];	// Well this was pointless.
-
 				// We're about to destroy this data, so it had better be forwarded by now!
 				if (qtv->buffersize < length)
 					Sys_Error ("%s: QTV_ParseMVD: qtv->buffersize < length", qtv->server);
 
 				forwards++;
+				buffer[0] = packettime; // adjust packet time according to our demospeed.
 				SV_ForwardStream(qtv, qtv->buffer, length);
 				qtv->buffersize -= length;
 				memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize);
+
+				qtv->parsetime = nextpackettime;
 
 				continue;
 			}
@@ -1310,12 +1317,6 @@ int QTV_ParseMVD(sv_t *qtv)
 			break;	// Can't parse it yet.
 		}
 
-		packettime     = (float)buffer[0] / demospeed;
-		nextpackettime = qtv->parsetime + packettime;
-
-		if (nextpackettime >= qtv->curtime)
-			break;
-
 		// Read the actual message.
 		{
 			char *messbuf = (char *)(buffer + lengthofs + 4);
@@ -1358,15 +1359,16 @@ int QTV_ParseMVD(sv_t *qtv)
 			Sys_Error ("%s: QTV_ParseMVD: qtv->buffersize < length", qtv->server);
 
 		forwards++;
+		buffer[0] = packettime; // adjust packet time according to our demospeed.
 		SV_ForwardStream(qtv, qtv->buffer, length);
 		qtv->buffersize -= length;
 		memmove(qtv->buffer, qtv->buffer + length, qtv->buffersize);
 
+		qtv->parsetime = nextpackettime;
+
 		// qqshka: This was in original qtv, cause overflow in some cases.
 		if (qtv->src.type == SRC_DEMO)
 			Net_ReadStream(qtv); // FIXME: remove me
-
-		qtv->parsetime = nextpackettime;
 	}
 
 	// Advance reconnect time in two cases: 
