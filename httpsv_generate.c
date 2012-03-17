@@ -10,6 +10,14 @@
 #define NOTFOUNDLEVELSHOT "levelshots/_notfound.jpg"
 #define HTMLPRINT(str) Net_ProxySend(cluster, dest, str, strlen(str))
 
+// Join button display
+cvar_t	allow_join 			= {"allow_join", 		"0"};
+
+void Http_Init(void)
+{
+	Cvar_Register (&allow_join);
+}
+
 qbool IsPlayer(const playerinfo_t *p)
 {
 	char buffer[64];
@@ -301,8 +309,13 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 		oddrow = !oddrow;
 
 		// 1st cell: watch now button
-		snprintf(buffer, sizeof(buffer), "        <td class='wn'><span class=\"qtvfile\"><a href=\"/watch.qtv?sid=%i\">Watch&nbsp;Now!</a></span></td>\n", streams->streamid);
-		Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+		if (!allow_join.integer) {
+			snprintf(buffer, sizeof(buffer), "        <td class='wn'><span class=\"qtvfile\"><a href=\"/watch.qtv?sid=%i\">Watch&nbsp;now!</a></span></td>\n", streams->streamid);
+			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+		} else {
+			snprintf(buffer, sizeof(buffer), "        <td class='wn'><span class=\"qtvfile\"><a href=\"/watch.qtv?sid=%i\">Watch</a></span><span class=\"qtvfile\"><a href=\"/join.qtv?sid=%i\">Join</a></span></td>\n", streams->streamid, streams->streamid);
+			Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+		}
 
 		// 2nd cell: server adress
 		HTMLPRINT("        <td class='adr'>");
@@ -402,6 +415,40 @@ void HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamtype
 									 "Stream: %s%s@%s\r\n"
 									 "", 
 									 streamtype, unescaped_streamid, hostname);
+
+	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
+}
+
+void HTTPSV_GenerateQTVJoinStub(cluster_t *cluster, oproxy_t *dest, char *streamid)
+{
+	qbool streamfound = false;
+	char *server;
+	char buffer[1024];
+	sv_t *streams;
+	char unescaped_streamid[512];
+
+	HTTPSV_UnescapeURL(streamid, unescaped_streamid, sizeof(unescaped_streamid));
+
+	server = NULL;
+	// get server address -- deurk: any better way to access it?
+	for (streams = cluster->servers; streams; streams = streams->next)
+	{
+		server = (strncmp(streams->server, "tcp:", sizeof("tcp:") - 1) ? streams->server : streams->server + sizeof("tcp:") - 1);
+		if ((unsigned int) atoi(streamid) == streams->streamid) {
+			streamfound = true;
+			break;
+		}
+	}
+
+	if (!streamfound)
+		return;
+		
+	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/x-quaketvident", false);
+
+	snprintf(buffer, sizeof(buffer), "[QTV]\r\n"
+									 "Join: %s\r\n"
+									 "", 
+									 server);
 
 	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 }

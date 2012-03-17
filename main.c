@@ -276,6 +276,7 @@ int main(int argc, char **argv)
 	Source_Init();	// Add source related commands.
 	Forward_Init(); // Register some vars.
 	Pending_Init();	// Register some vars.
+	Http_Init();		// Register some vars.
 	Ban_Init();		// Init banning system.
 
 	Cvar_Register(&developer);

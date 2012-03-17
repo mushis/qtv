@@ -623,7 +623,7 @@ typedef struct cluster_s
 
 	io_stat_t		socket_stat;		// read/write stats for all sockets
 
-	availdemo_t availdemos[2048];		// lala, insane... but we support it, I checked.
+	availdemo_t availdemos[8096];		// lala, insane...
 	int availdemoscount;
 	ullong last_demos_update;			// Miliseconds, last time when Cluster_BuildAvailableDemoList() was issued, saving CPU time
 
@@ -947,11 +947,14 @@ size_t			HTTPSV_EscapeURL(const char *url, char *out, size_t outsize);
 //
 // httpsv_generate.c
 //
+extern cvar_t	allow_join;
 
+void			Http_Init(void);
 void			HTTPSV_GenerateCSSFile(cluster_t *cluster, oproxy_t *dest);
 void			HTTPSV_GenerateJSFile(cluster_t *cluster, oproxy_t *dest);
 void			HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest);
 void			HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamtype, char *streamid);
+void			HTTPSV_GenerateQTVJoinStub(cluster_t *cluster, oproxy_t *dest, char *streamid);
 void			HTTPSV_GenerateAdmin(cluster_t *cluster, oproxy_t *dest, int streamid, char *postbody);
 void			HTTPSV_GenerateDemoListing(cluster_t *cluster, oproxy_t *dest);
 void			HTTPSV_GenerateImage(cluster_t *cluster, oproxy_t *dest, char *imgfilename);

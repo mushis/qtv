@@ -506,6 +506,10 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	{
 		HTTPSV_GenerateQTVStub(cluster, pend, "file:", getpath + skiplen);
 	}
+	else if (URLCOMPARE(getpath, "/join.qtv?sid=", skiplen))
+	{
+		HTTPSV_GenerateQTVJoinStub(cluster, pend, getpath + skiplen);
+	}
 	else if (URLCOMPARE(getpath, "/admin", skiplen))
 	{
 		HTTPSV_GenerateAdmin(cluster, pend, 0, NULL);
