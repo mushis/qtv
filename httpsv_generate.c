@@ -359,7 +359,7 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 		// details if server not empty
 		if (!sv_empty) 
 		{
-			char buf[32];
+			char buf[32], matchtag[32];
 			HTMLPRINT("      <tr class='notempty nebottom'>\n");
 			
 			// map preview
@@ -370,10 +370,13 @@ void HTTPSV_GenerateNowPlaying(cluster_t *cluster, oproxy_t *dest)
 			HTMLPRINT("        <td class='svstatus' colspan='2'>\n");			
 			HTTPSV_GenerateScoreBoard(cluster, dest, &sboard, teamplay);
 
-			// (match) status
+			// (match) tag and status
+			Info_ValueForKey(streams->serverinfo, "matchtag", matchtag, sizeof(matchtag));
 			Info_ValueForKey(streams->serverinfo, "status", buf, sizeof(buf));
-			if (buf[0]) {
-				snprintf(buffer,sizeof(buffer), "          <p class='status'>%s</p>\n", buf);
+			if (matchtag[0] || buf[0])
+			{
+				snprintf(buffer,sizeof(buffer), "          <p class='status'>%s%s%s</p>\n",
+					matchtag, (matchtag[0] && buf[0]) ? ": " : "", buf);
 				Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 			}
 
