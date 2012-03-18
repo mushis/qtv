@@ -98,6 +98,9 @@ padding:0;
   border: 0;
   border-left: 1px solid #4f606e; !important; background-color: #62717e;
 }
+/* removes annoying padding-left from tables with teams */
+#nowplaying tr td table.overallscores td { padding: 0.5em 1em 0 0; } 
+#nowplaying tr td table.overallscores { border-spacing: 0; }
 #nowplaying tr td table.scores tr.scodd td {
   background-color: #798691;
 }
@@ -190,3 +193,7 @@ background-color: #9a8e6c; }
 #helptext a:hover {
 	text-decoration: underline;
 }
+/* ------- altering original qtv style ------ */
+p { margin: 0; }
+p.status { margin-top: 1em; }
+p.observers { margin-top: 0.25em; margin-bottom: 1em; }
