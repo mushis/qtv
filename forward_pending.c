@@ -770,42 +770,45 @@ void SV_CheckMVDPort(cluster_t *cluster)
 {
 	int newp = bound(0, mvdport.integer, 65534);
 
-	if ((cluster->tcpsocket == INVALID_SOCKET) && newp && (cluster->mvdport_last_time_check + 30 * 1000 < cluster->curtime))
-		mvdport.modified = true; // Time to time attempt to open port if not open.
+	// Lets check if we should do some action with socket. open/close.
+	if (   (cluster->tcpsocket != INVALID_SOCKET && !newp) // we should close socket.
+		|| (cluster->tcpsocket == INVALID_SOCKET && newp && (cluster->mvdport_last_time_check + 30 * 1000 < cluster->curtime)) // we should open socket.
+	)
+		mvdport.modified = true; // force open/close.
 
 	if (!mvdport.modified)
-		return;
+		return; // nothing was changed.
 
+	// remember current time so we does not hammer it too fast.
 	cluster->mvdport_last_time_check = cluster->curtime;
 
-	if (!newp)
+	// close socket first.
+	if (cluster->tcpsocket != INVALID_SOCKET)
 	{
-		if (cluster->tcpsocket != INVALID_SOCKET)
-		{
-			closesocket(cluster->tcpsocket);
-			cluster->tcpsocket = INVALID_SOCKET;
+		closesocket(cluster->tcpsocket);
+		cluster->tcpsocket = INVALID_SOCKET;
 
-			Sys_Printf("mvdport is now closed\n");
-		}
-		else
-			Sys_Printf("mvdport already closed\n");
+		Sys_Printf("mvdport is now closed\n");
 	}
-	else
+
+	// open socket if required.
+	if (newp)
 	{
 		SOCKET news = Net_TCPListenPort(newp);
 
 		if (news != INVALID_SOCKET)
 		{
-			if (cluster->tcpsocket != INVALID_SOCKET)
-				closesocket(cluster->tcpsocket);
 			cluster->tcpsocket = news;
 
 			Sys_Printf("mvdport %d opened\n", newp);
 		}
 		else
+		{
 			Sys_Printf("mvdport %d failed to open\n", newp);
+		}
 	}
 
+	// we apply all we want, if we dont' then repeat it later (look mvdport_last_time_check).
 	mvdport.modified = false;
 }
 
