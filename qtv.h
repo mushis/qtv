@@ -610,6 +610,8 @@ typedef struct cluster_s
 
 	ullong curtime;						// Milliseconds.
 
+	ullong mvdport_last_time_check;		// Last time we attemp to open mvdport. Milliseconds.
+
 	qbool wanttoexit;					// If this is set to true our program will decide to die.
 
 	int buildnumber;					// Just our buildnumber.

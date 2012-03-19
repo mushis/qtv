@@ -768,17 +768,15 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster)
 
 void SV_CheckMVDPort(cluster_t *cluster)
 {
-    ullong last_time_check = 0;
+	int newp = bound(0, mvdport.integer, 65534);
 
-	int newp = bound(0, mvdport.integer, 65535);
-
-	if ((cluster->tcpsocket == INVALID_SOCKET) && newp && (last_time_check + 30 * 1000 < cluster->curtime))
+	if ((cluster->tcpsocket == INVALID_SOCKET) && newp && (cluster->mvdport_last_time_check + 30 * 1000 < cluster->curtime))
 		mvdport.modified = true; // Time to time attempt to open port if not open.
 
 	if (!mvdport.modified)
 		return;
 
-	last_time_check = cluster->curtime;
+	cluster->mvdport_last_time_check = cluster->curtime;
 
 	if (!newp)
 	{
