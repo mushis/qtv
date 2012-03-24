@@ -227,7 +227,7 @@ int Net_GetPacket(cluster_t *cluster, netmsg_t *msg)
 
 	ret = recvfrom(cluster->udpsocket, (char *)msg->data, msg->maxsize, 0, (struct sockaddr *) &cluster->net_from, &fromlen);
 
-	if (ret == SOCKET_ERROR)
+	if (ret == -1)
 	{
 		if (qerrno == EWOULDBLOCK)
 			return false;
@@ -267,7 +267,7 @@ void Net_SendPacket(cluster_t *cluster, int length, const void *data, struct soc
 	if (cluster->udpsocket == INVALID_SOCKET)
 		return;
 
-	if (sendto(cluster->udpsocket, (const char *) data, length, 0, (struct sockaddr *)to, addrlen) == SOCKET_ERROR)
+	if (sendto(cluster->udpsocket, (const char *) data, length, 0, (struct sockaddr *)to, addrlen) == -1)
 	{
 		if (qerrno == EWOULDBLOCK)
 			return;
