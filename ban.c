@@ -64,8 +64,8 @@ SV_FilterPacket
 */
 qbool SV_IsBanned (netadr_t *addr)
 {
-	int			i;
-	unsigned	in;
+	int				i;
+	unsigned int	in;
 
 	in = (((struct sockaddr_in *)addr)->sin_addr.s_addr); // FIXME: wonder is this work...
 

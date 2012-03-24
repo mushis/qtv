@@ -14,10 +14,12 @@ Contains the control routines
 const char* demos_allowed_ext[] = { ".mvd", ".gz", ".zip", ".bz2" };
 const int demos_allowed_ext_count = sizeof(demos_allowed_ext)/sizeof(*demos_allowed_ext);
 
+cvar_t version			= {"*version", "QTV " PROXY_VERSION, CVAR_ROM | CVAR_SERVERINFO};
+
 cvar_t developer		= {"developer", ""};
 cvar_t shownet			= {"shownet", ""};
 
-cvar_t hostname			= {"hostname", DEFAULT_HOSTNAME};
+cvar_t hostname			= {"hostname", DEFAULT_HOSTNAME, CVAR_SERVERINFO};
 cvar_t hosttitle		= {"hosttitle", ""};
 cvar_t admin_password	= {"admin_password", ""};
 
@@ -225,8 +227,14 @@ void Cluster_Run(cluster_t *cluster, qbool dowait, qbool down)
 		QTV_Run(cluster, old);
 	}
 
+	// Process UDP packets.
+	// NOTE: WE DO NOT select() on UDP socket, so it really suck in terms of responsivness,
+	// but it should not matter as long as we process connectionless packets ONLY.
+	// We do not select() on UDP sockets because we do not want QTV wake up too frequently.
+	SV_ReadPackets(cluster);
+
 	// Check changes of mvdport variable and do appropriate action.
-	SV_CheckMVDPort(cluster); 
+	SV_CheckNETPorts(cluster); 
 
 	// Look for any other proxies wanting to muscle in on the action.
 	SV_FindProxies(cluster->tcpsocket, cluster);
@@ -265,6 +273,7 @@ int main(int argc, char **argv)
 	memset(&g_cluster, 0, sizeof(g_cluster));
 
 	g_cluster.tcpsocket   = INVALID_SOCKET;
+	g_cluster.udpsocket   = INVALID_SOCKET;
 	g_cluster.buildnumber = Sys_Build_Number();
 	g_cluster.nextUserId  = 1; // Lets count users from 1.
 
@@ -276,8 +285,11 @@ int main(int argc, char **argv)
 	Source_Init();	// Add source related commands.
 	Forward_Init(); // Register some vars.
 	Pending_Init();	// Register some vars.
-	Http_Init();		// Register some vars.
+	Http_Init();	// Register some vars.
+	UDP_Init();		// UDP system init.
 	Ban_Init();		// Init banning system.
+
+	Cvar_Register(&version);
 
 	Cvar_Register(&developer);
 	Cvar_Register(&shownet);

@@ -326,6 +326,10 @@
 				RelativePath="..\token.c"
 				>
 			</File>
+			<File
+				RelativePath="..\udp.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

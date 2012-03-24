@@ -25,6 +25,8 @@ typedef struct ctxinfo_s {
 
 } ctxinfo_t;
 
+//Cvar system calls this when a CVAR_SERVERINFO cvar changes
+void			SV_ServerinfoChanged (char *key, char *string);
 
 // get key in buffer
 char			*Info_ValueForKey (const char *s, const char *const key, char *const buffer, size_t buffersize);
@@ -32,6 +34,8 @@ char			*Info_ValueForKey (const char *s, const char *const key, char *const buff
 void			Info_RemoveKey (char *s, const char *key);
 // put key in buffer
 void			Info_SetValueForStarKey (char *s, const char *key, const char *value, int maxsize);
+// print infostring on console
+void			Info_Print (char *s);
 
 
 

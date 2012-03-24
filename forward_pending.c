@@ -5,7 +5,7 @@
 #include "qtv.h"
 
 cvar_t mvdport    		= {"mvdport", PROX_DEFAULT_LISTEN_PORT};
-cvar_t maxclients		= {"maxclients", "1000"};
+cvar_t maxclients		= {"maxclients", "1000", CVAR_SERVERINFO};
 cvar_t allow_http		= {"allow_http", "1"};
 
 int get_maxclients(void)
@@ -734,7 +734,7 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster)
 	if (SV_IsBanned(&addr))
 	{
 		char ip[] = "xxx.xxx.xxx.xxx";
-		Sys_DPrintf("rejected connect from banned ip: %s\n", NET_BaseAdrToString(&addr, ip, sizeof(ip)));
+		Sys_DPrintf("rejected connect from banned ip: %s\n", Net_BaseAdrToString(&addr, ip, sizeof(ip)));
 		closesocket(sock);
 		return;
 	}
@@ -766,19 +766,8 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster)
 	cluster->pendingproxies = prox;
 }
 
-void SV_CheckMVDPort(cluster_t *cluster)
+static void SV_CheckMVDPort(cluster_t *cluster, int port)
 {
-	int newp = bound(0, mvdport.integer, 65534);
-
-	// Lets check if we should do some action with socket. open/close.
-	if (   (cluster->tcpsocket != INVALID_SOCKET && !newp) // we should close socket.
-		|| (cluster->tcpsocket == INVALID_SOCKET && newp && (cluster->mvdport_last_time_check + 30 * 1000 < cluster->curtime)) // we should open socket.
-	)
-		mvdport.modified = true; // force open/close.
-
-	if (!mvdport.modified)
-		return; // nothing was changed.
-
 	// remember current time so we does not hammer it too fast.
 	cluster->mvdport_last_time_check = cluster->curtime;
 
@@ -788,27 +777,56 @@ void SV_CheckMVDPort(cluster_t *cluster)
 		closesocket(cluster->tcpsocket);
 		cluster->tcpsocket = INVALID_SOCKET;
 
-		Sys_Printf("mvdport is now closed\n");
+		Sys_Printf("%s is now closed\n", mvdport.name);
 	}
 
 	// open socket if required.
-	if (newp)
+	if (port)
 	{
-		SOCKET news = Net_TCPListenPort(newp);
+		SOCKET news = Net_TCPListenPort(port);
 
 		if (news != INVALID_SOCKET)
 		{
 			cluster->tcpsocket = news;
 
-			Sys_Printf("mvdport %d opened\n", newp);
+			Sys_Printf("%s %d opened\n", mvdport.name, port);
 		}
 		else
 		{
-			Sys_Printf("mvdport %d failed to open\n", newp);
+			Sys_Printf("%s %d failed to open\n", mvdport.name, port);
 		}
 	}
+}
 
-	// we apply all we want, if we dont' then repeat it later (look mvdport_last_time_check).
+void SV_CheckNETPorts(cluster_t *cluster)
+{
+	qbool tcpport_modified = false;
+	qbool udpport_modified = false;
+	int newp = bound(0, mvdport.integer, 65534);
+
+	// Lets check if we should do some action with TCP socket. open/close.
+	if (   (cluster->tcpsocket != INVALID_SOCKET && !newp) // we should close socket.
+		|| (cluster->tcpsocket == INVALID_SOCKET && newp && (cluster->mvdport_last_time_check + 30 * 1000 < cluster->curtime)) // we should open socket.
+	)
+		tcpport_modified = true; // force open/close.
+
+	// Lets check if we should do some action with UDP socket. open/close.
+	if (   (cluster->udpsocket != INVALID_SOCKET && !newp) // we should close socket.
+		|| (cluster->udpsocket == INVALID_SOCKET && newp && (cluster->udpport_last_time_check + 30 * 1000 < cluster->curtime)) // we should open socket.
+	)
+		udpport_modified = true; // force open/close.
+
+	if (mvdport.modified)
+		tcpport_modified = udpport_modified = true;
+
+	if (tcpport_modified)
+		SV_CheckMVDPort(cluster, newp);
+
+	// As long as we use same port number for UPD/TCP I have to call SV_CheckUDPPort() from here.
+	if (udpport_modified)
+		SV_CheckUDPPort(cluster, newp);
+
+	// we apply all we want, if we don't then repeat it later.
 	mvdport.modified = false;
 }
 

@@ -128,6 +128,7 @@ void status_f(void)
 	Sys_Printf("Options:\n");
 	Sys_Printf("   hostname: %s\n", hostname.string);
 	Sys_Printf("    mvdport: %i%s\n", mvdport.integer, g_cluster.tcpsocket == INVALID_SOCKET ? " (INVALID)" : "");
+	Sys_Printf("    udpport: %i%s\n", mvdport.integer, g_cluster.udpsocket == INVALID_SOCKET ? " (INVALID)" : "");
 	Sys_Printf(" allow_http: %s\n", allow_http.integer ? "yes" : "no");
 }
 
@@ -159,7 +160,7 @@ void clientlist(sv_t *qtv, qbool showempty)
 							  "------ --------------- ----\n", qtv->streamid, qtv->server);
 		}
 
-		Sys_Printf("%6d %15s %s\n", tmp->id, NET_BaseAdrToString(&tmp->addr, ip, sizeof(ip)), Info_Get(&tmp->ctx, "name", name, sizeof(name)));
+		Sys_Printf("%6d %15s %s\n", tmp->id, Net_BaseAdrToString(&tmp->addr, ip, sizeof(ip)), Info_Get(&tmp->ctx, "name", name, sizeof(name)));
 		c++;
 	}	
 
@@ -215,7 +216,7 @@ void kick_f(void)
 				continue;
 
 			tmp->drop = true;
-			Sys_Printf("kicked: %d %s %s\n", tmp->id, NET_BaseAdrToString(&tmp->addr, ip, sizeof(ip)), Info_Get(&tmp->ctx, "name", name, sizeof(name)));
+			Sys_Printf("kicked: %d %s %s\n", tmp->id, Net_BaseAdrToString(&tmp->addr, ip, sizeof(ip)), Info_Get(&tmp->ctx, "name", name, sizeof(name)));
 			return;
 		}	
 	}
@@ -256,6 +257,70 @@ void showoutput_f(void)
 	}
 }
 
+/*
+===========
+serverinfo_f
+
+Examine or change the serverinfo string
+===========
+*/
+void serverinfo_f (void)
+{
+	cvar_t	*var;
+	char *s;
+	char	*key, *value;
+
+	if (Cmd_Argc() == 1)
+	{
+		Sys_Printf ("Server info settings:\n");
+		Info_Print (g_cluster.info);
+		Sys_Printf ("[%d/%d]\n", strlen(g_cluster.info), MAX_SERVERINFO_STRING);
+		return;
+	}
+
+	if (Cmd_Argc() == 2)
+	{
+		char cur_value[MAX_INFO_KEY] = "";
+
+		s = Info_ValueForKey(g_cluster.info, Cmd_Argv(1), cur_value, sizeof(cur_value));
+		if (*s)
+			Sys_Printf ("Serverinfo %s: \"%s\"\n", Cmd_Argv(1), s);
+		else
+			Sys_Printf ("No such key %s\n", Cmd_Argv(1));
+		return;
+	}
+
+	if (Cmd_Argc() != 3)
+	{
+		Sys_Printf ("usage: serverinfo [ <key> [ <value> ] ]\n");
+		return;
+	}
+
+	key = Cmd_Argv(1);
+	value = Cmd_Argv(2);
+
+	if (key[0] == '*')
+	{
+		Sys_Printf ("Star variables cannot be changed.\n");
+		return;
+	}
+
+	// force serverinfo "0" vars to be "".
+	if (!strcmp(value, "0"))
+		value = "";
+
+	// if the key is also a serverinfo cvar, change it too
+	var = Cvar_Find(key);
+	if (var && (var->flags & CVAR_SERVERINFO))
+	{
+		Cvar_Set (var, value); // this call SV_ServerinfoChanged() as well.
+	}
+	else
+	{
+		SV_ServerinfoChanged(key, value);
+	}
+}
+
 void Source_Init(void)
 {
 	Cvar_Register (&maxservers);
@@ -275,5 +340,7 @@ void Source_Init(void)
 
 	Cmd_AddCommand ("clientlist", clientlist_f);
 	Cmd_AddCommand ("kick", kick_f);
+
+	Cmd_AddCommand ("serverinfo", serverinfo_f);
 }
 

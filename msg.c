@@ -6,10 +6,16 @@
 
 void InitNetMsg(netmsg_t *b, char *buffer, int bufferlength)
 {
+	memset (b, 0, sizeof (*b));
 	b->data = buffer;
 	b->maxsize = bufferlength;
-	b->readpos = 0;
+}
+
+void ClearNetMsg(netmsg_t *b)
+{
 	b->cursize = 0;
+	b->readpos = 0;
+	b->startpos = 0;
 }
 
 //probably not the place for these any more..

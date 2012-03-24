@@ -53,6 +53,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#define EINPROGRESS WSAEINPROGRESS
 	#define ECONNREFUSED WSAECONNREFUSED
 	#define ENOTCONN WSAENOTCONN
+	#define EMSGSIZE WSAEMSGSIZE
+	#define ECONNRESET WSAECONNRESET
+
 
 	// We have special functions to properly terminate sprintf buffers in windows.
 	// we assume other systems are designed with even a minor thought to security.
@@ -178,7 +181,7 @@ extern "C" {
 
 //======================================
 
-#define PROXY_VERSION "1.10-dev"			// Release version of QTV (not protocol).
+#define PROXY_VERSION "1.10-dev"		// Release version of QTV (not protocol).
 #define QTV_VERSION			1.0f		// we are support up to this QTV version.
 
 // { QTV_EZQUAKE_EXT
@@ -411,7 +414,7 @@ typedef struct oproxy_s
 													// so buffer will be expanded maximum to this size when needed.
 
 
-	ullong			init_time;						// When this client was created, so we can timeout it.
+	ullong			init_time;						// When this client was created, so we can do some math with it.
 	ullong			io_time;						// When was IO activity, so we can timeout it.
 
 	int				id;								// User id for this client.
@@ -599,9 +602,20 @@ struct sv_s
 
 };
 
+//
+// Main QTV struct.
+//
 typedef struct cluster_s 
 {
 	SOCKET tcpsocket;					// Tcp listening socket (for mvd and listings and stuff).
+
+// { UDP
+	SOCKET udpsocket;					// UDP socket (for connectionless commands).
+
+	struct sockaddr_in	net_from;
+	netmsg_t			net_message;
+	char				net_message_buffer[MSG_BUF_SIZE];
+// }
 
 	char commandinput[512]; 			// Our console input buffer.
 	int inputlength; 					// How much data we have in the console buffer, after user presses enter the buffer is sent to the interpreter and this is set to 0.
@@ -611,6 +625,7 @@ typedef struct cluster_s
 	ullong curtime;						// Milliseconds.
 
 	ullong mvdport_last_time_check;		// Last time we attemp to open mvdport. Milliseconds.
+	ullong udpport_last_time_check;		// Last time we attemp to open udpport. Milliseconds.
 
 	qbool wanttoexit;					// If this is set to true our program will decide to die.
 
@@ -814,16 +829,20 @@ void			Com_BlockFullChecksum(void *buffer, int len, unsigned char *outbuf);
 
 qbool			Net_StringToAddr(char *s, netadr_t *sadr, int defaultport);
 qbool			Net_CompareAddress(netadr_t *s1, netadr_t *s2, int qp1, int qp2);
-char			*NET_BaseAdrToString (const netadr_t *a, char *buf, size_t bufsize);
+char			*Net_BaseAdrToString (const netadr_t *a, char *buf, size_t bufsize);
+qbool			TCP_Set_KEEPALIVE(int sock);
 SOCKET			Net_TCPListenPort(int port);
 
-qbool			TCP_Set_KEEPALIVE(int sock);
+SOCKET			Net_UDPOpenSocket(int port);
+int				Net_GetPacket(cluster_t *cluster, netmsg_t *msg);
+void			Net_SendPacket(cluster_t *cluster, int length, const void *data, struct sockaddr_in *to);
 
 //
 // msg.c
 //
 
 void			InitNetMsg	(netmsg_t *b, char *buffer, int bufferlength);
+void			ClearNetMsg (netmsg_t *b);
 
 // FIXME: Probably not the place for these any more..
 unsigned char	ReadByte	(netmsg_t *b);
@@ -899,7 +918,7 @@ void			SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster);
 void			SV_ProxySocketIOStats(oproxy_t *prox, int r, int w);
 
 // Check changes of mvdport variable and do appropriate action.
-void			SV_CheckMVDPort(cluster_t *cluster);
+void			SV_CheckNETPorts(cluster_t *cluster);
 
 // Register some vars.
 void			Pending_Init(void);
@@ -1033,11 +1052,19 @@ qbool			FS_SafePath(const char *in);
 //
 
 // Init banning system.
-void Ban_Init(void);
+void			Ban_Init(void);
 // Periodically check is it time to remove some bans.
-void SV_CleanBansIPList(void);
+void			SV_CleanBansIPList(void);
 // Return true if add is banned.
-qbool SV_IsBanned (netadr_t *addr);
+qbool			SV_IsBanned (netadr_t *addr);
+
+//
+// udp.c
+//
+
+void			UDP_Init(void);
+void			SV_CheckUDPPort(cluster_t *cluster, int port);
+void			SV_ReadPackets(cluster_t *cluster);
 
 #ifdef __cplusplus
 }

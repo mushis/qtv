@@ -430,7 +430,7 @@ void Cmd_Alias_f (void)
 	}
 
 #if 0
-	if ( (var = Cvar_FindVar(s)) != NULL )
+	if ( (var = Cvar_Find(s)) != NULL )
 	{
 		if (var->flags & CVAR_USER_CREATED)
 			Cvar_Delete (var->name);
@@ -689,7 +689,7 @@ void Cmd_AddCommand (char *cmd_name, xcommand_t function)
 		Sys_Error ("Cmd_AddCommand after host_initialized");
 
 	// fail if the command is a variable name
-	if (Cvar_FindVar(cmd_name))
+	if (Cvar_Find(cmd_name))
 	{
 		Sys_Printf("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
 		return;
@@ -794,7 +794,7 @@ void Cmd_ExpandString (char *data, char *dest)
 				data++;
 				buf[i++] = c;
 				buf[i] = 0;
-				if ( (var = Cvar_FindVar(buf)) != NULL )
+				if ( (var = Cvar_Find(buf)) != NULL )
 					bestvar = var;
 
 				if (i >= (int)sizeof(buf)-1)

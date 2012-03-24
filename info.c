@@ -4,6 +4,21 @@ Manipulation with various info strings
 
 #include "qtv.h"
 
+//Cvar system calls this when a CVAR_SERVERINFO cvar changes
+void SV_ServerinfoChanged (char *key, char *string)
+{
+	char value[MAX_INFO_KEY] = "";
+
+	// force serverinfo "0" vars to be "".
+	if (!strcmp(string, "0"))
+		string = "";
+
+	if (strcmp(string, Info_ValueForKey (g_cluster.info, key, value, sizeof(value))))
+	{
+		Info_SetValueForStarKey (g_cluster.info, key, string, MAX_SERVERINFO_STRING);
+	}
+}
+
 char *Info_ValueForKey (const char *s, const char *const key, char *const buffer, size_t buffersize)
 {
 	size_t keylen = strlen(key);
@@ -165,8 +180,48 @@ void Info_SetValueForStarKey (char *s, const char *key, const char *value, int m
 	*s = 0;
 }
 
+void Info_Print (char *s)
+{
+	char key[512];
+	char value[512];
+	char *o;
+	int l;
 
+	if (*s == '\\')
+		s++;
+	while (*s)
+	{
+		o = key;
+		while (*s && *s != '\\')
+			*o++ = *s++;
 
+		l = o - key;
+		if (l < 20)
+		{
+			memset (o, ' ', 20-l);
+			key[20] = 0;
+		}
+		else
+			*o = 0;
+		Sys_Printf ("%s ", key);
+
+		if (!*s)
+		{
+			Sys_Printf ("MISSING VALUE\n");
+			return;
+		}
+
+		o = value;
+		s++;
+		while (*s && *s != '\\')
+			*o++ = *s++;
+		*o = 0;
+
+		if (*s)
+			s++;
+		Sys_Printf ("%s\n", value);
+	}
+}
 
 //============================================================
 // Alternative variant manipulation with info strings

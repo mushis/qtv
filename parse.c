@@ -1148,11 +1148,8 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 	if (shownet.integer)
 		ShowMvdHeaderInfo(tv, length, to, mask);
 
+	InitNetMsg(&buf, buffer, length);
 	buf.cursize = length;
-	buf.maxsize = length;
-	buf.readpos = 0;
-	buf.data = buffer;
-	buf.startpos = 0;
 
 	while (buf.readpos < buf.cursize)
 	{

@@ -57,7 +57,7 @@ qbool Net_CompareAddress(netadr_t *s1, netadr_t *s2, int qp1, int qp2)
 	return false;
 }
 
-char *NET_BaseAdrToString (const netadr_t *a, char *buf, size_t bufsize)
+char *Net_BaseAdrToString (const netadr_t *a, char *buf, size_t bufsize)
 {
 	unsigned char ip[4];
 
@@ -123,11 +123,10 @@ qbool TCP_Set_KEEPALIVE(int sock)
 
 SOCKET Net_TCPListenPort(int port)
 {
-	SOCKET sock;
-
-	struct sockaddr_in	address;
-
-	unsigned long nonblocking = true;
+	SOCKET				sock = INVALID_SOCKET;
+	qbool				error = true;
+	struct sockaddr_in	address = {0};
+	unsigned long		nonblocking = true;
 
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
@@ -135,33 +134,147 @@ SOCKET Net_TCPListenPort(int port)
 
 	if ((sock = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET)
 	{
-		return INVALID_SOCKET;
+		// error.
+	}
+	else if (ioctlsocket (sock, FIONBIO, &nonblocking) == -1)
+	{
+		// error.
+	}
+	else if (bind (sock, (void *)&address, sizeof(address)) == -1)
+	{
+		// error.
+	}
+	else if (listen(sock, 3) == -1)	// Don't listen for too many clients.
+	{
+		// error.
+	}
+	else if (!TCP_Set_KEEPALIVE(sock))
+	{
+		// error.
+	}
+	else
+	{
+		// success.
+		error = false;	
 	}
 
-	if (ioctlsocket (sock, FIONBIO, &nonblocking) == -1)
+	// clean up in casse of error.
+	if (error)
 	{
-		closesocket(sock);
-		return INVALID_SOCKET;
-	}
-
-	if (bind (sock, (void *)&address, sizeof(address)) == -1)
-	{
-		closesocket(sock);
-		return INVALID_SOCKET;
-	}
-
-	if (listen(sock, 3) == -1)	// Don't listen for too many clients.
-	{
-		closesocket(sock);
-		return INVALID_SOCKET;
-	}
-
-	if (!TCP_Set_KEEPALIVE(sock))
-	{
-		closesocket(sock);
-		return INVALID_SOCKET;
+		if (sock != INVALID_SOCKET)
+		{
+			closesocket(sock);
+			sock = INVALID_SOCKET;
+		}
 	}
 
 	return sock;
 }
 
+//=============================================================================
+
+SOCKET Net_UDPOpenSocket(int port)
+{
+	SOCKET				sock = INVALID_SOCKET;
+	qbool				error = true;
+	struct sockaddr_in	address = {0};
+	unsigned long		nonblocking = true;
+
+	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = INADDR_ANY;
+	address.sin_port = htons((u_short)port);
+
+	if ((sock = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET)
+	{
+		// error.
+	}
+	else if (ioctlsocket (sock, FIONBIO, &nonblocking) == -1)
+	{
+		// error.
+	}
+	else if (bind (sock, (void *)&address, sizeof(address)) == -1)
+	{
+		// error.
+	}
+	else
+	{
+		// success.
+		error = false;	
+	}
+
+	// clean up in casse of error.
+	if (error)
+	{
+		if (sock != INVALID_SOCKET)
+		{
+			closesocket(sock);
+			sock = INVALID_SOCKET;
+		}
+	}
+
+	return sock;
+}
+
+int Net_GetPacket(cluster_t *cluster, netmsg_t *msg)
+{
+	int ret;
+	socklen_t fromlen = sizeof (cluster->net_from);
+
+	ClearNetMsg(msg);
+
+	if (cluster->udpsocket == INVALID_SOCKET)
+		return false;
+
+	ret = recvfrom(cluster->udpsocket, (char *)msg->data, msg->maxsize, 0, (struct sockaddr *) &cluster->net_from, &fromlen);
+
+	if (ret == SOCKET_ERROR)
+	{
+		if (qerrno == EWOULDBLOCK)
+			return false;
+
+		if (qerrno == EMSGSIZE)
+		{
+			Sys_Printf ("NET_GetPacket: Oversize packet from %s\n", inet_ntoa(cluster->net_from.sin_addr));
+			return false;
+		}
+
+		if (qerrno == ECONNRESET)
+		{
+			Sys_DPrintf ("NET_GetPacket: Connection was forcibly closed by %s\n", inet_ntoa(cluster->net_from.sin_addr));
+			return false;
+		}
+
+		Sys_Printf ("NET_GetPacket: recvfrom: (%i): %s\n", qerrno, strerror (qerrno));
+		return false;
+	}
+
+	if (ret >= msg->maxsize)
+	{
+		Sys_Printf ("NET_GetPacket: Oversize packet from %s\n", inet_ntoa(cluster->net_from.sin_addr));
+		return false;
+	}
+
+	msg->cursize = ret;
+	msg->data[ret] = 0;
+
+	return ret;
+}
+
+void Net_SendPacket(cluster_t *cluster, int length, const void *data, struct sockaddr_in *to)
+{
+	socklen_t addrlen = sizeof(*to);
+
+	if (cluster->udpsocket == INVALID_SOCKET)
+		return;
+
+	if (sendto(cluster->udpsocket, (const char *) data, length, 0, (struct sockaddr *)to, addrlen) == SOCKET_ERROR)
+	{
+		if (qerrno == EWOULDBLOCK)
+			return;
+
+		if (qerrno == ECONNREFUSED)
+			return;
+
+		Sys_Printf ("NET_SendPacket: sendto: (%i): %s\n", qerrno, strerror (qerrno));
+	}
+}

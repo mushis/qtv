@@ -1127,11 +1127,8 @@ void Proxy_ReadInput(sv_t *qtv, oproxy_t *prox)
 	if (prox->inbuffersize < 2)
 		return; // we need at least size
 
-	buf.data		= (char *)prox->inbuffer;
+	InitNetMsg(&buf, (char *)prox->inbuffer, prox->inbuffersize);
 	buf.cursize		= prox->inbuffersize;
-	buf.maxsize		= prox->inbuffersize;
-	buf.readpos		= 0;
-	buf.startpos	= 0;
 
 	parse_end 		= 0;
 
