@@ -4,7 +4,7 @@ Misc net functions/utils
 
 #include "qtv.h"
 
-qbool Net_StringToAddr (struct sockaddr_in *address, char *host, int defaultport)
+qbool Net_StringToAddr(struct sockaddr_in *address, const char *host, int defaultport)
 {
 	struct hostent *phe;
 	struct sockaddr_in sin = {0};
@@ -57,14 +57,27 @@ qbool Net_CompareAddress(struct sockaddr_in *a, struct sockaddr_in *b)
 
 char *Net_BaseAdrToString (struct sockaddr_in *a, char *buf, size_t bufsize)
 {
+	// Windows have inet_ntop only starting from Vista. Sigh.
 #ifdef _WIN32
-	// Windows have inet_ntop only starting from Vista.
 	char *result = inet_ntoa(a->sin_addr);
-	strlcpy(buf, result ? result : "", bufsize);
 #else
-	if (!inet_ntop(a->sin_family, &a->sin_addr, buf, bufsize))
-		buf[0] = 0;
+	char *result = inet_ntop(a->sin_family, &a->sin_addr, buf, bufsize))
 #endif
+
+	strlcpy(buf, result ? result : "", bufsize);
+
+	return buf;
+}
+
+char *Net_AdrToString (struct sockaddr_in *a, char *buf, size_t bufsize)
+{
+	if (*Net_BaseAdrToString(a, buf, bufsize))
+	{
+		char port[] = ":xxxxx";
+		snprintf(port, sizeof(port), ":%i", (int)ntohs(a->sin_port));
+		strlcat(buf, port, bufsize);
+	}
+
 	return buf;
 }
 

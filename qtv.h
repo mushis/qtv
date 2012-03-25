@@ -597,6 +597,39 @@ struct sv_s
 
 };
 
+#define MAX_MASTERS 8 // size for masters fixed size array, I am lazy
+
+//
+// master state enum
+//
+typedef enum
+{
+	ms_unknown,		// unknown state
+	ms_used			// this slot used in masters_t struct
+} master_state_t;
+
+//
+// single master struct
+//
+typedef struct master
+{
+	master_state_t			state;		// master state
+	struct sockaddr_in		addr;		// master addr
+} master_t;
+
+//
+// all masters in one struct
+//
+typedef struct masters
+{
+	time_t					init_time;				// this is used to periodical re-init initiation
+
+	time_t					last_heartbeat;			// when we send heartbeat last time
+	int						heartbeat_sequence;		// heartbeat sequence number
+
+	master_t				master[MAX_MASTERS];	// masters fixed size array, I am lazy
+} masters_t;
+
 //
 // Main QTV struct.
 //
@@ -607,9 +640,11 @@ typedef struct cluster_s
 // { UDP
 	SOCKET udpsocket;					// UDP socket (for connectionless commands).
 
-	struct sockaddr_in	net_from;
-	netmsg_t			net_message;
-	char				net_message_buffer[MSG_BUF_SIZE];
+	struct sockaddr_in	net_from;		// last recived UDP packet as from this address.
+	netmsg_t			net_message;	// last recived UDP packet
+	char				net_message_buffer[MSG_BUF_SIZE]; // last recived UDP packet buffer.
+
+	masters_t			masters;		// masters array.
 // }
 
 	char commandinput[512]; 			// Our console input buffer.
@@ -822,10 +857,11 @@ void			Com_BlockFullChecksum(void *buffer, int len, unsigned char *outbuf);
 // net_utils.c
 //
 
-qbool			Net_StringToAddr (struct sockaddr_in *address, char *host, int defaultport);
+qbool			Net_StringToAddr(struct sockaddr_in *address, const char *host, int defaultport);
 // return true if adresses equal
 qbool			Net_CompareAddress(struct sockaddr_in *a, struct sockaddr_in *b);
 char			*Net_BaseAdrToString (struct sockaddr_in *a, char *buf, size_t bufsize);
+char			*Net_AdrToString (struct sockaddr_in *a, char *buf, size_t bufsize);
 qbool			TCP_Set_KEEPALIVE(int sock);
 SOCKET			Net_TCPListenPort(int port);
 
@@ -1060,7 +1096,7 @@ qbool			SV_IsBanned (struct sockaddr_in *addr);
 
 void			UDP_Init(void);
 void			SV_CheckUDPPort(cluster_t *cluster, int port);
-void			SV_ReadPackets(cluster_t *cluster);
+void			SV_UDP_Frame(cluster_t *cluster);
 
 #ifdef __cplusplus
 }

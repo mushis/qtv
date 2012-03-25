@@ -227,14 +227,11 @@ void Cluster_Run(cluster_t *cluster, qbool dowait, qbool down)
 		QTV_Run(cluster, old);
 	}
 
-	// Process UDP packets.
-	// NOTE: WE DO NOT select() on UDP socket, so it really suck in terms of responsivness,
-	// but it should not matter as long as we process connectionless packets ONLY.
-	// We do not select() on UDP sockets because we do not want QTV wake up too frequently.
-	SV_ReadPackets(cluster);
-
 	// Check changes of mvdport variable and do appropriate action.
-	SV_CheckNETPorts(cluster); 
+	SV_CheckNETPorts(cluster);
+
+	// Do UDP related things.
+	SV_UDP_Frame(cluster);
 
 	// Look for any other proxies wanting to muscle in on the action.
 	SV_FindProxies(cluster->tcpsocket, cluster);
