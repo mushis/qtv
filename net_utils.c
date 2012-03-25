@@ -61,7 +61,7 @@ char *Net_BaseAdrToString (struct sockaddr_in *a, char *buf, size_t bufsize)
 #ifdef _WIN32
 	const char *result = inet_ntoa(a->sin_addr);
 #else
-	const char *result = inet_ntop(a->sin_family, &a->sin_addr, buf, bufsize));
+	const char *result = inet_ntop(a->sin_family, &a->sin_addr, buf, bufsize);
 #endif
 
 	strlcpy(buf, result ? result : "", bufsize);
