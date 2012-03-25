@@ -4,8 +4,11 @@ UDP protocl related things. At the moment just support "status" connectionless f
 
 #include "qtv.h"
 
-#define	A2C_PRINT		'n'	// print a message on client
-
+// out of band message id bytes (check protocol.h in QW server for full list)
+// M = master, S = server, C = client, A = any
+#define	A2C_PRINT			'n'	// print a message on client
+#define	A2A_PING			'k'	// respond with an A2A_ACK
+#define	A2A_ACK				'l'	// general acknowledgement without info
 
 void UDP_Init(void)
 {
@@ -43,6 +46,19 @@ void SV_CheckUDPPort(cluster_t *cluster, int port)
 			Sys_Printf("%s %d failed to open\n", "updport", port);
 		}
 	}
+}
+
+/*
+================
+SVC_Ping
+
+Just responds with an acknowledgement
+================
+*/
+static void SVC_Ping (cluster_t *cluster)
+{
+	char data = A2A_ACK;
+	Net_SendPacket(cluster, 1, &data, &cluster->net_from);
 }
 
 /*
@@ -110,7 +126,7 @@ static void SVC_Status (cluster_t *cluster)
 	}
 
 	// send the datagram
-	Net_SendPacket(cluster, buf.cursize, buf.data, &(cluster->net_from));
+	Net_SendPacket(cluster, buf.cursize, buf.data, &cluster->net_from);
 }
 
 static void SV_ConnectionlessPacket(cluster_t *cluster)
@@ -127,7 +143,9 @@ static void SV_ConnectionlessPacket(cluster_t *cluster)
 
 	c = Cmd_Argv(0);
 
-	if (!strcmp(c, "status"))
+	if (!strcmp(c, "ping") || (c[0] == A2A_PING && (c[1] == 0 || c[1] == '\n')))
+		SVC_Ping(cluster);
+	else if (!strcmp(c, "status"))
 		SVC_Status(cluster);
 	else
 		Sys_DPrintf("bad connectionless packet from %s:\n%s\n", inet_ntoa(cluster->net_from.sin_addr), cmd);
