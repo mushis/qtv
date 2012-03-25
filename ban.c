@@ -36,6 +36,12 @@ If 0, then only addresses matching the list will be allowed.  This lets you easi
 
 #define	MAX_IPFILTERS	1024
 
+typedef union
+{
+	unsigned int	u;
+	unsigned char	b[4];
+} b2i_t;
+
 typedef enum
 {
 	ipft_ban,
@@ -92,14 +98,8 @@ static qbool StringToFilter (char *s, ipfilter_t *f)
 {
 	char	num[128];
 	int		i, j;
-	unsigned char	b[4];
-	unsigned char	m[4];
-
-	for (i=0 ; i<4 ; i++)
-	{
-		b[i] = 0;
-		m[i] = 0;
-	}
+	b2i_t	b = {0}; // ip octet.
+	b2i_t	m = {0}; // mask octet.
 
 	for (i=0 ; i<4 ; i++)
 	{
@@ -115,17 +115,17 @@ static qbool StringToFilter (char *s, ipfilter_t *f)
 			num[j++] = *s++;
 		}
 		num[j] = 0;
-		b[i] = atoi(num);
-		if (b[i] != 0)
-			m[i] = 255;
+		b.b[i] = atoi(num);
+		if (b.b[i] != 0)
+			m.b[i] = 255;
 
 		if (!*s)
 			break;
 		s++;
 	}
 
-	f->mask = *(unsigned *)m;
-	f->compare = *(unsigned *)b;
+	f->mask = m.u;
+	f->compare = b.u;
 
 	return true;
 }
@@ -231,13 +231,13 @@ static void SV_ListIP_f (void)
 {
 	time_t	long_time = time(NULL);
 	int		i;
-	unsigned char	b[4];
+	b2i_t	b = {0};
 
 	Sys_Printf("Filter list:\n");
 	for (i=0 ; i<numipfilters ; i++)
 	{
-		*(unsigned *)b = ipfilters[i].compare;
-		Sys_Printf("%3i.%3i.%3i.%3i | ", b[0], b[1], b[2], b[3]);
+		b.u = ipfilters[i].compare;
+		Sys_Printf("%3i.%3i.%3i.%3i | ", b.b[0], b.b[1], b.b[2], b.b[3]);
 		switch((int)ipfilters[i].type)
 		{
 			case ipft_ban:  Sys_Printf(" ban"); break;
@@ -260,7 +260,7 @@ static void SV_WriteIP_f (void)
 {
 	FILE	*f;
 	char	name[1024], *s;
-	unsigned char	b[4];
+	b2i_t	b = {0};
 	int		i;
 
 	snprintf (name, sizeof(name), "qtv/listip.cfg");
@@ -280,8 +280,8 @@ static void SV_WriteIP_f (void)
 		if(ipfilters[i].type != ipft_safe)
 			continue;
 
-		*(unsigned *)b = ipfilters[i].compare;
-		fprintf (f, "addip %i.%i.%i.%i safe %.0f\n", b[0], b[1], b[2], b[3], ipfilters[i].time);
+		b.u = ipfilters[i].compare;
+		fprintf (f, "addip %i.%i.%i.%i safe %.0f\n", b.b[0], b.b[1], b.b[2], b.b[3], ipfilters[i].time);
 	}
 
 	for (i=0 ; i<numipfilters ; i++)
@@ -295,8 +295,8 @@ static void SV_WriteIP_f (void)
 			case ipft_safe: s = "safe"; break;
 			default: s = "unkn"; break;
 		}
-		*(unsigned *)b = ipfilters[i].compare;
-		fprintf (f, "addip %i.%i.%i.%i %s %.0f\n", b[0], b[1], b[2], b[3], s, ipfilters[i].time);
+		b.u = ipfilters[i].compare;
+		fprintf (f, "addip %i.%i.%i.%i %s %.0f\n", b.b[0], b.b[1], b.b[2], b.b[3], s, ipfilters[i].time);
 	}
 
 	fclose (f);
@@ -306,15 +306,15 @@ static void Do_BanList(ipfiltertype_t ipft)
 {
 	time_t	long_time = time(NULL);
 	int		i;
-	unsigned char	b[4];
+	b2i_t	b;
 
 	for (i=0 ; i<numipfilters ; i++)
 	{
 		if (ipfilters[i].type != ipft)
 			continue;
 
-		*(unsigned *)b = ipfilters[i].compare;
-		Sys_Printf("%3i|%3i.%3i.%3i.%3i", i, b[0], b[1], b[2], b[3]);
+		b.u = ipfilters[i].compare;
+		Sys_Printf("%3i|%3i.%3i.%3i.%3i", i, b.b[0], b.b[1], b.b[2], b.b[3]);
 		switch((int)ipfilters[i].type)
 		{
 			case ipft_ban:  Sys_Printf("| ban"); break;
@@ -394,7 +394,7 @@ static void SV_RemoveBansIPFilter (int i)
 
 static void SV_Cmd_Banip_f(void)
 {
-	unsigned char	b[4];
+	b2i_t		b = {0};
 	double		d;
 	int			c, t;
 	ipfilter_t  f;
@@ -440,17 +440,17 @@ static void SV_Cmd_Banip_f(void)
 		return;
 	}
 
-	*(unsigned *)b = f.compare;
-	Sys_Printf("%3i.%3i.%3i.%3i was banned for %d%s\n", b[0], b[1], b[2], b[3], t, arg2c);
+	b.u = f.compare;
+	Sys_Printf("%3i.%3i.%3i.%3i was banned for %d%s\n", b.b[0], b.b[1], b.b[2], b.b[3], t, arg2c);
 
-	snprintf(tmp_str, sizeof(tmp_str), "addip %i.%i.%i.%i ban %s%.0lf\n", b[0], b[1], b[2], b[3], d ? "+" : "", d);
+	snprintf(tmp_str, sizeof(tmp_str), "addip %i.%i.%i.%i ban %s%.0lf\n", b.b[0], b.b[1], b.b[2], b.b[3], d ? "+" : "", d);
 	Cbuf_AddText(tmp_str);
 	Cbuf_AddText("writeip\n");
 }
 
 static void SV_Cmd_Banremove_f(void)
 {
-	unsigned char	b[4];
+	b2i_t	b = {0};
 	int		id;
 
 	if (Cmd_Argc () < 2)
@@ -474,8 +474,8 @@ static void SV_Cmd_Banremove_f(void)
 		return;
 	}
 
-	*(unsigned *)b = ipfilters[id].compare;
-	Sys_Printf("%3i.%3i.%3i.%3i was unbanned\n", b[0], b[1], b[2], b[3]);
+	b.u = ipfilters[id].compare;
+	Sys_Printf("%3i.%3i.%3i.%3i was unbanned\n", b.b[0], b.b[1], b.b[2], b.b[3]);
 
 	SV_RemoveBansIPFilter (id);
 	Cbuf_AddText("writeip\n");
