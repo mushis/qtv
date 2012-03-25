@@ -209,7 +209,7 @@ void Net_SendQTVConnectionRequest(sv_t *qtv, char *authmethod, char *challenge)
 qbool Net_ConnectToTCPServer(sv_t *qtv, char *ip)
 {
 	int err;
-	netadr_t from;
+	struct sockaddr_in from;
 	unsigned long nonblocking = true;
 
 	if (qtv->src.type != SRC_TCP) 
@@ -225,7 +225,7 @@ qbool Net_ConnectToTCPServer(sv_t *qtv, char *ip)
 		qtv->src.type = SRC_TCP; // need SRC_TCP type
 	}
 
-	if (!Net_StringToAddr(ip, &qtv->ServerAddress, 27500))
+	if (!Net_StringToAddr(&qtv->ServerAddress, ip, 27500))
 	{
 		Sys_Printf("%s: Unable to resolve %s\n", qtv->server, ip);
 		return false;
@@ -236,8 +236,7 @@ qbool Net_ConnectToTCPServer(sv_t *qtv, char *ip)
 		return false;
 
 	memset(&from, 0, sizeof(from));
-	((struct sockaddr*)&from)->sa_family = ((struct sockaddr*)&qtv->ServerAddress)->sa_family;
-
+	from.sin_family = qtv->ServerAddress.sin_family;
 	if (bind(qtv->src.s, (struct sockaddr *)&from, sizeof(from)) == -1)
 		return false;
 

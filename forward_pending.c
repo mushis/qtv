@@ -623,7 +623,7 @@ static void SV_ProxyIdUsed(int id)
 // Just allocate memory and set some fields, do not perform any linkage to any list.
 // s = Either a socket or file (demo).
 // socket = Decides if "s" is a socket or a file.
-oproxy_t *SV_NewProxy(void *s, qbool socket, netadr_t *addr)
+oproxy_t *SV_NewProxy(void *s, qbool socket, struct sockaddr_in *addr)
 {
 	oproxy_t *prox = Sys_malloc(sizeof(*prox));
 
@@ -719,7 +719,7 @@ void SV_FindProxies(SOCKET qtv_sock, cluster_t *cluster)
 {
 	oproxy_t *prox;
 	SOCKET sock;
-	netadr_t addr;
+	struct sockaddr_in addr;
 	socklen_t addrlen;
 
 	unsigned long nonblocking = true;

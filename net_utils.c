@@ -4,67 +4,67 @@ Misc net functions/utils
 
 #include "qtv.h"
 
-qbool Net_StringToAddr (char *s, netadr_t *sadr, int defaultport)
+qbool Net_StringToAddr (struct sockaddr_in *address, char *host, int defaultport)
 {
-	struct hostent	*h;
+	struct hostent *phe;
+	struct sockaddr_in sin = {0};
 	char	*colon;
-	char	copy[128];
+	char	copy[128]; // copy host name without port here.
 
-	memset (sadr, 0, sizeof(netadr_t));
+	memset (address, 0, sizeof(*address));
 
-	((struct sockaddr_in *)sadr)->sin_family = AF_INET;
+	sin.sin_family = AF_INET;
+	sin.sin_port = htons(defaultport);
 
-	((struct sockaddr_in *)sadr)->sin_port = htons(defaultport);
-
-	strlcpy (copy, s, sizeof(copy));
+	strlcpy (copy, host, sizeof(copy));
 	// strip off a trailing :port if present
 	for (colon = copy ; *colon ; colon++)
+	{
 		if (*colon == ':')
 		{
 			*colon = 0;
-			((struct sockaddr_in *)sadr)->sin_port = htons((short)atoi(colon+1));
+			sin.sin_port = htons((short)atoi(colon+1));
 		}
-
-	if (copy[0] >= '0' && copy[0] <= '9')	//this is the wrong way to test. a server name may start with a number.
-	{
-		*(int *)&((struct sockaddr_in *)sadr)->sin_addr = inet_addr(copy);
-	}
-	else
-	{
-		if (! (h = gethostbyname(copy)) )
-			return 0;
-		if (h->h_addrtype != AF_INET)
-			return 0;
-		*(int *)&((struct sockaddr_in *)sadr)->sin_addr = *(int *)h->h_addr_list[0];
 	}
 
+	/* Map host name to IP address, allowing for dotted decimal */
+	if((phe = gethostbyname(copy)))
+	{
+		memcpy((char *)&sin.sin_addr, phe->h_addr, phe->h_length);
+	}
+	else if((sin.sin_addr.s_addr = inet_addr(copy)) == INADDR_NONE)
+	{
+		Sys_DPrintf("Net_StringToAddr: wrong host: %s\n", copy);
+		return false;
+	}
+
+	*address = sin;
 	return true;
 }
 
-qbool Net_CompareAddress(netadr_t *s1, netadr_t *s2, int qp1, int qp2)
+// return true if adresses equal
+qbool Net_CompareAddress(struct sockaddr_in *a, struct sockaddr_in *b)
 {
-	struct sockaddr_in *i1=(void*)s1, *i2=(void*)s2;
-	if (i1->sin_family != i2->sin_family)
+	if (!a || !b)
 		return false;
-	if (i1->sin_family == AF_INET)
-	{
-		if (*(unsigned int*)&i1->sin_addr != *(unsigned int*)&i2->sin_addr)
-			return false;
-		if (i1->sin_port != i2->sin_port && qp1 != qp2)	//allow qports to match instead of ports, if required.
-			return false;
-		return true;
-	}
-	return false;
+
+	return (
+			!memcmp(&a->sin_addr, &b->sin_addr, sizeof(a->sin_addr))
+			&&
+		    !memcmp(&a->sin_port, &b->sin_port, sizeof(a->sin_port))
+		    );
 }
 
-char *Net_BaseAdrToString (const netadr_t *a, char *buf, size_t bufsize)
+char *Net_BaseAdrToString (struct sockaddr_in *a, char *buf, size_t bufsize)
 {
-	unsigned char ip[4];
-
-	*(unsigned int*)ip = (((struct sockaddr_in *)a)->sin_addr.s_addr); // FIXME: wonder is this work...
-
-	snprintf(buf, bufsize, "%i.%i.%i.%i", ip[0], ip[1], ip[2], ip[3]);
-
+#ifdef _WIN32
+	// Windows have inet_ntop only starting from Vista.
+	char *result = inet_ntoa(a->sin_addr);
+	strlcpy(buf, result ? result : "", bufsize);
+#else
+	if (!inet_ntop(a->sin_family, &a->sin_addr, buf, bufsize))
+		buf[0] = 0;
+#endif
 	return buf;
 }
 

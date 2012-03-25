@@ -138,7 +138,7 @@ void SV_ReadPackets(cluster_t *cluster)
 	// now deal with new packets
 	while (Net_GetPacket(cluster, &cluster->net_message))
 	{
-		if (SV_IsBanned((netadr_t *)&cluster->net_from))
+		if (SV_IsBanned(&cluster->net_from))
 		{
 //			SV_SendBan ();	// tell them we aren't listening...
 			continue;

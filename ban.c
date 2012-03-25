@@ -62,12 +62,12 @@ static int			numipfilters;
 SV_FilterPacket
 =================
 */
-qbool SV_IsBanned (netadr_t *addr)
+qbool SV_IsBanned (struct sockaddr_in *addr)
 {
 	int				i;
 	unsigned int	in;
 
-	in = (((struct sockaddr_in *)addr)->sin_addr.s_addr); // FIXME: wonder is this work...
+	in = addr->sin_addr.s_addr;
 
 	for (i=0 ; i<numipfilters ; i++)
 	{

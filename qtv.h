@@ -366,11 +366,6 @@ typedef struct fp_cmd_s
 	int   warnings;
 } fp_cmd_t;
 
-typedef struct netadr_s 
-{
-	char adr[sizeof(struct sockaddr)];
-} netadr_t;
-
 #ifdef _WIN32
 typedef int socklen_t;
 #endif
@@ -397,7 +392,7 @@ typedef struct oproxy_s
 
 	FILE			*file;							// Recording a demo.
 	SOCKET			sock;							// Playing to a proxy.
-	netadr_t		addr;							// Client address
+	struct sockaddr_in addr;						// Client address
 
 	unsigned char	inbuffer[MAX_PROXY_INBUFFER];
 	unsigned int	inbuffersize;					// Amount of data available.
@@ -540,7 +535,7 @@ struct sv_s
 	// hm, I am not sure where I must put drop, put it here for now, so it reset to 0 on QTV_Connect, hope that right
 	qbool			drop;						// Something bad, close/free this sv_t.
 
-	netadr_t		ServerAddress;				// ip:port for socket
+	struct sockaddr_in ServerAddress;			// ip:port for socket
 
 	float			svversion;					// Server/upstream version, NOTE it float: 1.0 or 1.1 or 1.2 and so on...
 
@@ -827,9 +822,10 @@ void			Com_BlockFullChecksum(void *buffer, int len, unsigned char *outbuf);
 // net_utils.c
 //
 
-qbool			Net_StringToAddr(char *s, netadr_t *sadr, int defaultport);
-qbool			Net_CompareAddress(netadr_t *s1, netadr_t *s2, int qp1, int qp2);
-char			*Net_BaseAdrToString (const netadr_t *a, char *buf, size_t bufsize);
+qbool			Net_StringToAddr (struct sockaddr_in *address, char *host, int defaultport);
+// return true if adresses equal
+qbool			Net_CompareAddress(struct sockaddr_in *a, struct sockaddr_in *b);
+char			*Net_BaseAdrToString (struct sockaddr_in *a, char *buf, size_t bufsize);
 qbool			TCP_Set_KEEPALIVE(int sock);
 SOCKET			Net_TCPListenPort(int port);
 
@@ -924,7 +920,7 @@ void			SV_CheckNETPorts(cluster_t *cluster);
 void			Pending_Init(void);
 
 // Just allocate memory and set some fields, do not perform any linkage to any list.
-oproxy_t		*SV_NewProxy(void *s, qbool socket, netadr_t *addr);
+oproxy_t		*SV_NewProxy(void *s, qbool socket, struct sockaddr_in *addr);
 
 // Just free memory and handles, do not perfrom removing from any list.
 void			SV_FreeProxy(oproxy_t *prox);
@@ -1056,7 +1052,7 @@ void			Ban_Init(void);
 // Periodically check is it time to remove some bans.
 void			SV_CleanBansIPList(void);
 // Return true if add is banned.
-qbool			SV_IsBanned (netadr_t *addr);
+qbool			SV_IsBanned (struct sockaddr_in *addr);
 
 //
 // udp.c
