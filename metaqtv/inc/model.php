@@ -260,3 +260,33 @@ class ServerList {
 		}
 	}
 }	
+
+class CommentaryBanner {
+	
+	public function __construct() {
+		if ($this->isEnabled()) {
+			$age = time() - filemtime($this->getFlagFile());
+			if ($age > COMMENTARY_TIMEOUT) {
+				$this->disable();
+			}
+		}
+	}
+	
+	private function getFlagFile() {
+		return ROOT."/conf/commentary_banner_enabled";
+	}
+	
+	public function isEnabled() {
+		return file_exists($this->getFlagFile());
+	}
+	
+	public function enable() {
+		touch($this->getFlagFile());
+	}
+	
+	public function disable() {
+		if ($this->isEnabled()) {
+			unlink($this->getFlagFile());
+		}
+	}
+}

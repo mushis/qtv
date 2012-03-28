@@ -6,6 +6,9 @@
 	define ("SOCKET_OPEN_TIMEOUT", (float) 1.5);
 	define ("SOCKET_READ_TIMEOUT", (int) 2);
 	
+	define ("COMMENTARY_URL", "mumble://voice.quakeworld.nu");
+	define ("COMMENTARY_TIMEOUT", (int) 60*60*5);
+	
 	// maximum failed connect attempts before server is disabled (state set to errored)
 	define ("MAX_ERRORS", 30);
 	

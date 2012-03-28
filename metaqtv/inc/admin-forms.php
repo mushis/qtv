@@ -2,6 +2,19 @@
 
 <p><a href="../">MetaQTV</a> | <a href=".">Refresh</a> | Logged in as: <?=$_SERVER['PHP_AUTH_USER']?></p>
 
+<h2>Live commentary banner</h2>
+<p>Live commentary announcement banner is  
+<?php if (isCommentaryBannerOn()): ?>
+enabled
+<?php else: ?>
+disabled
+<?php endif; ?>
+</p>
+<form action="" method="post">
+<input type="hidden" name="act" value="toggle_banner"/>
+<input type="submit" value="toggle banner"/>
+</form>
+
 <h2>Servers</h2>
 <table>
 <thead><tr>

@@ -372,6 +372,10 @@ literal entities.
 	if ($request_type == "htmlactive" || $request_type == "htmlfull") { 
 		include ROOT."/inc/header.php";
 		echo '<table id="nowplaying" cellspacing="0">';
+		$commentaryBanner = new CommentaryBanner();
+		if ($commentaryBanner->isEnabled()) {
+			echo '<tr class=""><td colspan="3">Tune-in for live commentary: <strong><a href="'.COMMENTARY_URL.'">'.COMMENTARY_URL.'</a></strong></td></tr>';
+		}
 		flush();
 	}
 	else if ($request_type == "rss") {

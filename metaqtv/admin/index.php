@@ -1,5 +1,6 @@
 <?php
 	define ('ROOT', '..');
+	require_once ROOT."/conf/config.php";
 	require_once ROOT."/inc/model.php";
 
 	function posted($key) {
@@ -63,6 +64,21 @@
 		return $list->getList();
 	}
 	
+	function isCommentaryBannerOn() {
+		$commentaryBanner = new CommentaryBanner();
+		return $commentaryBanner->isEnabled();
+	}
+	
+	function toggleCommentaryBanner() {
+		$commentaryBanner = new CommentaryBanner();
+		if ($commentaryBanner->isEnabled()) {
+			$commentaryBanner->disable();
+		}
+		else {
+			$commentaryBanner->enable();
+		}
+	}
+	
 	function updateIPAddress() {
 		if (posted("server")) {
 			$list = new ServerList;
@@ -102,6 +118,10 @@
 				break;
 			case "updateip":
 				updateIPAddress();
+				refresh();
+				break;
+			case "toggle_banner":
+				toggleCommentaryBanner();
 				refresh();
 				break;
 			default:
