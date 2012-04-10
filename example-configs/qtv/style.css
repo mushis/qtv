@@ -142,6 +142,7 @@ background-color: #9a8e6c; }
 #demos tbody tr.odd {
   background-color: #8b8166;
 }
+#demos tbody tr:hover { background-color: #616265; }
 #demos tbody td.stream, #demos tbody td.save, #demos tbody td.name {
   border-right: 1px solid #ab9d74;
 }
