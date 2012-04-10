@@ -53,6 +53,7 @@ padding:0;
 }
 #nowplaying tr.odd { background-color: #8a8166; }
 #nowplaying tr { margin:0; padding:0; }
+#nowplaying tr:hover { background-color: #616265; }
 #nowplaying td.wn { width: 200px; }
 #nowplaying td.wn span a, #nowplaying td.wn span a:visited {
   background-color: #9c9ea1; border: 1px solid #616265; padding: 0.3em 2em;
