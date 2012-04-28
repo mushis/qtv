@@ -4,7 +4,7 @@
   <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
   <title>QuakeTV: Now Playing</title>
   <link rel="StyleSheet" href="style.css" type="text/css" />
-  <link rel="StyleSheet" href="<?=TOPBAR_CSS?>" type="text/css" />
+  <link rel="StyleSheet" href="<?php echo TOPBAR_CSS; ?>" type="text/css" />
   <link rel="alternate" type="application/rss+xml" title="RSS" href="?rss" />
 </head>
 <body>
@@ -16,13 +16,13 @@
 </div>
 <h1>QuakeTV</h1>
 <p id="subtitle">Live broadcasts from all around the world<br /><span id="mainmenu">
-<? if (strpos($_SERVER['PHP_SELF'], 'help.php') !== false): ?>
+<?php if (strpos($_SERVER['PHP_SELF'], 'help.php') !== false): ?>
 	<a href=".">Back</a>
-<? else: ?>
-	<? if (!isset($_GET['full'])): ?>
+<?php else: ?>
+	<?php if (!isset($_GET['full'])): ?>
 		<a href=".">Refresh</a> | Active only: <a href="?full">on</a>
-	<? else: ?>
+	<?php else: ?>
 		<a href="?full">Refresh</a> | Active only: <a href=".">off</a>
-	<? endif; ?>
-<? endif; ?> 
+	<?php endif; ?>
+<?php endif; ?> 
 </span></p>

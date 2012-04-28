@@ -22,4 +22,4 @@ Typical location is <var>C:\Program Files\nQuake\ezquake-gl.exe</var>.</li>
 
 </div>
 
-<? include ROOT."/inc/footer.php"; ?>
+<?php include ROOT."/inc/footer.php"; ?>

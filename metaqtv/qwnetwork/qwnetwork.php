@@ -46,7 +46,7 @@ class RSSParser
 		?>
 <div class="qwnet_separator">&nbsp;</div>
 		<?php else : ?>
-<a href="<?=htmlentities($this->link) ?>" title="<?=$this->title ?> - <?=$this->description ?>" id="qwnet_<?=$this->id ?>"<?php if ( preg_match("/".preg_quote($this->link, '/')."/i", 'http://'.$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]) ) : ?> class="qwnet_current"<?php endif;?>></a>
+<a href="<?php echo htmlentities($this->link); ?>" title="<?php echo $this->title; ?> - <?php echo $this->description; ?>" id="qwnet_<?php echo $this->id; ?>"<?php if ( preg_match("/".preg_quote($this->link, '/')."/i", 'http://'.$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]) ) : ?> class="qwnet_current"<?php endif;?>></a>
 		<?php
 			endif;
 

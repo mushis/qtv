@@ -1,6 +1,6 @@
 <h1>MetaQTV Administration</h1>
 
-<p><a href="../">MetaQTV</a> | <a href=".">Refresh</a> | Logged in as: <?=$_SERVER['PHP_AUTH_USER']?></p>
+<p><a href="../">MetaQTV</a> | <a href=".">Refresh</a> | Logged in as: <?php echo $_SERVER['PHP_AUTH_USER']; ?></p>
 
 <h2>Live commentary banner</h2>
 <p>Live commentary announcement banner is  
@@ -25,45 +25,45 @@ disabled
 <tbody>
 <?php foreach (getServerList() as $id => $server) : ?>
 <tr>
-	<th><?=$id?></th>
-	<td><?=$server->order?></td>
-	<td><?=$server->name?></td>
-	<td><a href="http://<?=$server->hostname?>:<?=$server->port?>/"><?=$server->hostname?></a></td>
+	<th><?php echo $id; ?></th>
+	<td><?php echo $server->order; ?></td>
+	<td><?php echo $server->name; ?></td>
+	<td><a href="http://<?php echo $server->hostname; ?>:<?php echo $server->port; ?>/"><?php echo $server->hostname; ?></a></td>
 	<td><form action="" method="post">
 		<input type="hidden" name="act" value="updateip" />
-		<input type="hidden" name="server" value="<?=$id?>" />
+		<input type="hidden" name="server" value="<?php echo $id; ?>" />
 		<input type="submit" value="update" /></form></td>
-	<td><a href="http://<?=$server->ip?>:<?=$server->port?>/"><?=$server->ip?></a></td>
-	<td><?=$server->port?></td>
-	<td><?=$server->stateName()?></td>
-	<td><?=$server->errors?></td>
-	<td><? if ($server->isEnabled()) : ?>
+	<td><a href="http://<?php echo $server->ip; ?>:<?php echo $server->port; ?>/"><?php echo $server->ip; ?></a></td>
+	<td><?php echo $server->port; ?></td>
+	<td><?php echo $server->stateName(); ?></td>
+	<td><?php echo $server->errors; ?></td>
+	<td><?php if ($server->isEnabled()) : ?>
 		<form action="" method="post">
 		<input type="hidden" name="act" value="disable" />
-		<input type="hidden" name="server" value="<?=$id?>" />
+		<input type="hidden" name="server" value="<?php echo $id; ?>" />
 		<input type="submit" value="disable" />
 		</form>		
-		<? else : ?>
+		<?php else : ?>
 		<form action="" method="post">
 		<input type="hidden" name="act" value="enable" />
-		<input type="hidden" name="server" value="<?=$id?>" />
+		<input type="hidden" name="server" value="<?php echo $id; ?>" />
 		<input type="submit" value="enable" />
 		</form>
-		<? endif ?>
+		<?php endif ?>
 	</td>
 	<td><form action="" method="post">
 		<input type="hidden" name="act" value="setorder" />
-		<input type="hidden" name="server" value="<?=$id?>" />
-		<input type="hidden" name="order" value="<?=$server->order-1?>" />
+		<input type="hidden" name="server" value="<?php echo $id; ?>" />
+		<input type="hidden" name="order" value="<?php echo $server->order-1; ?>" />
 		<input type="submit" value="up" /></form></td>
 	<td><form action="" method="post">
 		<input type="hidden" name="act" value="setorder" />
-		<input type="hidden" name="server" value="<?=$id?>" />
-		<input type="hidden" name="order" value="<?=$server->order+1?>" />
+		<input type="hidden" name="server" value="<?php echo $id; ?>" />
+		<input type="hidden" name="order" value="<?php echo $server->order+1; ?>" />
 		<input type="submit" value="down" /></form></td>
 	<td><form action="" method="post">
 		<input type="hidden" name="act" value="delete" />
-		<input type="hidden" name="server" value="<?=$id?>" />
+		<input type="hidden" name="server" value="<?php echo $id; ?>" />
 		<input type="submit" value="delete" /></form></td>
 </tr>
 <?php endforeach ?>
