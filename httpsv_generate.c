@@ -412,7 +412,7 @@ void HTTPSV_GenerateQTVStub(cluster_t *cluster, oproxy_t *dest, char *streamtype
 		return;
 	}
 
-	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/x-quaketvident", false);
+	HTTPSV_SendHTTPHeader(cluster, dest, "200", "application/octet-stream", false);
 
 	snprintf(buffer, sizeof(buffer), "[QTV]\r\n"
 									 "Stream: %s%s@%s\r\n"
@@ -446,7 +446,7 @@ void HTTPSV_GenerateQTVJoinStub(cluster_t *cluster, oproxy_t *dest, char *stream
 	if (!streamfound)
 		return;
 		
-	HTTPSV_SendHTTPHeader(cluster, dest, "200", "text/x-quaketvident", false);
+	HTTPSV_SendHTTPHeader(cluster, dest, "200", "application/octet-stream", false);
 
 	snprintf(buffer, sizeof(buffer), "[QTV]\r\n"
 									 "Join: %s\r\n"
