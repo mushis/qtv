@@ -1,11 +1,8 @@
-QTV: a QuakeWorld broacasting tool 
-----------------------------------
+QTV: a QuakeWorld match broadcasting tool 
+-----------------------------------------
 
 Official website:
-  http://qtv.qw-dev.net
-
-Latest builds:
-  http://builds.qw-dev.net
+  https://github.com/deurk/qtv
 
 Development team:
   see CREDITS file
@@ -15,10 +12,9 @@ License:
 
 Want to help?
   - spread the word: link to our website, mention QTV, run it
-  - document usage and features: http://qtv.qw-dev.net/wiki
-  - report bugs or ask for new features: http://qtv.qw-dev.net/isssues
-  - fix bugs by patching sources: http://qtv.qw-dev.net/repository
-  - join the development team: http://qtv.qw-dev.net/boards
+  - document usage and features: ttps://github.com/deurk/qtv/wiki
+  - report bugs or ask for new features: ttps://github.com/deurk/qtv/isssues
+  - fix bugs by patching sources: ttps://github.com/deurk/qtv/pulls
 
 :)
 

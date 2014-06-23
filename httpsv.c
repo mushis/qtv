@@ -228,7 +228,7 @@ void HTTPSV_SendHTMLHeader(cluster_t *cluster, oproxy_t *dest, char *title)
 		"    <script src=\"/script.js\" type=\"text/javascript\"></script>\n"
 		"  </head>\n\n"
 		"  <body>\n\n"
-		"    <div id=\"navigation\"><span><a href=\"/nowplaying/\">Live</a></span><span><a href=\"/demos/\">Demos</a></span><span><a href=\"/admin/\">Admin</a></span><span><a href=\"http://qtv.qw-dev.net/wiki\" target=\"_blank\">Help</a></span></div>\n\n";
+		"    <div id=\"navigation\"><span><a href=\"/nowplaying/\">Live</a></span><span><a href=\"/demos/\">Demos</a></span><span><a href=\"/admin/\">Admin</a></span><span><a href=\"https://github.com/deurk/qtv/wiki\" target=\"_blank\">Help</a></span></div>\n\n";
 
 	snprintf(buffer, sizeof(buffer), s, title);
 
@@ -240,7 +240,7 @@ void HTTPSV_SendHTMLFooter(cluster_t *cluster, oproxy_t *dest)
 	char *s;
 	char buffer[2048];
 
-	snprintf(buffer, sizeof(buffer), "\n    <p id='version'><strong><a href='http://qtv.qw-dev.net'>QTV</a> %s, build %i</strong></p>\n", PROXY_VERSION, cluster->buildnumber);
+	snprintf(buffer, sizeof(buffer), "\n    <p id='version'><strong><a href='https://github.com/deurk/qtv'>QTV</a> %s, build %i</strong></p>\n", PROXY_VERSION, cluster->buildnumber);
 	Net_ProxySend(cluster, dest, buffer, strlen(buffer));
 
 	s = 
@@ -551,7 +551,7 @@ void HTTPSV_GetMethod(cluster_t *cluster, oproxy_t *pend)
 	{	
 		// Redirect them to our funky website.
 		s = "HTTP/1.0 302 Found" CRLF
-			"Location: http://qtv.qw-dev.net" CRLF
+			"Location: https://github.com/deurk/qtv" CRLF
 			CRLF;
 		Net_ProxySend(cluster, pend, s, strlen(s));
 	}
