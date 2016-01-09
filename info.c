@@ -108,7 +108,7 @@ void Info_RemoveKey (char *s, const char *key)
 
 		if (!strcmp (key, pkey))
 		{
-			strcpy (start, s);	// FIXME: remove this part
+			memmove(start, s, strlen(s) + 1);
 			return;
 		}
 
