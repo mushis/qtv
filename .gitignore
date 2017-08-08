@@ -16,3 +16,4 @@ src/Makefile.dl32
 src/Makefile.vm
 qtv.bin
 qtv.db
+*.vc.db

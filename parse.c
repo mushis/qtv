@@ -21,11 +21,32 @@ static void ParseServerData(sv_t *tv, netmsg_t *m, int to, unsigned int playerma
 	qbool qw;
 	oproxy_t *prox;
 
-	protocol = ReadLong(m);
-	if (protocol != PROTOCOL_VERSION)
-	{
-		ParseError(m); // FIXME: WTF, we need drop proxy instead?
-		return;
+	while (true) {
+		protocol = ReadLong(m);
+		if (protocol == PROTOCOL_VERSION_FTE) {
+			tv->extension_flags_fte1 = ReadLong(m);
+			Sys_Printf("FTE extension flags: %u\n", tv->extension_flags_fte1);
+			continue;
+		}
+
+		if (protocol == PROTOCOL_VERSION_FTE2) {
+			tv->extension_flags_fte2 = ReadLong(m);
+			Sys_Printf("FTE2 extension flags: %u\n", tv->extension_flags_fte2);
+			continue;
+		}
+
+		if (protocol == PROTOCOL_VERSION_MVD1) {
+			tv->extension_flags_mvd1 = ReadLong(m);
+			Sys_Printf("MVD1 extension flags: %u\n", tv->extension_flags_mvd1);
+			continue;
+		}
+
+		if (protocol != PROTOCOL_VERSION) {
+			ParseError(m); // FIXME: WTF, we need drop proxy instead?
+			return;
+		}
+
+		break;
 	}
 
 	tv->qstate = qs_parsingconnection;
@@ -305,7 +326,7 @@ static int ParseList(sv_t *tv, netmsg_t *m, filename_t *list, int to, unsigned i
 	return ReadByte(m);
 }
 
-static void ParseEntityState(entity_state_t *es, netmsg_t *m)	// For baselines/static entities.
+static void ParseEntityState(sv_t *tv, entity_state_t *es, netmsg_t *m)	// For baselines/static entities.
 {
 	int i;
 
@@ -315,10 +336,11 @@ static void ParseEntityState(entity_state_t *es, netmsg_t *m)	// For baselines/s
 	es->skinnum = ReadByte(m);
 	for (i = 0; i < 3; i++)
 	{
-		es->origin[i] = ReadShort(m);
-		es->angles[i] = ReadByte(m);
+		es->origin[i] = ReadCoord(tv, m);
+		es->angles[i] = ReadAngle(tv, m);
 	}
 }
+
 static void ParseBaseline(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 {
 	unsigned int entnum;
@@ -328,7 +350,7 @@ static void ParseBaseline(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 		ParseError(m);
 		return;
 	}
-	ParseEntityState(&tv->entity[entnum].baseline, m);
+	ParseEntityState(tv, &tv->entity[entnum].baseline, m);
 }
 
 static void ParseStaticSound(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
@@ -339,9 +361,9 @@ static void ParseStaticSound(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 		Sys_ConPrintf(tv, "Too many static sounds\n");
 	}
 
-	tv->staticsound[tv->staticsound_count].origin[0] = ReadShort(m);
-	tv->staticsound[tv->staticsound_count].origin[1] = ReadShort(m);
-	tv->staticsound[tv->staticsound_count].origin[2] = ReadShort(m);
+	tv->staticsound[tv->staticsound_count].origin[0] = ReadCoord(tv, m);
+	tv->staticsound[tv->staticsound_count].origin[1] = ReadCoord(tv, m);
+	tv->staticsound[tv->staticsound_count].origin[2] = ReadCoord(tv, m);
 	tv->staticsound[tv->staticsound_count].soundindex = ReadByte(m);
 	tv->staticsound[tv->staticsound_count].volume = ReadByte(m);
 	tv->staticsound[tv->staticsound_count].attenuation = ReadByte(m);
@@ -351,12 +373,12 @@ static void ParseStaticSound(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 
 static void ParseIntermission(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 {
-	ReadShort(m);
-	ReadShort(m);
-	ReadShort(m);
-	ReadByte(m);
-	ReadByte(m);
-	ReadByte(m);
+	ReadCoord(tv, m);
+	ReadCoord(tv, m);
+	ReadCoord(tv, m);
+	ReadAngle(tv, m);
+	ReadAngle(tv, m);
+	ReadAngle(tv, m);
 }
 
 void ParseSpawnStatic(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
@@ -367,7 +389,7 @@ void ParseSpawnStatic(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 		Sys_ConPrintf(tv, "Too many static entities\n");
 	}
 
-	ParseEntityState(&tv->spawnstatic[tv->spawnstatic_count], m);
+	ParseEntityState(tv, &tv->spawnstatic[tv->spawnstatic_count], m);
 
 	tv->spawnstatic_count++;
 }
@@ -405,14 +427,14 @@ static void ParsePlayerInfo(sv_t *tv, netmsg_t *m, qbool clearoldplayers)
 	for (i = 0; i < 3; i++)
 	{
 		if (flags & (DF_ORIGIN << i))
-			tv->players[num].current.origin[i] = ReadShort (m);
+			tv->players[num].current.origin[i] = ReadCoord(tv, m);
 	}
 
 	for (i = 0; i < 3; i++)
 	{
 		if (flags & (DF_ANGLES << i))
 		{
-			tv->players[num].current.angles[i] = ReadShort(m);
+			tv->players[num].current.angles[i] = ReadAngle16(m);
 		}
 	}
 
@@ -484,17 +506,17 @@ static void ParseEntityDelta(sv_t *tv, netmsg_t *m, entity_state_t *old, entity_
 		new->effects = ReadByte(m);
 
 	if (flags & U_ORIGIN1)
-		new->origin[0] = ReadShort(m);
+		new->origin[0] = ReadCoord(tv, m);
 	if (flags & U_ANGLE1)
-		new->angles[0] = ReadByte(m);
+		new->angles[0] = ReadAngle(tv, m);
 	if (flags & U_ORIGIN2)
-		new->origin[1] = ReadShort(m);
+		new->origin[1] = ReadCoord(tv, m);
 	if (flags & U_ANGLE2)
-		new->angles[1] = ReadByte(m);
+		new->angles[1] = ReadAngle(tv, m);
 	if (flags & U_ORIGIN3)
-		new->origin[2] = ReadShort(m);
+		new->origin[2] = ReadCoord(tv, m);
 	if (flags & U_ANGLE3)
-		new->angles[2] = ReadByte(m);
+		new->angles[2] = ReadAngle(tv, m);
 }
 
 static int ExpandFrame(unsigned int newmax, frame_t *frame)
@@ -847,40 +869,27 @@ static void ParseSound(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 #define DEFAULT_SOUND_PACKET_ATTENUATION 1.0
 	int i;
 	int channel;
-	unsigned char vol;
-	unsigned char atten;
-	unsigned char sound_num;
-	short org[3];
-	int ent;
 
 	channel = (unsigned short)ReadShort(m);
-
-    if (channel & SND_VOLUME)
-		vol = ReadByte (m);
-	else
-		vol = DEFAULT_SOUND_PACKET_VOLUME;
-
-    if (channel & SND_ATTENUATION)
-		atten = ReadByte (m) / 64.0;
-	else
-		atten = DEFAULT_SOUND_PACKET_ATTENUATION;
-
-	sound_num = ReadByte (m);
-
-	ent = (channel>>3)&1023;
-	channel &= 7;
-
-	for (i=0 ; i<3 ; i++)
-		org[i] = ReadShort (m);
+	if (channel & SND_VOLUME) {
+		ReadByte(m); // vol
+	}
+	if (channel & SND_ATTENUATION) {
+		ReadByte(m); // atten
+	}
+	ReadByte(m); // sound_num
+	for (i = 0; i < 3; i++) {
+		ReadCoord(tv, m);
+	}
 }
 
 static void ParseDamage(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 {
 	ReadByte (m);
 	ReadByte (m);
-	ReadShort (m);
-	ReadShort (m);
-	ReadShort (m);
+	ReadCoord (tv, m);
+	ReadCoord (tv, m);
+	ReadCoord (tv, m);
 }
 
 enum {
@@ -904,85 +913,80 @@ enum {
 static void ParseTempEntity(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 {
 	int i;
-	char nqversion[64];
-	int nqversionlength = 0;
 
 	i = ReadByte (m);
 	switch(i)
 	{
 	case TE_SPIKE:
-		ReadShort (m);
-		ReadShort (m);
-		ReadShort (m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
 		break;
 	case TE_SUPERSPIKE:
-		ReadShort (m);
-		ReadShort (m);
-		ReadShort (m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
 		break;
 	case TE_GUNSHOT:
 		ReadByte (m);
 
-		nqversion[0] = svc_temp_entity;
-		nqversion[1] = TE_GUNSHOT;
-		nqversion[2] = ReadByte (m);nqversion[3] = ReadByte (m);
-		nqversion[4] = ReadByte (m);nqversion[5] = ReadByte (m);
-		nqversion[6] = ReadByte (m);nqversion[7] = ReadByte (m);
-		nqversionlength = 8;
+		ReadCoord (tv, m);
+		ReadCoord (tv, m);
+		ReadCoord (tv, m);
 		break;
 	case TE_EXPLOSION:
-		ReadShort (m);
-		ReadShort (m);
-		ReadShort (m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
 		break;
 	case TE_TAREXPLOSION:
-		ReadShort (m);
-		ReadShort (m);
-		ReadShort (m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
 		break;
 	case TE_LIGHTNING1:
 	case TE_LIGHTNING2:
 	case TE_LIGHTNING3:
 		ReadShort (m);
 
-		ReadShort (m);
-		ReadShort (m);
-		ReadShort (m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
 
-		ReadShort (m);
-		ReadShort (m);
-		ReadShort (m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
 		break;
 	case TE_WIZSPIKE:
-		ReadShort (m);
-		ReadShort (m);
-		ReadShort (m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
 		break;
 	case TE_KNIGHTSPIKE:
-		ReadShort (m);
-		ReadShort (m);
-		ReadShort (m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
 		break;
 	case TE_LAVASPLASH:
-		ReadShort (m);
-		ReadShort (m);
-		ReadShort (m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
 		break;
 	case TE_TELEPORT:
-		ReadShort (m);
-		ReadShort (m);
-		ReadShort (m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
 		break;
 	case TE_BLOOD:
-		ReadByte (m);
-		ReadShort (m);
-		ReadShort (m);
-		ReadShort (m);
+		ReadByte(m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
 		break;
 	case TE_LIGHTNINGBLOOD:
-		ReadShort (m);
-		ReadShort (m);
-		ReadShort (m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
+		ReadCoord(tv, m);
 		break;
 	default:
 		Sys_ConPrintf(tv, "temp entity %i not recognised\n", i);
@@ -1022,10 +1026,9 @@ void ParseNails(sv_t *tv, netmsg_t *m, qbool nails2)
 void ParseDownload(sv_t *tv, netmsg_t *m)
 {
 	int size, b;
-	unsigned int percent;
 
 	size = (signed short)ReadShort(m);
-	percent = ReadByte(m);
+	ReadByte(m); // percent
 
 	if (size < 0)
 	{
@@ -1233,9 +1236,9 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 				tv->proxyplayerangles[1] = ReadByte(&buf)*360.0/255;
 				tv->proxyplayerangles[2] = ReadByte(&buf)*360.0/255;
 				#else
-				ReadByte(&buf);
-				ReadByte(&buf);
-				ReadByte(&buf);
+				ReadAngle(tv, &buf);
+				ReadAngle(tv, &buf);
+				ReadAngle(tv, &buf);
 				#endif
 				break;
 			}
@@ -1260,9 +1263,9 @@ void ParseMessage(sv_t *tv, char *buffer, int length, int to, int mask)
 			// svc_updatecolors		17	// [qbyte] [qbyte] [qbyte]
 			case svc_particle:
 			{
-				ReadShort(&buf);
-				ReadShort(&buf);
-				ReadShort(&buf);
+				ReadCoord(tv, &buf);
+				ReadCoord(tv, &buf);
+				ReadCoord(tv, &buf);
 				ReadByte(&buf);
 				ReadByte(&buf);
 				ReadByte(&buf);
