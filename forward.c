@@ -204,6 +204,7 @@ void Prox_SendPlayerStats(sv_t *qtv, oproxy_t *prox)
 	char buffer[MAX_MSGLEN], spec[64];
 	netmsg_t msg;
 	int player, snum;
+	qbool sent_times = false;
 
 	InitNetMsg(&msg, buffer, sizeof(buffer));
 
@@ -233,6 +234,18 @@ void Prox_SendPlayerStats(sv_t *qtv, oproxy_t *prox)
 
 		if (msg.cursize)
 		{
+			if (qtv->match_start_time && !sent_times) {
+				WriteByte(&msg, svc_updatestatlong);
+				WriteByte(&msg, STAT_MATCHSTARTTIME);
+				WriteLong(&msg, qtv->match_start_time);
+
+				WriteByte(&msg, svc_updatestatlong);
+				WriteByte(&msg, STAT_TIME);
+				WriteLong(&msg, (qtv->curtime - qtv->match_start_local_curtime) + qtv->match_start_time);
+
+				sent_times = true;
+			}
+
 			Prox_SendMessage(&g_cluster, prox, msg.data, msg.cursize, dem_stats|(player<<3), (1<<player));
 			msg.cursize = 0;
 		}

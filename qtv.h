@@ -605,6 +605,11 @@ struct sv_s
 													// since these can be split up. We don't want the
 													// servername to be printed in the middle of a chat message.
 
+	// mvdsv sends STAT_TIME directly to player, so it isn't in .mvd/qtv stream
+	//   but STAT_MATCHSTARTTIME is sent every time the player respawns, so can pick this value up and use a local offset to guess
+	ullong          match_start_time;
+	ullong          match_start_local_curtime;
+
 	unsigned int    extension_flags_fte1;
 	unsigned int    extension_flags_fte2;
 	unsigned int    extension_flags_mvd1;

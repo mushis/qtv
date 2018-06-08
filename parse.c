@@ -263,6 +263,11 @@ static void ParseServerinfo(sv_t *tv, netmsg_t *m)
 	ReadString(m, key, sizeof(key));
 	ReadString(m, value, sizeof(value));
 
+	if (!strcmp(key, "status") && (!strcmp(value, "Standby") || !strcmp(value, "standby"))) {
+		tv->match_start_time = 0;
+		tv->match_start_local_curtime = 0;
+	}
+
 	if (strcmp(key, "hostname"))	// Don't allow the hostname to change, but allow the server to change other serverinfos.
 		Info_SetValueForStarKey(tv->serverinfo, key, value, sizeof(tv->serverinfo));
 }
@@ -794,6 +799,11 @@ static void ParseUpdateStatLong(sv_t *tv, netmsg_t *m, int to, unsigned int mask
 
 	statnum = ReadByte(m);
 	value = ReadLong(m);
+
+	if (statnum == STAT_MATCHSTARTTIME && value != tv->match_start_time) {
+		tv->match_start_time = value;
+		tv->match_start_local_curtime = tv->curtime;
+	}
 
 	if (statnum < MAX_STATS)
 	{

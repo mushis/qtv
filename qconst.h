@@ -52,6 +52,7 @@
 
 #define STAT_TIME 17	//A ZQ hack, sending time via a stat.
 						//this allows l33t engines to interpolate properly without spamming at a silly high fps.
+#define STAT_MATCHSTARTTIME     18		// Server should send this as msec (int)
 
 //======================================
 //flags on entities
