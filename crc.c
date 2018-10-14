@@ -86,7 +86,7 @@ unsigned short QCRC_Block(const unsigned char *start, int count)
 	unsigned short	crc;
 
 	QCRC_Init (&crc);
-	while (count--)
+	while (count-- > 0)
 		crc = (crc << 8) ^ crctable[(crc >> 8) ^ *start++];
 
 	return crc;
@@ -94,7 +94,7 @@ unsigned short QCRC_Block(const unsigned char *start, int count)
 
 unsigned short QCRC_Block_Continue(const unsigned char *start, int count, unsigned short crc)
 {
-	while (count--) {
+	while (count-- > 0) {
 		crc = (crc << 8) ^ crctable[(crc >> 8) ^ *start++];
 	}
 
