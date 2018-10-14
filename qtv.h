@@ -189,6 +189,8 @@ extern "C" {
 
 #define PROXY_VERSION    "1.12-dev"        // Release version of QTV (not protocol).
 #define QTV_VERSION      1.0f              // we are support up to this QTV version.
+#define QTV_PROJECT_URL  "https://github.com/deurk/qtv"
+#define QTV_HELP_URL     "https://github.com/deurk/qtv/wiki"
 
 // { QTV_EZQUAKE_EXT
 
