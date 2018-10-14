@@ -388,6 +388,8 @@ typedef struct io_stat_s
 
 typedef struct sv_s sv_t;
 
+#define MAX_AUTHCHALLENGE_LENGTH 64
+
 //
 // "Other proxy" - These are MVD stream clients.
 //
@@ -397,6 +399,9 @@ typedef struct oproxy_s
 	qbool			drop;							// This proxy is droppable.
 
 	qbool			connected_at_least_once;		// Connection sequence was completed at least once.
+	qbool           authenticated;
+	char            authchallenge[MAX_AUTHCHALLENGE_LENGTH];
+	char            authsource[2 * MAX_QPATH];      // workaround for source not being received when challenge response sent
 
 	sv_t			*qtv;							// To which qtv this client belong, may be NULL in case of pending proxy.
 
@@ -862,8 +867,9 @@ void			Source_Init(void);
 // crc.c
 //
 
-unsigned short	QCRC_Block(unsigned char *start, int count);
-unsigned short	QCRC_Value(unsigned short crcvalue);
+unsigned short QCRC_Block(const unsigned char *start, int count);
+unsigned short QCRC_Value(unsigned short crcvalue);
+unsigned short QCRC_Block_Continue(const unsigned char *start, int count, unsigned short crc);
 
 //
 // mdfour.c

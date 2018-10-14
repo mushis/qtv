@@ -81,7 +81,7 @@ unsigned short QCRC_Value(unsigned short crcvalue)
 	return crcvalue ^ QCRC_XOR_VALUE;
 }
 
-unsigned short QCRC_Block (unsigned char *start, int count)
+unsigned short QCRC_Block(const unsigned char *start, int count)
 {
 	unsigned short	crc;
 
@@ -92,3 +92,11 @@ unsigned short QCRC_Block (unsigned char *start, int count)
 	return crc;
 }
 
+unsigned short QCRC_Block_Continue(const unsigned char *start, int count, unsigned short crc)
+{
+	while (count--) {
+		crc = (crc << 8) ^ crctable[(crc >> 8) ^ *start++];
+	}
+
+	return crc;
+}

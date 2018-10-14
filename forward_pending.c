@@ -4,9 +4,10 @@
 
 #include "qtv.h"
 
-cvar_t mvdport    		= {"mvdport", PROX_DEFAULT_LISTEN_PORT};
-cvar_t maxclients		= {"maxclients", "1000", CVAR_SERVERINFO};
-cvar_t allow_http		= {"allow_http", "1"};
+cvar_t mvdport          = {"mvdport", PROX_DEFAULT_LISTEN_PORT};
+cvar_t maxclients       = {"maxclients", "1000", CVAR_SERVERINFO};
+cvar_t allow_http       = {"allow_http", "1"};
+cvar_t qtv_password     = {"qtv_password", ""};
 
 int get_maxclients(void)
 {
@@ -317,6 +318,57 @@ static qbool SV_CheckForHTTPRequest(cluster_t *cluster, oproxy_t *pend)
 	return true;
 }
 
+typedef enum {
+	QTVAM_NONE,
+	QTVAM_PLAIN,
+	QTVAM_CCITT,
+	QTVAM_MD4,
+} authmethod_t;
+
+static qbool SV_QTVValidateAuthentication(authmethod_t authmethod, const char* password_supplied, const char* authchallenge, const char* our_password)
+{
+	// Server doesn't require password...
+	if (our_password == NULL || our_password[0] == '\0') {
+		return true;
+	}
+
+	// Client didn't supply password...
+	if (password_supplied == NULL || password_supplied[0] == '\0') {
+		return false;
+	}
+
+	// Client didn't supply authentication method...
+	if (authmethod == QTVAM_NONE) {
+		return false;
+	}
+
+	if (authmethod == QTVAM_PLAIN) {
+		return strcmp(password_supplied, our_password) == 0;
+	}
+
+	if (authmethod == QTVAM_CCITT) {
+		short crc;
+
+		crc = QCRC_Block(authchallenge, strlen(authchallenge));
+		crc = QCRC_Block_Continue(our_password, strlen(our_password), crc);
+
+		return (crc == atoi(password_supplied));
+	}
+
+	if (authmethod == QTVAM_MD4) {
+		char hash[512];
+		int md4sum[4];
+
+		snprintf(hash, sizeof(hash), "%s%s", authchallenge, our_password);
+		Com_BlockFullChecksum(hash, strlen(hash), (unsigned char*)md4sum);
+		snprintf(hash, sizeof(hash), "%X%X%X%X", md4sum[0], md4sum[1], md4sum[2], md4sum[3]);
+		return strcmp(password_supplied, hash) == 0;
+	}
+
+	// Unknown authentication method
+	return false;
+}
+
 static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 {
 	qbool raw = false;
@@ -327,6 +379,8 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 	int parse_end;
 	char *e = (char *)pend->inbuffer;
 	char *s = e;
+	char password[128] = { 0 };
+	authmethod_t authmethod = QTVAM_NONE;
 
 	// Parse a QTV request.
 	while (*e)
@@ -357,6 +411,7 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 					}
 					else if (!strcmp(s, "RECEIVE"))
 					{
+						strlcpy(pend->authsource, "RECEIVE:", sizeof(pend->authsource));
 						qtv = SV_ReadReceiveRequest(cluster, pend);
 					}
 					else if (!strcmp(s, "DEMOLIST"))
@@ -375,6 +430,9 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 				else
 				{
 					*colon++ = '\0';
+					while (colon[0] == ' ') {
+						colon++;
+					}
 					Sys_DPrintf("qtv cl, got (%s) (%s)\n", s, colon);
 
 					if (!strcmp(s, "VERSION"))
@@ -392,19 +450,45 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 					}
 					else if (!strcmp(s, "SOURCE"))
 					{
+						strlcpy(pend->authsource, "SOURCE:", sizeof(pend->authsource));
+						strlcat(pend->authsource, colon, sizeof(pend->authsource));
 						qtv = SV_ReadSourceRequest(cluster, colon);
 					}
 					else if (!strcmp(s, "DEMO"))
 					{
+						strlcpy(pend->authsource, "DEMO:", sizeof(pend->authsource));
+						strlcat(pend->authsource, colon, sizeof(pend->authsource));
 						qtv = SV_ReadDemoRequest(cluster, pend, colon);
 					}
 					else if (!strcmp(s, "AUTH"))
 					{	
-						// Lists the demos available on this proxy
-						// part of the connection process, can be ignored if there's no password.
+						authmethod_t this_method = QTVAM_NONE;
+						if (!strcmp(colon, "NONE")) {
+							this_method = QTVAM_NONE;
+						}
+						else if (!strcmp(colon, "PLAIN")) {
+							this_method = QTVAM_PLAIN;
+						}
+						else if (!strcmp(colon, "CCITT")) {
+							this_method = QTVAM_CCITT;
+						}
+						else if (!strcmp(colon, "MD4")) {
+							this_method = QTVAM_MD4;
+						}
+						authmethod = max(authmethod, this_method);
 					}
-					else if (!strcmp(s, "USERINFO"))
-					{
+					else if (!strcmp(s, "PASSWORD")) {
+						if (colon[0] == '"') {
+							colon++;
+
+							if (*(e - 1) == '"') {
+								*(e - 1) = '\0';
+							}
+						}
+
+						strlcpy(password, colon, sizeof(password));
+					}
+					else if (!strcmp(s, "USERINFO")) {
 						strlcpy(userinfo, colon, sizeof(userinfo)); // Can't use it right now, qtv may be NULL atm.
 					}
 					else
@@ -438,6 +522,50 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 
 	if (pend->flushing)
 		return false;
+
+	pend->authenticated = SV_QTVValidateAuthentication(authmethod, password, pend->authchallenge, qtv_password.string);
+
+	if (!pend->authenticated) {
+		if (authmethod == QTVAM_CCITT && !password[0]) {
+			Net_ProxyPrintf(
+				pend, "%s"
+				"AUTH: CCITT\n"
+				"CHALLENGE: %s\n\n",
+				QTV_SV_HEADER(pend, QTV_VERSION),
+				pend->authchallenge
+			);
+		}
+		else if (authmethod == QTVAM_MD4 && !password[0]) {
+			Net_ProxyPrintf(
+				pend, "%s"
+				"AUTH: MD4\n"
+				"CHALLENGE: %s\n\n",
+				QTV_SV_HEADER(pend, QTV_VERSION),
+				pend->authchallenge
+			);
+		}
+		else {
+			Net_ProxyPrintf(pend, "%s"
+				"PERROR: Authentication failure\n\n",
+				QTV_SV_HEADER(pend, QTV_VERSION));
+
+			pend->flushing = true;
+		}
+		return false;
+	}
+
+	// Workaround for ezquake clients (possibly others) not re-sending source when replying to challenge
+	if (!qtv && password[0] && pend->authsource[0]) {
+		if (!strncmp(pend->authsource, "SOURCE:", sizeof("SOURCE:") - 1)) {
+			qtv = SV_ReadSourceRequest(cluster, pend->authsource + sizeof("SOURCE:") - 1);
+		}
+		else if (!strncmp(pend->authsource, "DEMO:", sizeof("DEMO:") - 1)) {
+			qtv = SV_ReadDemoRequest(cluster, pend, colon);
+		}
+		else if (!strncmp(pend->authsource, "RECEIVE:", sizeof("RECEIVE:") - 1)) {
+			qtv = SV_ReadReceiveRequest(cluster, pend);
+		}
+	}
 
 	if (!usableversion)
 	{
@@ -654,6 +782,16 @@ oproxy_t *SV_NewProxy(void *s, qbool socket, struct sockaddr_in *addr)
 	{
 		Sys_Printf("Can't reserve name for client, dropping\n");
 		prox->drop = true;
+	}
+
+	{
+		int i;
+
+		//generate a random challenge
+		Net_BaseAdrToString(&prox->addr, prox->authchallenge, sizeof(prox->authchallenge));
+		for (i = strlen(prox->authchallenge); i < sizeof(prox->authchallenge) - 1; i++) {
+			prox->authchallenge[i] = rand() % (127 - 33) + 33;
+		}
 	}
 
 	if (developer.integer > 1)
@@ -931,4 +1069,5 @@ void Pending_Init(void)
 	Cvar_Register (&mvdport);
 	Cvar_Register (&maxclients);
 	Cvar_Register (&allow_http);
+	Cvar_Register (&qtv_password);
 }
