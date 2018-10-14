@@ -525,6 +525,10 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 
 	pend->authenticated = SV_QTVValidateAuthentication(authmethod, password, pend->authchallenge, qtv_password.string);
 
+	if (userinfo[0]) {
+		Info_Convert(&pend->ctx, userinfo);
+	}
+
 	if (!pend->authenticated) {
 		if (authmethod == QTVAM_CCITT && !password[0]) {
 			Net_ProxyPrintf(
@@ -608,7 +612,6 @@ static qbool SV_CheckForQTVRequest(cluster_t *cluster, oproxy_t *pend)
 							  "BEGIN: %s\n\n", QTV_SV_HEADER(pend, QTV_VERSION), qtv->server);
 	}
 
-	Info_Convert(&pend->ctx, userinfo);
 	Prox_FixName(qtv, pend);
 
 	// Send message to all proxies what we have new client.
